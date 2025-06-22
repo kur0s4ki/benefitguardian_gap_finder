@@ -26,7 +26,8 @@ const ScenarioComparison = ({
       .map(scenario => ({
         ...scenario,
         projections: calculateProjections(scenario)
-      }));
+      }))
+      .filter(scenario => !scenario.projections.error); // Filter out scenarios with errors
   };
 
   const getRiskColor = (risk) => {
@@ -199,12 +200,18 @@ const ScenarioComparison = ({
                 <div className="w-full bg-primary-100 rounded-full h-4">
                   <div
                     className={`h-4 rounded-full transition-all duration-500 ${
-                      scenario.projections.gapClosure >= 80 ? 'bg-success' : 
+                      scenario.projections.gapClosure >= 100 ? 'bg-success' :
+                      scenario.projections.gapClosure >= 80 ? 'bg-success' :
                       scenario.projections.gapClosure >= 50 ? 'bg-warning' : 'bg-error'
                     }`}
                     style={{ width: `${Math.min(scenario.projections.gapClosure, 100)}%` }}
                   />
                 </div>
+                {scenario.projections.gapClosure > 100 && (
+                  <div className="text-xs text-success-600 mt-1">
+                    Exceeds target by {(scenario.projections.gapClosure - 100).toFixed(1)}%
+                  </div>
+                )}
               </div>
             ))}
           </div>

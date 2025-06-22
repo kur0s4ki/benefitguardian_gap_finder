@@ -52,21 +52,21 @@ const GapCalculatorTool = () => {
   const presetScenarios = [
     {
       name: 'Conservative',
-      monthlyContribution: 300,
+      monthlyContribution: 650,
       targetRetirementAge: 67,
       riskTolerance: 'conservative',
       description: 'Lower risk, steady growth approach'
     },
     {
       name: 'Moderate',
-      monthlyContribution: 500,
+      monthlyContribution: 600,
       targetRetirementAge: 65,
       riskTolerance: 'moderate',
       description: 'Balanced risk and growth strategy'
     },
     {
       name: 'Aggressive',
-      monthlyContribution: 750,
+      monthlyContribution: 650,
       targetRetirementAge: 62,
       riskTolerance: 'aggressive',
       description: 'Higher risk, accelerated growth plan'
@@ -75,25 +75,88 @@ const GapCalculatorTool = () => {
 
   const calculateProjections = (scenario) => {
     const yearsToRetirement = scenario.targetRetirementAge - userData.currentAge;
-    const totalContributions = scenario.monthlyContribution * 12 * yearsToRetirement;
-    
-    const growthMultipliers = {
-      conservative: 1.06,
-      moderate: 1.08,
-      aggressive: 1.10
+
+    // Input validation
+    if (yearsToRetirement <= 0) {
+      return {
+        totalContributions: 0,
+        projectedValue: 0,
+        gapClosure: 0,
+        yearsToRetirement: yearsToRetirement,
+        monthlyNeeded: 0,
+        error: yearsToRetirement === 0
+          ? "You are already at retirement age"
+          : "Retirement age must be greater than current age"
+      };
+    }
+
+    if (scenario.monthlyContribution < 0) {
+      return {
+        totalContributions: 0,
+        projectedValue: 0,
+        gapClosure: 0,
+        yearsToRetirement: yearsToRetirement,
+        monthlyNeeded: 0,
+        error: "Monthly contribution cannot be negative"
+      };
+    }
+
+    // Corrected annual growth rates (more realistic)
+    const annualGrowthRates = {
+      conservative: 0.05, // 5% annual
+      moderate: 0.07,     // 7% annual
+      aggressive: 0.09    // 9% annual
     };
-    
-    const multiplier = growthMultipliers[scenario.riskTolerance];
-    const projectedValue = totalContributions * Math.pow(multiplier, yearsToRetirement);
-    
-    const gapClosure = Math.min((projectedValue / userData.totalGap) * 100, 100);
-    
+
+    const annualRate = annualGrowthRates[scenario.riskTolerance];
+    const monthlyRate = annualRate / 12;
+    const months = yearsToRetirement * 12;
+    const monthlyContribution = scenario.monthlyContribution;
+
+    const totalContributions = monthlyContribution * months;
+
+    // Correct Future Value of Ordinary Annuity formula: PMT * (((1 + r)^n - 1) / r)
+    let projectedValue;
+    if (monthlyRate === 0) {
+      // Handle edge case where rate is 0
+      projectedValue = totalContributions;
+    } else {
+      projectedValue = monthlyContribution * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
+    }
+
+    // Remove the artificial 100% cap to show over-funding scenarios
+    const gapClosure = (projectedValue / userData.totalGap) * 100;
+
+    // Correct calculation for monthly needed using Present Value of Annuity formula
+    let monthlyNeeded;
+    if (monthlyRate === 0) {
+      monthlyNeeded = userData.totalGap / months;
+    } else {
+      monthlyNeeded = userData.totalGap * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1);
+    }
+
+    // Calculate inflation-adjusted values (optional)
+    const inflationRate = 0.03; // 3% annual inflation
+    const realRate = (1 + annualRate) / (1 + inflationRate) - 1;
+    const realMonthlyRate = realRate / 12;
+
+    let inflationAdjustedValue;
+    if (realMonthlyRate === 0) {
+      inflationAdjustedValue = totalContributions;
+    } else {
+      inflationAdjustedValue = monthlyContribution * (Math.pow(1 + realMonthlyRate, months) - 1) / realMonthlyRate;
+    }
+
     return {
       totalContributions,
       projectedValue,
+      inflationAdjustedValue,
       gapClosure,
       yearsToRetirement,
-      monthlyNeeded: Math.ceil(userData.totalGap / (12 * yearsToRetirement * multiplier))
+      monthlyNeeded: Math.ceil(monthlyNeeded),
+      annualRate: annualRate * 100, // Return as percentage for display
+      realAnnualRate: realRate * 100,
+      inflationRate: inflationRate * 100
     };
   };
 
@@ -286,7 +349,29 @@ const GapCalculatorTool = () => {
 
 // Projection Results Component
 const ProjectionResults = ({ scenario, projections, userData }) => {
-  const gapClosureColor = projections.gapClosure >= 80 ? 'text-success' : 
+  // Handle error cases
+  if (projections.error) {
+    return (
+      <div className="space-y-6">
+        <div className="p-4 bg-error-50 rounded-lg border border-error-200">
+          <div className="flex items-start gap-3">
+            <Icon name="AlertTriangle" size={20} className="text-error-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-error-800 mb-1">
+                Cannot Calculate Projections
+              </div>
+              <div className="text-sm text-error-700">
+                {projections.error}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const gapClosureColor = projections.gapClosure >= 100 ? 'text-success' :
+                         projections.gapClosure >= 80 ? 'text-success' :
                          projections.gapClosure >= 50 ? 'text-warning' : 'text-error';
 
   return (
@@ -302,12 +387,18 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
         <div className="w-full bg-primary-100 rounded-full h-3">
           <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              projections.gapClosure >= 80 ? 'bg-success' : 
+              projections.gapClosure >= 100 ? 'bg-success' :
+              projections.gapClosure >= 80 ? 'bg-success' :
               projections.gapClosure >= 50 ? 'bg-warning' : 'bg-error'
             }`}
             style={{ width: `${Math.min(projections.gapClosure, 100)}%` }}
           />
         </div>
+        {projections.gapClosure > 100 && (
+          <div className="mt-2 text-sm text-success font-medium">
+            🎉 Exceeds gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}
+          </div>
+        )}
       </div>
 
       {/* Key Metrics */}
@@ -316,14 +407,20 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           <div className="text-2xl font-bold text-primary mb-1">
             ${projections.projectedValue.toLocaleString()}
           </div>
-          <div className="text-sm text-text-secondary">Projected Value</div>
+          <div className="text-sm text-text-secondary">Projected Value (Nominal)</div>
+          <div className="text-xs text-text-muted mt-1">
+            ${projections.inflationAdjustedValue.toLocaleString()} in today's dollars
+          </div>
         </div>
-        
+
         <div className="text-center p-4 bg-secondary-50 rounded-lg">
           <div className="text-2xl font-bold text-secondary mb-1">
             {projections.yearsToRetirement}
           </div>
           <div className="text-sm text-text-secondary">Years to Retirement</div>
+          <div className="text-xs text-text-muted mt-1">
+            {projections.annualRate.toFixed(1)}% growth rate
+          </div>
         </div>
       </div>
 
@@ -353,8 +450,29 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
             <div>
               <div className="font-medium text-accent-800 mb-1">Recommendation</div>
               <div className="text-sm text-accent-700">
-                To fully close your gap, consider increasing your monthly contribution to 
+                To fully close your gap, consider increasing your monthly contribution to
                 <strong> ${projections.monthlyNeeded.toLocaleString()}</strong> or extending your retirement timeline.
+                <div className="mt-2 text-xs text-accent-600">
+                  Based on {projections.annualRate}% annual growth rate
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success message for over-funding */}
+      {projections.gapClosure >= 100 && (
+        <div className="p-4 bg-success-50 rounded-lg border border-success-200">
+          <div className="flex items-start gap-3">
+            <Icon name="CheckCircle" size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-success-800 mb-1">Excellent Progress!</div>
+              <div className="text-sm text-success-700">
+                This scenario {projections.gapClosure > 100 ? 'exceeds' : 'meets'} your retirement gap target.
+                {projections.gapClosure > 100 && (
+                  <span> You could reduce contributions to ${Math.ceil(scenario.monthlyContribution * (userData.totalGap / projections.projectedValue)).toLocaleString()}/month and still meet your goal.</span>
+                )}
               </div>
             </div>
           </div>

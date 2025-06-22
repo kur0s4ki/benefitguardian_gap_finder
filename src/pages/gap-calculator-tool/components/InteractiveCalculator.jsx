@@ -178,9 +178,9 @@ const InteractiveCalculator = ({
                   {risk}
                 </div>
                 <div className="text-xs text-text-secondary">
-                  {risk === 'conservative' && '4-6% growth'}
-                  {risk === 'moderate' && '6-8% growth'}
-                  {risk === 'aggressive' && '8-10% growth'}
+                  {risk === 'conservative' && 'Target: 5% annually'}
+                  {risk === 'moderate' && 'Target: 7% annually'}
+                  {risk === 'aggressive' && 'Target: 9% annually'}
                 </div>
               </button>
             ))}
@@ -189,21 +189,42 @@ const InteractiveCalculator = ({
       </div>
 
       {/* Real-time Feedback */}
-      <div className="mt-8 p-4 bg-accent-50 rounded-lg border border-accent-200">
-        <div className="flex items-start gap-3">
-          <Icon name="TrendingUp" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="font-medium text-accent-800 mb-1">
-              Scenario Impact
-            </div>
-            <div className="text-sm text-accent-700">
-              This scenario could close <strong>{projections.gapClosure.toFixed(1)}%</strong> of your 
-              retirement gap, building <strong>${projections.projectedValue.toLocaleString()}</strong> by 
-              age {scenario.targetRetirementAge}.
+      {projections.error ? (
+        <div className="mt-8 p-4 bg-error-50 rounded-lg border border-error-200">
+          <div className="flex items-start gap-3">
+            <Icon name="AlertTriangle" size={20} className="text-error-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-error-800 mb-1">
+                Invalid Scenario
+              </div>
+              <div className="text-sm text-error-700">
+                {projections.error}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mt-8 p-4 bg-accent-50 rounded-lg border border-accent-200">
+          <div className="flex items-start gap-3">
+            <Icon name="TrendingUp" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-accent-800 mb-1">
+                Scenario Impact
+              </div>
+              <div className="text-sm text-accent-700">
+                This scenario could close <strong>{projections.gapClosure.toFixed(1)}%</strong> of your
+                retirement gap, building <strong>${projections.projectedValue.toLocaleString()}</strong> by
+                age {scenario.targetRetirementAge}.
+                {projections.gapClosure > 100 && (
+                  <span className="block mt-1 text-success-700 font-medium">
+                    🎉 This scenario exceeds your gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}!
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Haptic Feedback Simulation */}
       <style jsx>{`
