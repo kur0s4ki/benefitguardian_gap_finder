@@ -100,22 +100,11 @@ const ProfessionSelectionLanding = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="max-w-4xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-primary rounded-xl flex items-center justify-center shadow-card">
-              <svg
-                viewBox="0 0 24 24"
-                className="w-8 h-8 lg:w-10 lg:h-10 text-white"
-                fill="currentColor"
-              >
-                <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none"/>
-              </svg>
-            </div>
-          </div>
+         
           
           <div className="mb-2">
             <img
-              src="/logo.png"
+              src="assets/images/logo.png"
               alt="Company Logo"
               className="h-12 w-auto"
             />
