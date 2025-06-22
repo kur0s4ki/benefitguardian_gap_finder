@@ -11,9 +11,30 @@ import StateSelector from './components/StateSelector';
 const ServiceProfileCollection = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get profession from previous step or default
-  const profession = location.state?.profession || 'teacher';
+
+  // Get profession from previous step, sessionStorage, or default
+  const getProfession = () => {
+    // First try location state
+    if (location.state?.profession) {
+      return location.state.profession;
+    }
+
+    // Then try sessionStorage
+    try {
+      const storedProfession = sessionStorage.getItem('selectedProfession');
+      if (storedProfession) {
+        const professionData = JSON.parse(storedProfession);
+        return professionData.id || 'teacher';
+      }
+    } catch (error) {
+      console.warn('Error parsing stored profession:', error);
+    }
+
+    // Default fallback
+    return 'teacher';
+  };
+
+  const profession = getProfession();
   
   // Form state
   const [formData, setFormData] = useState({

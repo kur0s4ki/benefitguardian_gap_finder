@@ -55,16 +55,17 @@ const ProfessionSelectionLanding = () => {
 
   const handleProfessionSelect = (profession) => {
     if (isTransitioning) return;
-    
+
     setSelectedProfession(profession);
     setIsTransitioning(true);
 
-    // Store profession data for later use
-    sessionStorage.setItem('selectedProfession', JSON.stringify(profession));
-
     // Smooth transition with delay
     setTimeout(() => {
-      navigate('/service-profile-collection');
+      navigate('/service-profile-collection', {
+        state: {
+          profession: profession.id
+        }
+      });
     }, 800);
   };
 
