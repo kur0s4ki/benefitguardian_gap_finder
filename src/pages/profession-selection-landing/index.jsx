@@ -114,12 +114,11 @@ const ProfessionSelectionLanding = () => {
           </div>
           
           <div className="mb-2">
-            <h1 className="text-2xl lg:text-3xl font-bold text-primary mb-2">
-              PublicServ Wealth Group
-            </h1>
-            <p className="text-sm text-text-secondary font-medium">
-              BenefitGuardian Gap Finder
-            </p>
+            <img
+              src="/logo.png"
+              alt="Company Logo"
+              className="h-12 w-auto"
+            />
           </div>
         </div>
       </motion.header>

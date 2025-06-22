@@ -14,8 +14,6 @@ const AssetInputSection = ({
     if (!value) return '';
     const numericValue = value.replace(/[^\d]/g, '');
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(numericValue);

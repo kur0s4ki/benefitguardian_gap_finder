@@ -17,7 +17,7 @@ const RiskAssessmentQuestionnaire = () => {
   // Get profession from previous step or default
   const [profession, setProfession] = useState('teacher');
   const [formData, setFormData] = useState({
-    inflationProtection: null, // This maps to 'cola' in client spec
+    inflationProtection: undefined, // This maps to 'cola' in client spec - undefined means not selected, null means "not sure"
     survivorPlanning: null,
     survivorPlanningDetails: '',
     retirementAge: 65,
@@ -89,7 +89,7 @@ const RiskAssessmentQuestionnaire = () => {
 
   const isFormValid = () => {
     return (
-      formData.inflationProtection !== null &&
+      formData.inflationProtection !== undefined &&
       formData.survivorPlanning !== null &&
       formData.retirementAge &&
       formData.financialFears.length > 0 &&
@@ -358,7 +358,7 @@ const RiskAssessmentQuestionnaire = () => {
               <div>
                 <h3 className="font-semibold text-warning-600 mb-2">Please complete all sections:</h3>
                 <ul className="text-sm text-warning-700 space-y-1">
-                  {formData.inflationProtection === null && (
+                  {formData.inflationProtection === undefined && (
                     <li>• Inflation protection status</li>
                   )}
                   {formData.survivorPlanning === null && (

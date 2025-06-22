@@ -148,9 +148,10 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
           {/* Age Markers */}
           <div className="flex justify-between mt-2 text-xs text-text-secondary">
             <span>50</span>
-            <span className="text-warning font-medium">{currentData.earlyAge}</span>
-            <span className="text-success font-medium">{currentData.normalAge}</span>
-            <span className="text-primary font-medium">{currentData.lateAge}</span>
+            <span>55</span>
+            <span>60</span>
+            <span>65</span>
+            <span>70</span>
             <span>75</span>
           </div>
         </div>
