@@ -11,7 +11,7 @@ const FinancialFearsSection = ({ value, onChange, profession }) => {
     nurse: [
       { id: 'shift-work-impact', label: 'Impact of shift work on health', icon: 'Clock', priority: 'high' },
       { id: 'burnout-early-retirement', label: 'Burnout forcing early retirement', icon: 'Flame', priority: 'high' },
-      { id: 'healthcare-costs', label: 'Rising healthcare expenses', icon: 'TrendingUp', priority: 'medium' }
+      { id: 'nurse-healthcare-costs', label: 'Rising healthcare expenses', icon: 'TrendingUp', priority: 'medium' }
     ],
     'first-responder': [
       { id: 'disability-risk', label: 'Disability from line of duty', icon: 'Shield', priority: 'high' },

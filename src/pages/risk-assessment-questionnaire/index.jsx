@@ -78,6 +78,14 @@ const RiskAssessmentQuestionnaire = () => {
       financialFears: allData.riskAssessment.financialFears
     });
 
+    // Store results in localStorage for persistence
+    try {
+      localStorage.setItem('calculatedResults', JSON.stringify(results));
+      localStorage.setItem('userData', JSON.stringify(allData));
+    } catch (error) {
+      console.error('Error storing results:', error);
+    }
+
     // Navigate to results with calculated data
     navigate('/dynamic-results-dashboard', {
       state: {

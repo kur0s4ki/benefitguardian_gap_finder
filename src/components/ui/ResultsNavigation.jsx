@@ -16,7 +16,26 @@ const ResultsNavigation = ({
   const shouldShow = showOnPaths.includes(location.pathname);
 
   const handleResultsClick = () => {
-    navigate('/dynamic-results-dashboard');
+    // Try to get stored results data from localStorage or sessionStorage
+    try {
+      const storedResults = localStorage.getItem('calculatedResults');
+      const storedUserData = localStorage.getItem('userData');
+
+      if (storedResults && storedUserData) {
+        navigate('/dynamic-results-dashboard', {
+          state: {
+            calculatedResults: JSON.parse(storedResults),
+            userData: JSON.parse(storedUserData)
+          }
+        });
+      } else {
+        // If no stored data, redirect to start assessment
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error loading stored results:', error);
+      navigate('/');
+    }
   };
 
   if (!shouldShow) {

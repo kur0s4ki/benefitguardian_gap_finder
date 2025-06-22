@@ -16,16 +16,22 @@ const DynamicResultsDashboard = () => {
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
 
-  // Load data from navigation state
+  // Load data from navigation state or localStorage
   useEffect(() => {
     try {
       // Check if we have calculated results from navigation state
       if (location.state?.calculatedResults) {
         setCalculatedResults(location.state.calculatedResults);
       } else {
-        // If no navigation state, redirect to start
-        setCalculationError('No assessment data found. Please complete the assessment first.');
-        return;
+        // Try to load from localStorage
+        const storedResults = localStorage.getItem('calculatedResults');
+        if (storedResults) {
+          setCalculatedResults(JSON.parse(storedResults));
+        } else {
+          // If no stored data, redirect to start
+          setCalculationError('No assessment data found. Please complete the assessment first.');
+          return;
+        }
       }
 
     } catch (error) {

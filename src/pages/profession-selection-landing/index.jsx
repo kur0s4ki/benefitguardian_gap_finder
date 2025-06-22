@@ -102,11 +102,11 @@ const ProfessionSelectionLanding = () => {
         <div className="max-w-4xl mx-auto text-center">
          
           
-          <div className="mb-2">
+          <div className="mb-2 flex justify-center">
             <img
               src="assets/images/logo.png"
               alt="Company Logo"
-              className="h-12 w-auto"
+              className="h-36 w-auto mx-auto"
             />
           </div>
         </div>
