@@ -10,10 +10,10 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
       title: 'Pension Gap Analysis',
       icon: 'TrendingDown',
       emoji: '📉',
-      gap: userData.gaps.pensionGap,
-      monthlyContribution: userData.monthlyContributions.pensionGap,
-      description: `Based on your current pension of ${userData.monthlyPension.toLocaleString()}/month and ${userData.yearsOfService} years of service, you may face a significant shortfall in retirement income.`,
-      methodology: `Our analysis considers your current pension benefits, projected inflation rates, and typical retirement expenses for ${userData.profession}s in ${userData.state}. The calculation assumes a 3% annual inflation rate and 25-year retirement period.`,
+      gap: userData.pensionGap * 240, // Convert monthly to 20-year total for display
+      monthlyContribution: Math.round((userData.pensionGap * 12) / (userData.yearsUntilRetirement * 7)),
+      description: `Based on your current pension of $${userData.currentPension?.toLocaleString() || 'N/A'}/month and ${userData.yearsOfService} years of service, you may face a significant shortfall in retirement income.`,
+      methodology: `Our analysis considers your current pension benefits, projected inflation rates, and typical retirement expenses for ${userData.profession}s in ${userData.state}. The calculation uses a 3% annual pension gap factor multiplied by years of service.`,
       actionItems: [
         'Consider additional retirement savings vehicles',
         'Explore pension maximization strategies',
@@ -26,10 +26,10 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
       title: 'Tax Torpedo Risk',
       icon: 'Zap',
       emoji: '💥',
-      gap: userData.gaps.taxTorpedoRisk,
-      monthlyContribution: userData.monthlyContributions.taxTorpedo,
+      gap: userData.taxTorpedo,
+      monthlyContribution: Math.round((userData.taxTorpedo / 240) * 12 / (userData.yearsUntilRetirement * 7)),
       description: `The "Tax Torpedo" occurs when your retirement income pushes you into higher tax brackets, potentially costing you thousands in unexpected taxes.`,
-      methodology: `This calculation analyzes your projected retirement income sources including pension, Social Security, and other assets. We model various tax scenarios to identify potential tax bracket jumps and their financial impact.`,
+      methodology: `This calculation analyzes 30% of your current savings ($${userData.otherSavings?.toLocaleString() || '0'}) as potential tax impact. We model various tax scenarios to identify potential tax bracket jumps and their financial impact.`,
       actionItems: [
         'Implement tax-diversification strategies',
         'Consider Roth conversion opportunities',
@@ -42,12 +42,15 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
       title: 'Survivor Protection Gap',
       icon: 'Heart',
       emoji: '❤️‍🩹',
-      gap: userData.gaps.survivorGap,
-      monthlyContribution: userData.monthlyContributions.survivorGap,
+      gap: userData.survivorGap * 240, // Convert monthly to 20-year total for display
+      monthlyContribution: Math.round((userData.survivorGap * 12) / (userData.yearsUntilRetirement * 7)),
       description: `This gap represents the income shortfall your loved ones would face if you were no longer able to provide for them.`,
-      methodology: `Our survivor analysis considers your current income, existing life insurance, pension survivor benefits, and your family's ongoing financial needs. The calculation projects a 10-year income replacement period.`,
+      methodology: `Our survivor analysis calculates 40% of your monthly pension ($${userData.currentPension?.toLocaleString() || 'N/A'}) as the potential survivor benefit gap. This considers your family's ongoing financial needs and existing coverage.`,
       actionItems: [
-        'Review existing life insurance coverage','Understand pension survivor benefits','Consider supplemental income protection','Create emergency fund strategies'
+        'Review existing life insurance coverage',
+        'Understand pension survivor benefits',
+        'Consider supplemental income protection',
+        'Create emergency fund strategies'
       ]
     }
   ];

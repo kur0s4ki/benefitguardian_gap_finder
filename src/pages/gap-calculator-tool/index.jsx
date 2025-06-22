@@ -45,22 +45,10 @@ const GapCalculatorTool = () => {
       }
     }
 
-    // Fallback to mock data for development
+    // If no data found, redirect to assessment
     if (!loadedData) {
-      loadedData = {
-        profession: 'teacher',
-        yearsOfService: 15,
-        currentAge: 45,
-        state: 'CA',
-        currentPension: 2800,
-        pensionGap: 1260, // Monthly gap
-        taxTorpedo: 37500, // Lump sum
-        survivorGap: 1120, // Monthly gap
-        monthlyGap: 2536, // Combined monthly gap
-        totalGap: 305000, // Approximate total gap for 20 years
-        riskScore: 78,
-        riskColor: 'red'
-      };
+      navigate('/dynamic-results-dashboard');
+      return;
     }
 
     // Transform data for compatibility with existing calculator

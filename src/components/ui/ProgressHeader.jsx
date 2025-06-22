@@ -52,24 +52,19 @@ const ProgressHeader = ({ currentStep = 1, totalSteps = 6, profession = 'teacher
             <button
               onClick={handleLogoClick}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-150"
-              aria-label="PublicServ Wealth Group - Return to start"
+              aria-label="BenefitGuardian - Return to start"
             >
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-lg flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-5 h-5 lg:w-6 lg:h-6 text-white"
-                  fill="currentColor"
-                >
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-                  <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none"/>
-                </svg>
-              </div>
+              <img
+                src="/assets/images/logo.png"
+                alt="BenefitGuardian Logo"
+                className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
+              />
               <div className="hidden sm:block">
                 <div className={`font-semibold text-lg ${getProfessionTheme()}`}>
-                  PublicServ
+                  BenefitGuardian
                 </div>
                 <div className="text-xs text-text-secondary -mt-1">
-                  Wealth Group
+                  Gap Finder
                 </div>
               </div>
             </button>

@@ -13,7 +13,6 @@ const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
-  const [userData, setUserData] = useState(null);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
 
@@ -45,20 +44,10 @@ const DynamicResultsDashboard = () => {
         }
       }
 
-      // If no data found, use fallback mock data for development
+      // If no data found, redirect to start
       if (!combinedUserData.profession) {
-        combinedUserData = {
-          profession: 'teacher',
-          yearsOfService: 15,
-          pensionEstimate: 2800,
-          state: 'CA',
-          currentAge: 45,
-          retirementAge: 62,
-          inflationProtection: false,
-          survivorPlanning: false,
-          currentSavings: 125000,
-          financialFears: ['pension-cuts', 'healthcare-retirement']
-        };
+        setCalculationError('No assessment data found. Please complete the assessment first.');
+        return;
       }
 
       // Validate and calculate
@@ -69,7 +58,6 @@ const DynamicResultsDashboard = () => {
       }
 
       const results = calculateBenefitGaps(combinedUserData);
-      setUserData(combinedUserData);
       setCalculatedResults(results);
 
     } catch (error) {

@@ -6,6 +6,7 @@ import Icon from 'components/AppIcon';
 import SuccessAnimation from './components/SuccessAnimation';
 import ReportPreview from './components/ReportPreview';
 import NextStepsSection from './components/NextStepsSection';
+import { calculateBenefitGaps } from 'utils/calculationEngine';
 import FAQSection from './components/FAQSection';
 import TestimonialsSection from './components/TestimonialsSection';
 
@@ -14,57 +15,99 @@ const ReportDeliveryConfirmation = () => {
   const [userEmail, setUserEmail] = useState('');
   const [profession, setProfession] = useState('teacher');
   const [reportData, setReportData] = useState(null);
-
-  // Mock user data - in real app this would come from session/context
-  const mockUserData = {
-    email: "sarah.johnson@email.com",
-    profession: "teacher",
-    firstName: "Sarah",
-    yearsOfService: 15,
-    state: "California",
-    riskScore: 72,
-    pensionGap: 285000,
-    taxTorpedoRisk: 45000,
-    survivorGap: 125000,
-    monthlyShortfall: 1250
-  };
-
-  const mockReportHighlights = {
-    riskScore: 72,
-    riskLevel: "High Risk",
-    topGaps: [
-      {
-        type: "Pension Gap",
-        amount: 285000,
-        icon: "TrendingDown",
-        description: "Projected retirement income shortfall"
-      },
-      {
-        type: "Tax Torpedo Risk",
-        amount: 45000,
-        icon: "Zap",
-        description: "Potential tax liability on retirement withdrawals"
-      },
-      {
-        type: "Survivor Protection Gap",
-        amount: 125000,
-        icon: "Heart",
-        description: "Income protection for surviving spouse"
-      }
-    ],
-    keyRecommendations: [
-      "Maximize 403(b) contributions to reduce tax torpedo impact",
-      "Consider Roth IRA conversions during lower-income years",
-      "Evaluate supplemental life insurance for survivor protection",
-      "Explore state-specific teacher retirement benefits"
-    ]
-  };
+  const [calculatedResults, setCalculatedResults] = useState(null);
 
   useEffect(() => {
-    // Simulate loading user data from session storage or context
-    setUserEmail(mockUserData.email);
-    setProfession(mockUserData.profession);
-    setReportData(mockReportHighlights);
+    // Load real calculated data from session storage
+    try {
+      const completeData = sessionStorage.getItem('completeAssessmentData');
+      const calculatedResults = sessionStorage.getItem('calculatedResults');
+      const emailData = sessionStorage.getItem('userEmail');
+
+      let loadedData = null;
+
+      if (calculatedResults) {
+        loadedData = JSON.parse(calculatedResults);
+      } else if (completeData) {
+        // Recalculate if we have the raw data
+        const rawData = JSON.parse(completeData);
+        loadedData = calculateBenefitGaps(rawData);
+      }
+
+      // Fallback to mock data for development
+      if (!loadedData) {
+        loadedData = {
+          profession: 'teacher',
+          yearsOfService: 15,
+          state: 'CA',
+          riskScore: 72,
+          riskColor: 'red',
+          pensionGap: 1440,
+          taxTorpedo: 37500,
+          survivorGap: 1280,
+          monthlyGap: 2876,
+          currentPension: 2800,
+          otherSavings: 125000
+        };
+      }
+
+      setCalculatedResults(loadedData);
+      setProfession(loadedData.profession);
+
+      // Set email from session storage or use fallback
+      if (emailData) {
+        setUserEmail(JSON.parse(emailData));
+      } else {
+        setUserEmail("user@email.com");
+      }
+
+      // Create report highlights from calculated data
+      const reportHighlights = {
+        riskScore: loadedData.riskScore,
+        riskLevel: loadedData.riskColor === 'red' ? "High Risk" :
+                  loadedData.riskColor === 'gold' ? "Moderate Risk" : "Low Risk",
+        topGaps: [
+          {
+            type: "Pension Gap",
+            amount: loadedData.pensionGap * 240, // Convert monthly to 20-year total
+            icon: "TrendingDown",
+            description: `Monthly pension shortfall: $${loadedData.pensionGap}/month`
+          },
+          {
+            type: "Tax Torpedo Risk",
+            amount: loadedData.taxTorpedo,
+            icon: "Zap",
+            description: `Potential tax impact on $${loadedData.otherSavings?.toLocaleString() || '0'} in savings`
+          },
+          {
+            type: "Survivor Protection Gap",
+            amount: loadedData.survivorGap * 240, // Convert monthly to 20-year total
+            icon: "Heart",
+            description: `Monthly survivor benefit gap: $${loadedData.survivorGap}/month`
+          }
+        ],
+        keyRecommendations: [
+          `Contribute $${loadedData.monthlyContribution}/month to close gaps`,
+          "Maximize 403(b) contributions to reduce tax torpedo impact",
+          "Consider Roth IRA conversions during lower-income years",
+          `Explore ${loadedData.profession}-specific retirement benefits in ${loadedData.state}`
+        ]
+      };
+
+      setReportData(reportHighlights);
+
+    } catch (error) {
+      console.error('Error loading report data:', error);
+      // Fallback data
+      setUserEmail("user@email.com");
+      setProfession("teacher");
+      setReportData({
+        riskScore: 72,
+        riskLevel: "High Risk",
+        topGaps: [],
+        keyRecommendations: []
+      });
+    }
   }, []);
 
   const handleBookAudit = () => {

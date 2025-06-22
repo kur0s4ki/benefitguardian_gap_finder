@@ -66,13 +66,13 @@ const ConversionFooter = ({ className = "" }) => {
         {/* Disclaimer */}
         <div className="text-center space-y-2">
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            Investment advisory services offered through PublicServ Wealth Group, LLC, a registered investment advisor. 
-            This analysis is for educational purposes and does not constitute personalized investment advice. 
+            Investment advisory services offered through BenefitGuardian, LLC, a registered investment advisor.
+            This analysis is for educational purposes and does not constitute personalized investment advice.
             Past performance does not guarantee future results. All investments involve risk of loss.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-xs text-text-muted">
-            <span>© {currentYear} PublicServ Wealth Group, LLC</span>
+            <span>© {currentYear} BenefitGuardian, LLC</span>
             <span className="hidden sm:inline">•</span>
             <span>All rights reserved</span>
             <span className="hidden sm:inline">•</span>
@@ -86,18 +86,13 @@ const ConversionFooter = ({ className = "" }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center">
             <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-4 h-4 text-white"
-                  fill="currentColor"
-                >
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-                  <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none"/>
-                </svg>
-              </div>
+              <img
+                src="/assets/images/logo.png"
+                alt="BenefitGuardian Logo"
+                className="w-6 h-6 object-contain"
+              />
               <div className="text-white">
-                <div className="font-semibold text-sm">PublicServ Wealth Group</div>
+                <div className="font-semibold text-sm">BenefitGuardian</div>
               </div>
             </div>
           </div>
