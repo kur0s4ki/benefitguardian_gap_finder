@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from 'components/AppIcon';
 
-const InteractiveCalculator = ({ 
-  scenario, 
-  onScenarioChange, 
-  presetScenarios, 
-  userData, 
-  calculateProjections 
+const InteractiveCalculator = ({
+  scenario,
+  onScenarioChange,
+  presetScenarios,
+  userData,
+  calculateProjections
 }) => {
-  const [activePreset, setActivePreset] = useState('moderate');
+  const [activePreset, setActivePreset] = useState('custom');
+
+  // Sync activePreset with current scenario
+  useEffect(() => {
+    if (!presetScenarios || presetScenarios.length === 0) return;
+
+    const matchingPreset = presetScenarios.find(preset =>
+      preset.monthlyContribution === scenario.monthlyContribution &&
+      preset.targetRetirementAge === scenario.targetRetirementAge &&
+      preset.riskTolerance === scenario.riskTolerance
+    );
+
+    setActivePreset(matchingPreset ? matchingPreset.name.toLowerCase() : 'custom');
+  }, [scenario, presetScenarios]);
 
   const handleSliderChange = (field, value) => {
     onScenarioChange(prev => ({
@@ -38,6 +51,23 @@ const InteractiveCalculator = ({
   };
 
   const projections = calculateProjections(scenario);
+
+  // Validation check
+  if (!presetScenarios || presetScenarios.length === 0) {
+    return (
+      <div className="card p-6">
+        <div className="text-center py-8">
+          <Icon name="AlertCircle" size={48} className="text-warning-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            Calculator Unavailable
+          </h3>
+          <p className="text-text-secondary">
+            Unable to load calculator presets. Please try refreshing the page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card p-6">

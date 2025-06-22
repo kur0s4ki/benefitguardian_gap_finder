@@ -21,22 +21,32 @@ const SavedScenarios = ({ scenarios, onLoadScenario, onDeleteScenario }) => {
     }
   };
 
-  if (scenarios.length === 0) {
+  if (!scenarios || scenarios.length === 0) {
     return (
-      <div className="card p-8 text-center">
-        <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Icon name="Bookmark" size={32} className="text-secondary-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
-          No Saved Scenarios Yet
-        </h3>
-        <p className="text-text-secondary mb-6">
-          Create and save scenarios in the calculator to compare them later. 
-          Your saved scenarios will appear here for easy access.
-        </p>
-        <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
-          <Icon name="Info" size={16} />
-          <span>Use the "Save This Scenario" button in the calculator tab</span>
+      <div className="space-y-6">
+        <div className="card p-8 text-center">
+          <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon name="Bookmark" size={32} className="text-secondary-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            No Saved Scenarios Yet
+          </h3>
+          <p className="text-text-secondary mb-6">
+            Create and save scenarios in the calculator to compare them later.
+            Your saved scenarios will appear here for easy access.
+          </p>
+          <div className="p-4 bg-warning-50 rounded-lg border border-warning-200 mb-4">
+            <div className="flex items-start gap-3">
+              <Icon name="AlertTriangle" size={16} className="text-warning-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-warning-700">
+                <strong>Session Storage:</strong> Scenarios are saved for this session only and will be lost when you close your browser.
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
+            <Icon name="Info" size={16} />
+            <span>Use the "Save This Scenario" button in the calculator tab</span>
+          </div>
         </div>
       </div>
     );
@@ -111,14 +121,14 @@ const SavedScenarios = ({ scenarios, onLoadScenario, onDeleteScenario }) => {
                 
                 <div className="text-center p-3 bg-success-50 rounded-lg">
                   <div className="text-lg font-bold text-success">
-                    ${scenario.projections.projectedValue.toLocaleString()}
+                    ${(scenario.projections?.projectedValue || 0).toLocaleString()}
                   </div>
                   <div className="text-xs text-text-secondary">Projected</div>
                 </div>
-                
+
                 <div className="text-center p-3 bg-accent-50 rounded-lg">
                   <div className="text-lg font-bold text-accent-600">
-                    {scenario.projections.gapClosure.toFixed(1)}%
+                    {(scenario.projections?.gapClosure || 0).toFixed(1)}%
                   </div>
                   <div className="text-xs text-text-secondary">Gap Closed</div>
                 </div>
@@ -129,16 +139,16 @@ const SavedScenarios = ({ scenarios, onLoadScenario, onDeleteScenario }) => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-text-secondary">Gap Closure Progress</span>
                   <span className="text-sm font-semibold text-primary">
-                    {scenario.projections.gapClosure.toFixed(1)}%
+                    {(scenario.projections?.gapClosure || 0).toFixed(1)}%
                   </span>
                 </div>
                 <div className="w-full bg-primary-100 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      scenario.projections.gapClosure >= 80 ? 'bg-success' : 
-                      scenario.projections.gapClosure >= 50 ? 'bg-warning' : 'bg-error'
+                      (scenario.projections?.gapClosure || 0) >= 80 ? 'bg-success' :
+                      (scenario.projections?.gapClosure || 0) >= 50 ? 'bg-warning' : 'bg-error'
                     }`}
-                    style={{ width: `${Math.min(scenario.projections.gapClosure, 100)}%` }}
+                    style={{ width: `${Math.min(scenario.projections?.gapClosure || 0, 100)}%` }}
                   />
                 </div>
               </div>

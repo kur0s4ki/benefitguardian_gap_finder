@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
 
-const ScenarioComparison = ({ 
-  presetScenarios, 
-  calculateProjections, 
-  userData, 
-  onSelectScenario 
+const ScenarioComparison = ({
+  presetScenarios,
+  calculateProjections,
+  userData,
+  onSelectScenario
 }) => {
-  const [selectedScenarios, setSelectedScenarios] = useState(['Conservative', 'Moderate', 'Aggressive']);
+  // Initialize with available scenarios (up to 3)
+  const [selectedScenarios, setSelectedScenarios] = useState(() => {
+    if (!presetScenarios || presetScenarios.length === 0) return [];
+    return presetScenarios.slice(0, 3).map(s => s.name);
+  });
 
   const handleScenarioToggle = (scenarioName) => {
     setSelectedScenarios(prev => {
@@ -21,12 +25,27 @@ const ScenarioComparison = ({
   };
 
   const getComparisonData = () => {
+    if (!presetScenarios || presetScenarios.length === 0) return [];
+
     return presetScenarios
       .filter(scenario => selectedScenarios.includes(scenario.name))
-      .map(scenario => ({
-        ...scenario,
-        projections: calculateProjections(scenario)
-      }))
+      .map(scenario => {
+        try {
+          const projections = calculateProjections(scenario);
+          return { ...scenario, projections };
+        } catch (error) {
+          console.error('Error calculating projections for scenario:', scenario.name, error);
+          return {
+            ...scenario,
+            projections: {
+              error: 'Calculation failed',
+              totalContributions: 0,
+              projectedValue: 0,
+              gapClosure: 0
+            }
+          };
+        }
+      })
       .filter(scenario => !scenario.projections.error); // Filter out scenarios with errors
   };
 
@@ -41,6 +60,23 @@ const ScenarioComparison = ({
 
   const comparisonData = getComparisonData();
 
+  // Validation check
+  if (!presetScenarios || presetScenarios.length === 0) {
+    return (
+      <div className="card p-6">
+        <div className="text-center py-8">
+          <Icon name="AlertCircle" size={48} className="text-warning-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            No Scenarios Available
+          </h3>
+          <p className="text-text-secondary">
+            Unable to load preset scenarios for comparison. Please try refreshing the page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Scenario Selection */}
@@ -49,7 +85,7 @@ const ScenarioComparison = ({
           Select Scenarios to Compare
         </h3>
         <p className="text-text-secondary mb-6">
-          Choose up to 3 scenarios to compare side by side. See how different approaches 
+          Choose up to 3 scenarios to compare side by side. See how different approaches
           impact your retirement gap closure.
         </p>
         

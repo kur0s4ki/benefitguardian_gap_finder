@@ -21,6 +21,8 @@ const GapCalculatorTool = () => {
     riskTolerance: 'moderate',
     name: 'Current Scenario'
   });
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   // Load calculated user data from navigation state
   const [userData, setUserData] = useState(null);
@@ -35,6 +37,28 @@ const GapCalculatorTool = () => {
       return;
     }
   }, [location.state, navigate]);
+
+  // Load saved scenarios from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('gapCalculatorScenarios');
+      if (saved) {
+        const parsedScenarios = JSON.parse(saved);
+        setSavedScenarios(parsedScenarios);
+      }
+    } catch (error) {
+      console.warn('Error loading saved scenarios:', error);
+    }
+  }, []);
+
+  // Save scenarios to sessionStorage whenever they change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('gapCalculatorScenarios', JSON.stringify(savedScenarios));
+    } catch (error) {
+      console.warn('Error saving scenarios:', error);
+    }
+  }, [savedScenarios]);
 
   if (!userData) {
     return (
@@ -77,6 +101,29 @@ const GapCalculatorTool = () => {
   ];
 
   const calculateProjections = (scenario) => {
+    // Add validation for userData and totalGap
+    if (!userData || !userData.totalGap || userData.totalGap <= 0) {
+      return {
+        error: "Invalid gap data - please complete the assessment first",
+        totalContributions: 0,
+        projectedValue: 0,
+        gapClosure: 0,
+        yearsToRetirement: 0,
+        monthlyNeeded: 0
+      };
+    }
+
+    if (!userData.currentAge || userData.currentAge <= 0) {
+      return {
+        error: "Invalid current age - please complete the assessment first",
+        totalContributions: 0,
+        projectedValue: 0,
+        gapClosure: 0,
+        yearsToRetirement: 0,
+        monthlyNeeded: 0
+      };
+    }
+
     const yearsToRetirement = scenario.targetRetirementAge - userData.currentAge;
 
     // Input validation
@@ -127,8 +174,8 @@ const GapCalculatorTool = () => {
       projectedValue = monthlyContribution * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
     }
 
-    // Remove the artificial 100% cap to show over-funding scenarios
-    const gapClosure = (projectedValue / userData.totalGap) * 100;
+    // Safe gap closure calculation with bounds checking
+    const gapClosure = Math.max(0, (projectedValue / userData.totalGap) * 100);
 
     // Correct calculation for monthly needed using Present Value of Annuity formula
     let monthlyNeeded;
@@ -154,7 +201,7 @@ const GapCalculatorTool = () => {
       totalContributions,
       projectedValue,
       inflationAdjustedValue,
-      gapClosure,
+      gapClosure: Math.round(gapClosure * 10) / 10, // Round to 1 decimal place
       yearsToRetirement,
       monthlyNeeded: Math.ceil(monthlyNeeded),
       annualRate: annualRate * 100, // Return as percentage for display
@@ -163,23 +210,48 @@ const GapCalculatorTool = () => {
     };
   };
 
-  const handleSaveScenario = () => {
-    const newScenario = {
-      ...currentScenario,
-      id: Date.now(),
-      savedAt: new Date(),
-      projections: calculateProjections(currentScenario)
-    };
-    
-    setSavedScenarios(prev => [...prev, newScenario]);
-    
-    // Show success feedback
-    const button = document.querySelector('[data-save-scenario]');
-    if (button) {
-      button.textContent = 'Saved!';
-      setTimeout(() => {
-        button.textContent = 'Save This Scenario';
-      }, 2000);
+  const handleSaveScenario = async () => {
+    setIsCalculating(true);
+    setSaveMessage('');
+
+    try {
+      // Validate scenario before saving
+      const projections = calculateProjections(currentScenario);
+      if (projections.error) {
+        setSaveMessage('Cannot save scenario: ' + projections.error);
+        return;
+      }
+
+      // Check for duplicate scenarios
+      const isDuplicate = savedScenarios.some(scenario =>
+        scenario.monthlyContribution === currentScenario.monthlyContribution &&
+        scenario.targetRetirementAge === currentScenario.targetRetirementAge &&
+        scenario.riskTolerance === currentScenario.riskTolerance
+      );
+
+      if (isDuplicate) {
+        setSaveMessage('This scenario is already saved');
+        return;
+      }
+
+      const newScenario = {
+        ...currentScenario,
+        id: Date.now(),
+        savedAt: new Date(),
+        projections
+      };
+
+      setSavedScenarios(prev => [...prev, newScenario]);
+      setSaveMessage('Scenario saved successfully!');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveMessage(''), 3000);
+
+    } catch (error) {
+      console.error('Error saving scenario:', error);
+      setSaveMessage('Failed to save scenario');
+    } finally {
+      setIsCalculating(false);
     }
   };
 
@@ -247,6 +319,21 @@ const GapCalculatorTool = () => {
 
         {/* Content Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Session Storage Warning */}
+          <div className="mb-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
+            <div className="flex items-start gap-3">
+              <Icon name="AlertTriangle" size={20} className="text-warning-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-medium text-warning-800 mb-1">
+                  Session-Only Storage
+                </div>
+                <div className="text-sm text-warning-700">
+                  Saved scenarios are stored for this session only. They will be lost if you refresh the page or close your browser.
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Gap Summary - Always Visible */}
           <div className="mb-8">
             <GapSummaryCard userData={userData} />
@@ -299,23 +386,51 @@ const GapCalculatorTool = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={handleSaveScenario}
-              data-save-scenario
-              className="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-secondary-700 transition-colors duration-200"
-            >
-              <Icon name="Bookmark" size={20} />
-              <span>Save This Scenario</span>
-            </button>
-            
-            <button
-              onClick={handleScheduleConsultation}
-              className="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-            >
-              <Icon name="Calendar" size={20} />
-              <span>Schedule Consultation</span>
-            </button>
+          <div className="mt-12 space-y-4">
+            {/* Save Message */}
+            {saveMessage && (
+              <div className={`p-3 rounded-lg text-center ${
+                saveMessage.includes('successfully') ? 'bg-success-50 text-success-700 border border-success-200' :
+                saveMessage.includes('already saved') ? 'bg-warning-50 text-warning-700 border border-warning-200' :
+                'bg-error-50 text-error-700 border border-error-200'
+              }`}>
+                <div className="flex items-center justify-center gap-2">
+                  <Icon name={
+                    saveMessage.includes('successfully') ? 'CheckCircle' :
+                    saveMessage.includes('already saved') ? 'AlertCircle' : 'XCircle'
+                  } size={16} />
+                  <span className="text-sm font-medium">{saveMessage}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={handleSaveScenario}
+                disabled={isCalculating}
+                className="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-secondary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCalculating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Bookmark" size={20} />
+                    <span>Save This Scenario</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleScheduleConsultation}
+                className="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+              >
+                <Icon name="Calendar" size={20} />
+                <span>Schedule Consultation</span>
+              </button>
+            </div>
           </div>
 
           {/* Help Section */}
