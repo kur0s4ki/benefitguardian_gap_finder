@@ -1,53 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Icon from 'components/AppIcon';
 
 const ScenarioComparison = ({
-  presetScenarios,
-  calculateProjections,
-  userData,
-  onSelectScenario
+  savedScenarios,
+  onDeleteScenario
 }) => {
-  // Initialize with available scenarios (up to 3)
-  const [selectedScenarios, setSelectedScenarios] = useState(() => {
-    if (!presetScenarios || presetScenarios.length === 0) return [];
-    return presetScenarios.slice(0, 3).map(s => s.name);
-  });
+  // Only use saved scenarios - no presets
+  const scenarios = savedScenarios || [];
 
-  const handleScenarioToggle = (scenarioName) => {
-    setSelectedScenarios(prev => {
-      if (prev.includes(scenarioName)) {
-        return prev.filter(name => name !== scenarioName);
-      } else if (prev.length < 3) {
-        return [...prev, scenarioName];
-      }
-      return prev;
-    });
-  };
-
-  const getComparisonData = () => {
-    if (!presetScenarios || presetScenarios.length === 0) return [];
-
-    return presetScenarios
-      .filter(scenario => selectedScenarios.includes(scenario.name))
-      .map(scenario => {
-        try {
-          const projections = calculateProjections(scenario);
-          return { ...scenario, projections };
-        } catch (error) {
-          console.error('Error calculating projections for scenario:', scenario.name, error);
-          return {
-            ...scenario,
-            projections: {
-              error: 'Calculation failed',
-              totalContributions: 0,
-              projectedValue: 0,
-              gapClosure: 0
-            }
-          };
-        }
-      })
-      .filter(scenario => !scenario.projections.error); // Filter out scenarios with errors
-  };
+  // All saved scenarios are automatically shown for comparison (up to 3)
+  const comparisonData = scenarios.slice(0, 3).map(scenario => ({
+    ...scenario,
+    // Use existing projections from when scenario was saved
+    projections: scenario.projections || {
+      error: 'No projection data available',
+      totalContributions: 0,
+      projectedValue: 0,
+      gapClosure: 0
+    }
+  })).filter(scenario => !scenario.projections.error);
 
   const getRiskColor = (risk) => {
     switch (risk) {
@@ -58,20 +29,26 @@ const ScenarioComparison = ({
     }
   };
 
-  const comparisonData = getComparisonData();
-
-  // Validation check
-  if (!presetScenarios || presetScenarios.length === 0) {
+  // Empty state - no saved scenarios
+  if (!scenarios || scenarios.length === 0) {
     return (
       <div className="card p-6">
         <div className="text-center py-8">
-          <Icon name="AlertCircle" size={48} className="text-warning-400 mx-auto mb-4" />
+          <Icon name="Bookmark" size={48} className="text-secondary-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-text-primary mb-2">
-            No Scenarios Available
+            No Saved Scenarios Yet
           </h3>
-          <p className="text-text-secondary">
-            Unable to load preset scenarios for comparison. Please try refreshing the page.
+          <p className="text-text-secondary mb-6">
+            Save scenarios from the Calculator tab to compare them here. You can save up to 3 scenarios for comparison.
           </p>
+          <div className="p-4 bg-accent-50 rounded-lg border border-accent-200">
+            <div className="flex items-center gap-3">
+              <Icon name="Info" size={16} className="text-accent-600" />
+              <div className="text-sm text-accent-700">
+                <strong>How it works:</strong> Adjust settings in the Calculator tab, then click "Save This Scenario" to add it here for comparison.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -79,35 +56,45 @@ const ScenarioComparison = ({
 
   return (
     <div className="space-y-6">
-      {/* Scenario Selection */}
+      {/* Saved Scenarios Header */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">
-          Select Scenarios to Compare
-        </h3>
-        <p className="text-text-secondary mb-6">
-          Choose up to 3 scenarios to compare side by side. See how different approaches
-          impact your retirement gap closure.
-        </p>
-        
-        <div className="flex flex-wrap gap-3">
-          {presetScenarios.map((scenario) => (
-            <button
-              key={scenario.name}
-              onClick={() => handleScenarioToggle(scenario.name)}
-              disabled={!selectedScenarios.includes(scenario.name) && selectedScenarios.length >= 3}
-              className={`px-4 py-2 rounded-lg border-2 font-medium transition-all duration-200 ${
-                selectedScenarios.includes(scenario.name)
-                  ? `${getRiskColor(scenario.riskTolerance)} border-current`
-                  : 'border-border text-text-secondary hover:border-primary-200 disabled:opacity-50 disabled:cursor-not-allowed'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {selectedScenarios.includes(scenario.name) && (
-                  <Icon name="Check" size={16} />
-                )}
-                <span>{scenario.name}</span>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary">
+              Your Saved Scenarios
+            </h3>
+            <p className="text-text-secondary">
+              Compare your saved retirement planning scenarios side by side
+            </p>
+          </div>
+          <div className="text-sm text-text-muted">
+            {scenarios.length} of 3 scenarios saved
+          </div>
+        </div>
+
+        {/* Saved Scenarios List */}
+        <div className="space-y-3">
+          {scenarios.map((scenario, index) => (
+            <div key={scenario.id} className="flex items-center justify-between p-4 bg-accent-50 rounded-lg border border-accent-200">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {index + 1}
+                </div>
+                <div>
+                  <div className="font-medium text-text-primary">{scenario.name}</div>
+                  <div className="text-sm text-text-secondary">
+                    ${scenario.monthlyContribution}/month • Retire at {scenario.targetRetirementAge} • {scenario.riskTolerance}
+                  </div>
+                </div>
               </div>
-            </button>
+              <button
+                onClick={() => onDeleteScenario(scenario.id)}
+                className="p-2 text-error hover:bg-error-50 rounded-md transition-colors duration-150"
+                title="Delete scenario"
+              >
+                <Icon name="Trash2" size={16} />
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -126,8 +113,9 @@ const ScenarioComparison = ({
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 font-medium text-text-secondary">Metric</th>
                   {comparisonData.map((scenario) => (
-                    <th key={scenario.name} className="text-center py-3 px-4">
+                    <th key={scenario.id || scenario.name} className="text-center py-3 px-4">
                       <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(scenario.riskTolerance)}`}>
+                        <Icon name="Bookmark" size={12} />
                         {scenario.name}
                       </div>
                     </th>
@@ -168,11 +156,12 @@ const ScenarioComparison = ({
           {/* Mobile Card View */}
           <div className="lg:hidden space-y-4">
             {comparisonData.map((scenario) => (
-              <div key={scenario.name} className="border border-border rounded-lg p-4">
+              <div key={scenario.id || scenario.name} className="border border-border rounded-lg p-4">
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-4 ${getRiskColor(scenario.riskTolerance)}`}>
+                  <Icon name="Bookmark" size={12} />
                   {scenario.name}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <div className="text-text-secondary">Monthly</div>
@@ -191,29 +180,11 @@ const ScenarioComparison = ({
                     <div className="font-semibold text-success">{scenario.projections.gapClosure.toFixed(1)}%</div>
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => onSelectScenario(scenario)}
-                  className="w-full mt-4 btn-primary py-2 rounded-md font-medium hover:bg-primary-700 transition-colors duration-200"
-                >
-                  Select This Scenario
-                </button>
               </div>
             ))}
           </div>
 
-          {/* Action Buttons */}
-          <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            {comparisonData.map((scenario) => (
-              <button
-                key={scenario.name}
-                onClick={() => onSelectScenario(scenario)}
-                className="btn-secondary px-4 py-2 rounded-md font-medium hover:bg-secondary-700 transition-colors duration-200"
-              >
-                Use {scenario.name}
-              </button>
-            ))}
-          </div>
+
         </div>
       )}
 
@@ -226,9 +197,12 @@ const ScenarioComparison = ({
           
           <div className="space-y-4">
             {comparisonData.map((scenario) => (
-              <div key={scenario.name} className="space-y-2">
+              <div key={scenario.id || scenario.name} className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-text-primary">{scenario.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Icon name="Bookmark" size={14} className="text-accent-600" />
+                    <span className="font-medium text-text-primary">{scenario.name}</span>
+                  </div>
                   <span className="text-sm font-semibold text-primary">
                     {scenario.projections.gapClosure.toFixed(1)}%
                   </span>

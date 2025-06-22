@@ -8,7 +8,6 @@ import Icon from 'components/AppIcon';
 import GapSummaryCard from './components/GapSummaryCard';
 import InteractiveCalculator from './components/InteractiveCalculator';
 import ScenarioComparison from './components/ScenarioComparison';
-import SavedScenarios from './components/SavedScenarios';
 
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
@@ -38,10 +37,10 @@ const GapCalculatorTool = () => {
     }
   }, [location.state, navigate]);
 
-  // Load saved scenarios from sessionStorage on mount
+  // Load saved scenarios from localStorage on mount
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('gapCalculatorScenarios');
+      const saved = localStorage.getItem('gapCalculatorScenarios');
       if (saved) {
         const parsedScenarios = JSON.parse(saved);
         setSavedScenarios(parsedScenarios);
@@ -51,10 +50,10 @@ const GapCalculatorTool = () => {
     }
   }, []);
 
-  // Save scenarios to sessionStorage whenever they change
+  // Save scenarios to localStorage whenever they change
   useEffect(() => {
     try {
-      sessionStorage.setItem('gapCalculatorScenarios', JSON.stringify(savedScenarios));
+      localStorage.setItem('gapCalculatorScenarios', JSON.stringify(savedScenarios));
     } catch (error) {
       console.warn('Error saving scenarios:', error);
     }
@@ -78,6 +77,7 @@ const GapCalculatorTool = () => {
 
   const presetScenarios = [
     {
+      id: 'conservative',
       name: 'Conservative',
       monthlyContribution: 650,
       targetRetirementAge: 67,
@@ -85,6 +85,7 @@ const GapCalculatorTool = () => {
       description: 'Lower risk, steady growth approach'
     },
     {
+      id: 'moderate',
       name: 'Moderate',
       monthlyContribution: 600,
       targetRetirementAge: 65,
@@ -92,6 +93,7 @@ const GapCalculatorTool = () => {
       description: 'Balanced risk and growth strategy'
     },
     {
+      id: 'aggressive',
       name: 'Aggressive',
       monthlyContribution: 650,
       targetRetirementAge: 62,
@@ -268,8 +270,7 @@ const GapCalculatorTool = () => {
 
   const tabs = [
     { id: 'calculator', label: 'Calculator', icon: 'Calculator' },
-    { id: 'comparison', label: 'Compare', icon: 'BarChart3' },
-    { id: 'saved', label: 'Saved', icon: 'Bookmark' }
+    { id: 'comparison', label: 'Compare', icon: 'BarChart3' }
   ];
 
   return (
@@ -319,16 +320,16 @@ const GapCalculatorTool = () => {
 
         {/* Content Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Session Storage Warning */}
-          <div className="mb-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
+          {/* Scenario Info */}
+          <div className="mb-6 p-4 bg-accent-50 rounded-lg border border-accent-200">
             <div className="flex items-start gap-3">
-              <Icon name="AlertTriangle" size={20} className="text-warning-600 flex-shrink-0 mt-0.5" />
+              <Icon name="Info" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium text-warning-800 mb-1">
-                  Session-Only Storage
+                <div className="font-medium text-accent-800 mb-1">
+                  Scenario Comparison ({savedScenarios.length}/3 saved)
                 </div>
-                <div className="text-sm text-warning-700">
-                  Saved scenarios are stored for this session only. They will be lost if you refresh the page or close your browser.
+                <div className="text-sm text-accent-700">
+                  Save up to 3 scenarios from the Calculator tab to compare them side-by-side in the Compare tab. Scenarios are stored locally and persist between sessions.
                 </div>
               </div>
             </div>
@@ -369,17 +370,7 @@ const GapCalculatorTool = () => {
 
             {activeTab === 'comparison' && (
               <ScenarioComparison
-                presetScenarios={presetScenarios}
-                calculateProjections={calculateProjections}
-                userData={userData}
-                onSelectScenario={setCurrentScenario}
-              />
-            )}
-
-            {activeTab === 'saved' && (
-              <SavedScenarios
-                scenarios={savedScenarios}
-                onLoadScenario={setCurrentScenario}
+                savedScenarios={savedScenarios}
                 onDeleteScenario={(id) => setSavedScenarios(prev => prev.filter(s => s.id !== id))}
               />
             )}
@@ -407,7 +398,7 @@ const GapCalculatorTool = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={handleSaveScenario}
-                disabled={isCalculating}
+                disabled={isCalculating || savedScenarios.length >= 3}
                 className="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-secondary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCalculating ? (
@@ -415,10 +406,15 @@ const GapCalculatorTool = () => {
                     <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
                     <span>Saving...</span>
                   </>
+                ) : savedScenarios.length >= 3 ? (
+                  <>
+                    <Icon name="Bookmark" size={20} />
+                    <span>Maximum Scenarios Saved (3/3)</span>
+                  </>
                 ) : (
                   <>
                     <Icon name="Bookmark" size={20} />
-                    <span>Save This Scenario</span>
+                    <span>Save This Scenario ({savedScenarios.length}/3)</span>
                   </>
                 )}
               </button>
