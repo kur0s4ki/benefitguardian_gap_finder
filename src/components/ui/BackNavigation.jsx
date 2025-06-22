@@ -7,7 +7,7 @@ const BackNavigation = ({
   preserveData = true, 
   customLabel,
   className = "",
-  variant = "default" // "default", "minimal", "inline"
+  variant = "default" // "default", "minimal", "inline "
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
