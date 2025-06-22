@@ -200,18 +200,19 @@ If you're unsure, we'll use government employee averages to provide accurate cal
             </div>
           </>
         ) : (
-          /* Unknown State Display */
-          <div className="mb-6 p-6 bg-success-50 rounded-lg border border-success-200 text-center">
-            <Icon name="Calculator" size={48} className="text-success mx-auto mb-4" />
-            <h4 className="font-semibold text-success-600 mb-2">We'll Calculate For You</h4>
-            <p className="text-text-secondary">
-              Based on your profession and years of service, we'll use industry-standard pension calculations 
-              to provide accurate retirement projections.
-            </p>
-            <div className="mt-4 p-3 bg-white rounded-lg">
-              <p className="text-sm text-text-secondary">
-                Typical range for your profession: {context.averages.low} - {context.averages.high}
-              </p>
+          /* Unknown State Display - Compact Version */
+          <div className="mb-6 p-4 bg-success-50 rounded-lg border border-success-200">
+            <div className="flex items-center gap-3">
+              <Icon name="Calculator" size={24} className="text-success flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-success-600 mb-1">We'll Calculate For You</h4>
+                <p className="text-sm text-text-secondary">
+                  Using industry-standard calculations based on your profession and years of service.
+                </p>
+                <p className="text-xs text-text-secondary mt-1">
+                  Typical range: {context.averages.low} - {context.averages.high}
+                </p>
+              </div>
             </div>
           </div>
         )}

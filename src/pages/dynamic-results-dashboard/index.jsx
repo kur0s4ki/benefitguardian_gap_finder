@@ -126,10 +126,48 @@ const DynamicResultsDashboard = () => {
     });
   };
 
-  const handleEmailReport = () => {
+  const handleEmailReport = async () => {
     // HubSpot integration would go here
     console.log('Email report requested');
-    navigate('/report-delivery-confirmation');
+
+    // Transform calculated results to the format expected by report delivery confirmation
+    const transformedUserData = {
+      profession: calculatedResults.profession,
+      yearsOfService: calculatedResults.yearsOfService,
+      currentAge: calculatedResults.currentAge || 45,
+      state: calculatedResults.state,
+      riskScore: calculatedResults.riskScore,
+      riskColor: calculatedResults.riskScore >= 70 ? 'red' :
+                 calculatedResults.riskScore >= 40 ? 'gold' : 'green',
+      gaps: {
+        pension: {
+          amount: calculatedResults.pensionGap * 240, // Convert monthly to 20-year total
+          description: `Monthly pension shortfall: $${calculatedResults.pensionGap}/month`
+        },
+        tax: {
+          amount: calculatedResults.taxTorpedo,
+          description: `Tax torpedo impact on retirement withdrawals`
+        },
+        survivor: {
+          amount: calculatedResults.survivorGap * 240, // Convert monthly to 20-year total
+          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
+        }
+      }
+    };
+
+    const projections = {
+      monthlyNeeded: Math.round((calculatedResults.pensionGap + calculatedResults.survivorGap) * 0.8) || 500
+    };
+
+    // Small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    navigate('/report-delivery-confirmation', {
+      state: {
+        userData: transformedUserData,
+        projections: projections
+      }
+    });
   };
 
   const handleBookAudit = () => {

@@ -8,6 +8,7 @@ import ReportPreview from './components/ReportPreview';
 import NextStepsSection from './components/NextStepsSection';
 import FAQSection from './components/FAQSection';
 import TestimonialsSection from './components/TestimonialsSection';
+import DeliveryInfoModal from './components/DeliveryInfoModal';
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const ReportDeliveryConfirmation = () => {
   const [profession, setProfession] = useState('teacher');
   const [reportData, setReportData] = useState(null);
   const [calculatedResults, setCalculatedResults] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
 
   useEffect(() => {
     // Load data from navigation state
@@ -26,7 +29,7 @@ const ReportDeliveryConfirmation = () => {
 
         setCalculatedResults(userData);
         setProfession(userData.profession);
-        setUserEmail("user@email.com"); // Default email
+        // Don't set default email - user will enter it in modal
 
         // Create report highlights from navigation data
         const reportHighlights = {
@@ -102,7 +105,7 @@ const ReportDeliveryConfirmation = () => {
 
   const handleReferColleague = () => {
     const referralText = `Hi! I just used this free retirement gap analysis tool designed specifically for ${profession}s. It revealed some eye-opening insights about my retirement planning. You might find it helpful too: ${window.location.origin}`;
-    
+
     if (navigator.share) {
       navigator.share({
         title: 'Free Retirement Analysis for Public Service Professionals',
@@ -112,6 +115,20 @@ const ReportDeliveryConfirmation = () => {
       navigator.clipboard.writeText(referralText);
       alert('Referral message copied to clipboard!');
     }
+  };
+
+  const handleSendReport = () => {
+    setShowModal(true);
+  };
+
+  const handleModalSubmit = (email) => {
+    setUserEmail(email);
+    setReportSent(true);
+    setShowModal(false);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
   };
 
   const getProfessionTheme = () => {
@@ -127,33 +144,56 @@ const ReportDeliveryConfirmation = () => {
   const theme = getProfessionTheme();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <ProgressHeader currentStep={6} totalSteps={6} profession={profession} />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Success Animation Section */}
+
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {/* Header Section */}
         <div className="text-center mb-8">
-          <SuccessAnimation profession={profession} />
-          
-          <div className="mt-6">
-            <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
-              Your Personalized Retirement Gap Report is on its way!
-            </h1>
-            <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
-              <Icon name="Mail" size={20} className="text-primary" />
-              <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
+          {reportSent ? (
+            <>
+              <SuccessAnimation profession={profession} />
+              <div className="mt-6">
+                <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
+                  Your Personalized Retirement Gap Report is on its way!
+                </h1>
+                <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
+                  <Icon name="Mail" size={20} className="text-primary" />
+                  <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
+                </div>
+                <p className="text-text-secondary">
+                  Check your inbox (and spam folder) in the next few minutes
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="FileText" size={40} className="text-primary" />
+              </div>
+              <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
+                Your Retirement Gap Analysis is Ready!
+              </h1>
+              <p className="text-lg text-text-secondary mb-8">
+                Get your personalized report with detailed insights and recommendations tailored specifically for {profession}s.
+              </p>
+              <button
+                onClick={handleSendReport}
+                className="btn-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 mx-auto hover:bg-primary-700 transition-colors duration-200"
+              >
+                <Icon name="Mail" size={24} />
+                <span>Send My Report</span>
+              </button>
             </div>
-            <p className="text-text-secondary">
-              Check your inbox (and spam folder) in the next few minutes
-            </p>
-          </div>
+          )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Report Preview */}
-            <ReportPreview reportData={reportData} profession={profession} />
+        {reportSent && (
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Report Preview */}
+              <ReportPreview reportData={reportData} profession={profession} />
 
             {/* What's Included */}
             <div className="card p-6">
@@ -247,44 +287,53 @@ const ReportDeliveryConfirmation = () => {
               <TestimonialsSection profession={profession} />
             </div>
           </div>
-        </div>
 
-        {/* Mobile Testimonials */}
-        <div className="lg:hidden mt-8">
-          <TestimonialsSection profession={profession} />
-        </div>
+          {/* Mobile Testimonials */}
+          <div className="lg:hidden mt-8">
+            <TestimonialsSection profession={profession} />
+          </div>
 
-        {/* Bottom CTA */}
-        <div className={`mt-12 rounded-2xl p-8 text-center ${theme.bg}`}>
-          <div className="max-w-2xl mx-auto">
-            <div className="text-4xl mb-4">{theme.emoji}</div>
-            <h2 className="text-2xl font-bold text-primary mb-4">
-              Ready to Secure Your Retirement?
-            </h2>
-            <p className="text-text-secondary mb-6">
-              Don't let retirement gaps catch you off guard. Take action now to protect your financial future.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={handleBookAudit}
-                className="btn-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-              >
-                <Icon name="Calendar" size={18} />
-                Schedule Your Audit
-              </button>
-              <button
-                onClick={handleShareResults}
-                className="border border-primary text-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors duration-200"
-              >
-                <Icon name="Share2" size={18} />
-                Share Results
-              </button>
+          {/* Bottom CTA - Spans all 3 columns */}
+          <div className={`lg:col-span-3 mt-12 rounded-2xl p-8 text-center ${theme.bg}`}>
+            <div className="max-w-2xl mx-auto">
+              <div className="text-4xl mb-4">{theme.emoji}</div>
+              <h2 className="text-2xl font-bold text-primary mb-4">
+                Ready to Secure Your Retirement?
+              </h2>
+              <p className="text-text-secondary mb-6">
+                Don't let retirement gaps catch you off guard. Take action now to protect your financial future.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={handleBookAudit}
+                  className="btn-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+                >
+                  <Icon name="Calendar" size={18} />
+                  Schedule Your Audit
+                </button>
+                <button
+                  onClick={handleShareResults}
+                  className="border border-primary text-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors duration-200"
+                >
+                  <Icon name="Share2" size={18} />
+                  Share Results
+                </button>
+              </div>
             </div>
           </div>
         </div>
+        )}
       </main>
 
       <ConversionFooter />
+
+      {/* Delivery Info Modal */}
+      <DeliveryInfoModal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        onSubmit={handleModalSubmit}
+        profession={profession}
+      />
     </div>
   );
 };
