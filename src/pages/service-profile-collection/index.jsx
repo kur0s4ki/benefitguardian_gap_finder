@@ -77,10 +77,21 @@ const ServiceProfileCollection = () => {
 
   const handleContinue = () => {
     if (isValid) {
+      // Save service profile data to session storage
+      const serviceProfileData = {
+        profession,
+        yearsOfService: formData.yearsOfService,
+        pensionEstimate: formData.pensionUnknown ? "I don't know" : formData.pensionEstimate,
+        pensionUnknown: formData.pensionUnknown,
+        state: formData.selectedState
+      };
+
+      sessionStorage.setItem('serviceProfileData', JSON.stringify(serviceProfileData));
+
       navigate('/risk-assessment-questionnaire', {
         state: {
           profession,
-          serviceProfile: formData
+          serviceProfile: serviceProfileData
         }
       });
     }

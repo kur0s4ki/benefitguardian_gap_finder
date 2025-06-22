@@ -16,7 +16,7 @@ const RiskAssessmentQuestionnaire = () => {
   // Get profession from previous step or default
   const [profession, setProfession] = useState('teacher');
   const [formData, setFormData] = useState({
-    inflationProtection: null,
+    inflationProtection: null, // This maps to 'cola' in client spec
     survivorPlanning: null,
     survivorPlanningDetails: '',
     retirementAge: 65,

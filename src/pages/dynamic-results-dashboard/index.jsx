@@ -7,35 +7,76 @@ import RiskGauge from './components/RiskGauge';
 import GapAnalysisCard from './components/GapAnalysisCard';
 import DetailedBreakdown from './components/DetailedBreakdown';
 import CallToActionSection from './components/CallToActionSection';
+import { calculateBenefitGaps, validateUserData } from 'utils/calculationEngine';
 
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
-  const [selectedProfession, setSelectedProfession] = useState('teacher');
+  const [userData, setUserData] = useState(null);
+  const [calculatedResults, setCalculatedResults] = useState(null);
+  const [calculationError, setCalculationError] = useState(null);
 
-  // Mock user data - would come from previous steps
-  const mockUserData = {
-    profession: 'teacher',
-    yearsOfService: 15,
-    monthlyPension: 2800,
-    state: 'California',
-    retirementAge: 62,
-    hasInflationProtection: false,
-    hasSurvivorBenefits: true,
-    currentAssets: 125000,
-    riskScore: 72,
-    gaps: {
-      pensionGap: 185000,
-      taxTorpedoRisk: 95000,
-      survivorGap: 220000
-    },
-    monthlyContributions: {
-      pensionGap: 485,
-      taxTorpedo: 245,
-      survivorGap: 575
+  // Load user data from session storage and calculate results
+  useEffect(() => {
+    try {
+      // Get data from previous steps
+      const completeData = sessionStorage.getItem('completeAssessmentData');
+      const serviceProfile = sessionStorage.getItem('serviceProfileData');
+      const riskAssessment = sessionStorage.getItem('riskAssessmentData');
+      const selectedProfession = sessionStorage.getItem('selectedProfession');
+
+      let combinedUserData = {};
+
+      if (completeData) {
+        combinedUserData = JSON.parse(completeData);
+      } else {
+        // Fallback: combine individual pieces
+        if (selectedProfession) {
+          combinedUserData.profession = JSON.parse(selectedProfession);
+        }
+        if (serviceProfile) {
+          const profile = JSON.parse(serviceProfile);
+          combinedUserData = { ...combinedUserData, ...profile };
+        }
+        if (riskAssessment) {
+          const assessment = JSON.parse(riskAssessment);
+          combinedUserData = { ...combinedUserData, ...assessment };
+        }
+      }
+
+      // If no data found, use fallback mock data for development
+      if (!combinedUserData.profession) {
+        combinedUserData = {
+          profession: 'teacher',
+          yearsOfService: 15,
+          pensionEstimate: 2800,
+          state: 'CA',
+          currentAge: 45,
+          retirementAge: 62,
+          inflationProtection: false,
+          survivorPlanning: false,
+          currentSavings: 125000,
+          financialFears: ['pension-cuts', 'healthcare-retirement']
+        };
+      }
+
+      // Validate and calculate
+      const validation = validateUserData(combinedUserData);
+      if (!validation.isValid) {
+        setCalculationError(`Data validation failed: ${validation.errors.join(', ')}`);
+        return;
+      }
+
+      const results = calculateBenefitGaps(combinedUserData);
+      setUserData(combinedUserData);
+      setCalculatedResults(results);
+
+    } catch (error) {
+      console.error('Error calculating results:', error);
+      setCalculationError(error.message);
     }
-  };
+  }, []);
 
   const professionThemes = {
     teacher: {
@@ -64,17 +105,19 @@ const DynamicResultsDashboard = () => {
     }
   };
 
-  const currentTheme = professionThemes[mockUserData.profession] || professionThemes.teacher;
+  const currentTheme = professionThemes[calculatedResults?.profession] || professionThemes.teacher;
 
+  // Loading effect after calculation is complete
   useEffect(() => {
-    // Simulate loading and data processing
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      setTimeout(() => setShowResults(true), 300);
-    }, 2000);
+    if (calculatedResults || calculationError) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        setTimeout(() => setShowResults(true), 300);
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [calculatedResults, calculationError]);
 
   const getRiskLevel = (score) => {
     if (score < 40) return { level: 'Low', color: 'text-success', bgColor: 'bg-success-50' };
@@ -82,7 +125,7 @@ const DynamicResultsDashboard = () => {
     return { level: 'High', color: 'text-error', bgColor: 'bg-error-50' };
   };
 
-  const riskLevel = getRiskLevel(mockUserData.riskScore);
+  const riskLevel = calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' };
 
   const handleNavigateToCalculator = () => {
     navigate('/gap-calculator-tool');
@@ -103,7 +146,7 @@ const DynamicResultsDashboard = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <ProgressHeader currentStep={4} profession={mockUserData.profession} />
+        <ProgressHeader currentStep={4} profession={calculatedResults?.profession || 'teacher'} />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -111,8 +154,59 @@ const DynamicResultsDashboard = () => {
               Analyzing Your Retirement Profile
             </h2>
             <p className="text-text-secondary">
-              Calculating personalized gap analysis...
+              Calculating personalized gap analysis using BenefitGuardian™ engine...
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (calculationError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ProgressHeader currentStep={4} profession="teacher" />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 bg-error-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-error text-2xl">⚠️</span>
+            </div>
+            <h2 className="text-xl font-semibold text-text-primary mb-2">
+              Calculation Error
+            </h2>
+            <p className="text-text-secondary mb-4">
+              {calculationError}
+            </p>
+            <button
+              onClick={() => navigate('/service-profile-collection')}
+              className="btn-primary px-6 py-2 rounded-lg"
+            >
+              Return to Profile Setup
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!calculatedResults) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ProgressHeader currentStep={4} profession="teacher" />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-text-primary mb-2">
+              No Data Available
+            </h2>
+            <p className="text-text-secondary mb-4">
+              Please complete the assessment to see your results.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="btn-primary px-6 py-2 rounded-lg"
+            >
+              Start Assessment
+            </button>
           </div>
         </div>
       </div>
@@ -121,8 +215,8 @@ const DynamicResultsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <ProgressHeader currentStep={4} profession={mockUserData.profession} />
-      
+      <ProgressHeader currentStep={4} profession={calculatedResults.profession} />
+
       <main className={`bg-gradient-to-br ${currentTheme.bgGradient} min-h-screen`}>
         {/* Hero Section */}
         <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
@@ -133,24 +227,37 @@ const DynamicResultsDashboard = () => {
                 {currentTheme.title} Risk Analysis
               </span>
             </div>
-            
+
             <h1 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4">
               Your Personalized Retirement Gap Analysis
             </h1>
-            
+
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Based on your {mockUserData.yearsOfService} years of service and retirement planning profile, 
+              Based on your {calculatedResults.yearsOfService} years of service and retirement planning profile,
               we've identified critical gaps that could impact your financial security.
             </p>
+
+            {/* Hidden Benefit Opportunity Highlight */}
+            <div className="mt-6 p-4 bg-accent-50 rounded-lg border border-accent-200 max-w-md mx-auto">
+              <div className="text-sm font-medium text-accent-800 mb-1">
+                💡 Hidden Benefit Opportunity
+              </div>
+              <div className="text-2xl font-bold text-accent-900">
+                ${calculatedResults.hiddenBenefitOpportunity.toLocaleString()}/month
+              </div>
+              <div className="text-xs text-accent-700">
+                Potential additional monthly benefit based on your profile
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Risk Gauge Section */}
         <div className="px-4 sm:px-6 lg:px-8 pb-8">
           <div className="max-w-4xl mx-auto">
-            <RiskGauge 
-              score={mockUserData.riskScore}
-              profession={mockUserData.profession}
+            <RiskGauge
+              score={calculatedResults.riskScore}
+              profession={calculatedResults.profession}
               showResults={showResults}
             />
           </div>
@@ -162,35 +269,35 @@ const DynamicResultsDashboard = () => {
             <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
               Critical Retirement Gaps Identified
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <GapAnalysisCard
-                title="Pension Shortfall"
-                amount={mockUserData.gaps.pensionGap}
+                title="Pension Gap"
+                amount={calculatedResults.pensionGap}
                 icon="TrendingDown"
                 emoji="📉"
-                description="Projected gap between your pension and retirement needs"
-                riskLevel="high"
+                description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
+                riskLevel={calculatedResults.riskComponents.pensionRisk > 60 ? "high" : "moderate"}
                 delay={0}
               />
-              
+
               <GapAnalysisCard
                 title="Tax Torpedo Risk"
-                amount={mockUserData.gaps.taxTorpedoRisk}
+                amount={calculatedResults.taxTorpedo}
                 icon="Zap"
                 emoji="💥"
-                description="Potential tax impact on your retirement income"
-                riskLevel="moderate"
+                description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                riskLevel={calculatedResults.riskComponents.taxRisk > 50 ? "high" : "moderate"}
                 delay={200}
               />
-              
+
               <GapAnalysisCard
-                title="Survivor Protection"
-                amount={mockUserData.gaps.survivorGap}
+                title="Survivor Protection Gap"
+                amount={calculatedResults.survivorGap}
                 icon="Heart"
                 emoji="❤️‍🩹"
-                description="Income protection gap for your loved ones"
-                riskLevel="high"
+                description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
+                riskLevel={calculatedResults.riskComponents.survivorRisk > 60 ? "high" : "moderate"}
                 delay={400}
               />
             </div>
@@ -200,8 +307,8 @@ const DynamicResultsDashboard = () => {
         {/* Detailed Breakdown */}
         <div className="px-4 sm:px-6 lg:px-8 pb-8">
           <div className="max-w-4xl mx-auto">
-            <DetailedBreakdown 
-              userData={mockUserData}
+            <DetailedBreakdown
+              userData={calculatedResults}
               onNavigateToCalculator={handleNavigateToCalculator}
             />
           </div>
@@ -213,7 +320,7 @@ const DynamicResultsDashboard = () => {
             <CallToActionSection
               onEmailReport={handleEmailReport}
               onBookAudit={handleBookAudit}
-              profession={mockUserData.profession}
+              profession={calculatedResults.profession}
             />
           </div>
         </div>

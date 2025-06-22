@@ -9,6 +9,7 @@ import GapSummaryCard from './components/GapSummaryCard';
 import InteractiveCalculator from './components/InteractiveCalculator';
 import ScenarioComparison from './components/ScenarioComparison';
 import SavedScenarios from './components/SavedScenarios';
+import { calculateBenefitGaps } from 'utils/calculationEngine';
 
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
@@ -21,33 +22,94 @@ const GapCalculatorTool = () => {
     name: 'Current Scenario'
   });
 
-  // Mock user data from previous steps
-  const userData = {
-    profession: 'teacher',
-    yearsOfService: 15,
-    currentAge: 45,
-    state: 'California',
-    monthlyPension: 2800,
-    gaps: {
-      pension: {
-        amount: 125000,
-        risk: 'high',
-        description: 'Projected pension shortfall based on inflation and longevity'
-      },
-      tax: {
-        amount: 85000,
-        risk: 'medium',
-        description: 'Tax torpedo impact on retirement withdrawals'
-      },
-      survivor: {
-        amount: 95000,
-        risk: 'high',
-        description: 'Survivor benefit protection gap for spouse'
+  // Load calculated user data from previous steps
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    // Try to get calculated results from session storage
+    const completeData = sessionStorage.getItem('completeAssessmentData');
+    const calculatedResults = sessionStorage.getItem('calculatedResults');
+
+    let loadedData = null;
+
+    if (calculatedResults) {
+      loadedData = JSON.parse(calculatedResults);
+    } else if (completeData) {
+      // Recalculate if we have the raw data
+      try {
+        const rawData = JSON.parse(completeData);
+        loadedData = calculateBenefitGaps(rawData);
+        sessionStorage.setItem('calculatedResults', JSON.stringify(loadedData));
+      } catch (error) {
+        console.error('Error recalculating data:', error);
       }
-    },
-    totalGap: 305000,
-    riskScore: 78
-  };
+    }
+
+    // Fallback to mock data for development
+    if (!loadedData) {
+      loadedData = {
+        profession: 'teacher',
+        yearsOfService: 15,
+        currentAge: 45,
+        state: 'CA',
+        currentPension: 2800,
+        pensionGap: 1260, // Monthly gap
+        taxTorpedo: 37500, // Lump sum
+        survivorGap: 1120, // Monthly gap
+        monthlyGap: 2536, // Combined monthly gap
+        totalGap: 305000, // Approximate total gap for 20 years
+        riskScore: 78,
+        riskColor: 'red'
+      };
+    }
+
+    // Transform data for compatibility with existing calculator
+    const transformedData = {
+      profession: loadedData.profession,
+      yearsOfService: loadedData.yearsOfService,
+      currentAge: loadedData.currentAge || 45,
+      state: loadedData.state,
+      monthlyPension: loadedData.currentPension,
+      gaps: {
+        pension: {
+          amount: loadedData.pensionGap * 240, // Convert monthly to 20-year total
+          risk: loadedData.riskComponents?.pensionRisk > 60 ? 'high' : 'medium',
+          description: `Monthly pension shortfall: $${loadedData.pensionGap}/month`
+        },
+        tax: {
+          amount: loadedData.taxTorpedo,
+          risk: loadedData.riskComponents?.taxRisk > 50 ? 'high' : 'medium',
+          description: `Tax torpedo impact on retirement withdrawals`
+        },
+        survivor: {
+          amount: loadedData.survivorGap * 240, // Convert monthly to 20-year total
+          risk: loadedData.riskComponents?.survivorRisk > 60 ? 'high' : 'medium',
+          description: `Monthly survivor benefit gap: $${loadedData.survivorGap}/month`
+        }
+      },
+      totalGap: (loadedData.pensionGap + loadedData.survivorGap) * 240 + loadedData.taxTorpedo,
+      riskScore: loadedData.riskScore,
+      hiddenBenefitOpportunity: loadedData.hiddenBenefitOpportunity
+    };
+
+    setUserData(transformedData);
+  }, []);
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">
+            Loading Your Data
+          </h2>
+          <p className="text-text-secondary">
+            Preparing your personalized calculator...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const presetScenarios = [
     {
