@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import BackNavigation from 'components/ui/BackNavigation';
 import ResultsNavigation from 'components/ui/ResultsNavigation';
@@ -9,10 +9,10 @@ import GapSummaryCard from './components/GapSummaryCard';
 import InteractiveCalculator from './components/InteractiveCalculator';
 import ScenarioComparison from './components/ScenarioComparison';
 import SavedScenarios from './components/SavedScenarios';
-import { calculateBenefitGaps } from 'utils/calculationEngine';
 
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('calculator');
   const [savedScenarios, setSavedScenarios] = useState([]);
   const [currentScenario, setCurrentScenario] = useState({
@@ -22,66 +22,19 @@ const GapCalculatorTool = () => {
     name: 'Current Scenario'
   });
 
-  // Load calculated user data from previous steps
+  // Load calculated user data from navigation state
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    // Try to get calculated results from session storage
-    const completeData = sessionStorage.getItem('completeAssessmentData');
-    const calculatedResults = sessionStorage.getItem('calculatedResults');
-
-    let loadedData = null;
-
-    if (calculatedResults) {
-      loadedData = JSON.parse(calculatedResults);
-    } else if (completeData) {
-      // Recalculate if we have the raw data
-      try {
-        const rawData = JSON.parse(completeData);
-        loadedData = calculateBenefitGaps(rawData);
-        sessionStorage.setItem('calculatedResults', JSON.stringify(loadedData));
-      } catch (error) {
-        console.error('Error recalculating data:', error);
-      }
-    }
-
-    // If no data found, redirect to assessment
-    if (!loadedData) {
+    // Check if we have data from navigation state (from results dashboard)
+    if (location.state?.userData) {
+      setUserData(location.state.userData);
+    } else {
+      // If no navigation state, redirect to assessment
       navigate('/dynamic-results-dashboard');
       return;
     }
-
-    // Transform data for compatibility with existing calculator
-    const transformedData = {
-      profession: loadedData.profession,
-      yearsOfService: loadedData.yearsOfService,
-      currentAge: loadedData.currentAge || 45,
-      state: loadedData.state,
-      monthlyPension: loadedData.currentPension,
-      gaps: {
-        pension: {
-          amount: loadedData.pensionGap * 240, // Convert monthly to 20-year total
-          risk: loadedData.riskComponents?.pensionRisk > 60 ? 'high' : 'medium',
-          description: `Monthly pension shortfall: $${loadedData.pensionGap}/month`
-        },
-        tax: {
-          amount: loadedData.taxTorpedo,
-          risk: loadedData.riskComponents?.taxRisk > 50 ? 'high' : 'medium',
-          description: `Tax torpedo impact on retirement withdrawals`
-        },
-        survivor: {
-          amount: loadedData.survivorGap * 240, // Convert monthly to 20-year total
-          risk: loadedData.riskComponents?.survivorRisk > 60 ? 'high' : 'medium',
-          description: `Monthly survivor benefit gap: $${loadedData.survivorGap}/month`
-        }
-      },
-      totalGap: (loadedData.pensionGap + loadedData.survivorGap) * 240 + loadedData.taxTorpedo,
-      riskScore: loadedData.riskScore,
-      hiddenBenefitOpportunity: loadedData.hiddenBenefitOpportunity
-    };
-
-    setUserData(transformedData);
-  }, []);
+  }, [location.state, navigate]);
 
   if (!userData) {
     return (
@@ -231,14 +184,14 @@ const GapCalculatorTool = () => {
   };
 
   const handleScheduleConsultation = () => {
-    // Store scenario data for consultation
-    sessionStorage.setItem('consultationData', JSON.stringify({
-      userData,
-      currentScenario,
-      projections: calculateProjections(currentScenario)
-    }));
-    
-    navigate('/report-delivery-confirmation');
+    // Navigate with scenario data
+    navigate('/report-delivery-confirmation', {
+      state: {
+        userData,
+        currentScenario,
+        projections: calculateProjections(currentScenario)
+      }
+    });
   };
 
   const tabs = [

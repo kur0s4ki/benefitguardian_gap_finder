@@ -1,114 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import ConversionFooter from 'components/ui/ConversionFooter';
 import Icon from 'components/AppIcon';
 import SuccessAnimation from './components/SuccessAnimation';
 import ReportPreview from './components/ReportPreview';
 import NextStepsSection from './components/NextStepsSection';
-import { calculateBenefitGaps } from 'utils/calculationEngine';
 import FAQSection from './components/FAQSection';
 import TestimonialsSection from './components/TestimonialsSection';
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userEmail, setUserEmail] = useState('');
   const [profession, setProfession] = useState('teacher');
   const [reportData, setReportData] = useState(null);
   const [calculatedResults, setCalculatedResults] = useState(null);
 
   useEffect(() => {
-    // Load real calculated data from session storage
+    // Load data from navigation state
     try {
-      const completeData = sessionStorage.getItem('completeAssessmentData');
-      const calculatedResults = sessionStorage.getItem('calculatedResults');
-      const emailData = sessionStorage.getItem('userEmail');
+      if (location.state?.userData && location.state?.projections) {
+        const userData = location.state.userData;
+        const projections = location.state.projections;
 
-      let loadedData = null;
+        setCalculatedResults(userData);
+        setProfession(userData.profession);
+        setUserEmail("user@email.com"); // Default email
 
-      if (calculatedResults) {
-        loadedData = JSON.parse(calculatedResults);
-      } else if (completeData) {
-        // Recalculate if we have the raw data
-        const rawData = JSON.parse(completeData);
-        loadedData = calculateBenefitGaps(rawData);
-      }
-
-      // Fallback to mock data for development
-      if (!loadedData) {
-        loadedData = {
-          profession: 'teacher',
-          yearsOfService: 15,
-          state: 'CA',
-          riskScore: 72,
-          riskColor: 'red',
-          pensionGap: 1440,
-          taxTorpedo: 37500,
-          survivorGap: 1280,
-          monthlyGap: 2876,
-          currentPension: 2800,
-          otherSavings: 125000
+        // Create report highlights from navigation data
+        const reportHighlights = {
+          riskScore: userData.riskScore || 72,
+          riskLevel: userData.riskColor === 'red' ? "High Risk" :
+                    userData.riskColor === 'gold' ? "Moderate Risk" : "Low Risk",
+          topGaps: [
+            {
+              type: "Pension Gap",
+              amount: userData.gaps?.pension?.amount || 0,
+              icon: "TrendingDown",
+              description: userData.gaps?.pension?.description || "Pension shortfall"
+            },
+            {
+              type: "Tax Torpedo Risk",
+              amount: userData.gaps?.tax?.amount || 0,
+              icon: "Zap",
+              description: userData.gaps?.tax?.description || "Tax impact"
+            },
+            {
+              type: "Survivor Protection Gap",
+              amount: userData.gaps?.survivor?.amount || 0,
+              icon: "Heart",
+              description: userData.gaps?.survivor?.description || "Survivor benefit gap"
+            }
+          ],
+          keyRecommendations: [
+            `Monthly contribution: $${projections.monthlyNeeded || 500}`,
+            "Maximize 403(b) contributions to reduce tax torpedo impact",
+            "Consider Roth IRA conversions during lower-income years",
+            `Explore ${userData.profession}-specific retirement benefits`
+          ]
         };
-      }
 
-      setCalculatedResults(loadedData);
-      setProfession(loadedData.profession);
+        setReportData(reportHighlights);
 
-      // Set email from session storage or use fallback
-      if (emailData) {
-        setUserEmail(JSON.parse(emailData));
       } else {
-        setUserEmail("user@email.com");
+        // If no navigation state, redirect to start
+        navigate('/profession-selection-landing');
       }
-
-      // Create report highlights from calculated data
-      const reportHighlights = {
-        riskScore: loadedData.riskScore,
-        riskLevel: loadedData.riskColor === 'red' ? "High Risk" :
-                  loadedData.riskColor === 'gold' ? "Moderate Risk" : "Low Risk",
-        topGaps: [
-          {
-            type: "Pension Gap",
-            amount: loadedData.pensionGap * 240, // Convert monthly to 20-year total
-            icon: "TrendingDown",
-            description: `Monthly pension shortfall: $${loadedData.pensionGap}/month`
-          },
-          {
-            type: "Tax Torpedo Risk",
-            amount: loadedData.taxTorpedo,
-            icon: "Zap",
-            description: `Potential tax impact on $${loadedData.otherSavings?.toLocaleString() || '0'} in savings`
-          },
-          {
-            type: "Survivor Protection Gap",
-            amount: loadedData.survivorGap * 240, // Convert monthly to 20-year total
-            icon: "Heart",
-            description: `Monthly survivor benefit gap: $${loadedData.survivorGap}/month`
-          }
-        ],
-        keyRecommendations: [
-          `Contribute $${loadedData.monthlyContribution}/month to close gaps`,
-          "Maximize 403(b) contributions to reduce tax torpedo impact",
-          "Consider Roth IRA conversions during lower-income years",
-          `Explore ${loadedData.profession}-specific retirement benefits in ${loadedData.state}`
-        ]
-      };
-
-      setReportData(reportHighlights);
 
     } catch (error) {
       console.error('Error loading report data:', error);
-      // Fallback data
-      setUserEmail("user@email.com");
-      setProfession("teacher");
-      setReportData({
-        riskScore: 72,
-        riskLevel: "High Risk",
-        topGaps: [],
-        keyRecommendations: []
-      });
+      navigate('/profession-selection-landing');
     }
-  }, []);
+  }, [location.state, navigate]);
 
   const handleBookAudit = () => {
     // In real app, this would integrate with Calendly

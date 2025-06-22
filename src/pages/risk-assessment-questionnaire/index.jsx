@@ -8,6 +8,7 @@ import SurvivorPlanningSection from './components/SurvivorPlanningSection';
 import RetirementAgeSection from './components/RetirementAgeSection';
 import FinancialFearsSection from './components/FinancialFearsSection';
 import AssetInputSection from './components/AssetInputSection';
+import { calculateBenefitGaps } from 'utils/calculationEngine';
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
@@ -28,24 +29,17 @@ const RiskAssessmentQuestionnaire = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
 
-  // Load data from previous steps
+  // Load data from navigation state
   useEffect(() => {
-    const savedData = sessionStorage.getItem('riskAssessmentData');
-    const professionData = sessionStorage.getItem('selectedProfession');
-    
-    if (savedData) {
-      setFormData(JSON.parse(savedData));
+    if (location.state) {
+      if (location.state.profession) {
+        setProfession(location.state.profession);
+      }
+    } else {
+      // If no navigation state, redirect to start
+      navigate('/profession-selection-landing');
     }
-    
-    if (professionData) {
-      setProfession(professionData);
-    }
-  }, []);
-
-  // Save data to session storage
-  useEffect(() => {
-    sessionStorage.setItem('riskAssessmentData', JSON.stringify(formData));
-  }, [formData]);
+  }, [location.state, navigate]);
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({
@@ -56,23 +50,41 @@ const RiskAssessmentQuestionnaire = () => {
 
   const handleSubmit = async () => {
     if (!isFormValid()) return;
-    
+
     setIsSubmitting(true);
-    
+
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Save all collected data
+
+    // Combine all collected data
     const allData = {
       profession,
-      serviceProfile: JSON.parse(sessionStorage.getItem('serviceProfileData') || '{}'),
+      serviceProfile: location.state?.serviceProfile || {},
       riskAssessment: formData
     };
-    
-    sessionStorage.setItem('completeAssessmentData', JSON.stringify(allData));
-    
-    // Navigate to results
-    navigate('/dynamic-results-dashboard');
+
+    // Calculate results and navigate with data
+    const results = calculateBenefitGaps({
+      profession: allData.profession,
+      yearsOfService: allData.serviceProfile.yearsOfService,
+      pensionEstimate: allData.serviceProfile.pensionEstimate,
+      pensionUnknown: allData.serviceProfile.pensionUnknown,
+      state: allData.serviceProfile.state,
+      currentAge: 45, // Default age, could be added to form
+      retirementAge: allData.riskAssessment.retirementAge,
+      inflationProtection: allData.riskAssessment.inflationProtection,
+      survivorPlanning: allData.riskAssessment.survivorPlanning,
+      currentSavings: parseFloat(allData.riskAssessment.currentSavings) || 0,
+      financialFears: allData.riskAssessment.financialFears
+    });
+
+    // Navigate to results with calculated data
+    navigate('/dynamic-results-dashboard', {
+      state: {
+        calculatedResults: results,
+        userData: allData
+      }
+    });
   };
 
   const isFormValid = () => {

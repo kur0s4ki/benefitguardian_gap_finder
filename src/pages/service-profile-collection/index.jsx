@@ -27,22 +27,8 @@ const ServiceProfileCollection = () => {
   const [errors, setErrors] = useState({});
   const [isValid, setIsValid] = useState(false);
 
-  // Load saved data on mount
+  // Validate form on changes
   useEffect(() => {
-    const savedData = sessionStorage.getItem('serviceProfileData');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setFormData(parsed);
-      } catch (error) {
-        console.error('Error loading saved data:', error);
-      }
-    }
-  }, []);
-
-  // Save data on changes
-  useEffect(() => {
-    sessionStorage.setItem('serviceProfileData', JSON.stringify(formData));
     validateForm();
   }, [formData]);
 
@@ -77,7 +63,7 @@ const ServiceProfileCollection = () => {
 
   const handleContinue = () => {
     if (isValid) {
-      // Save service profile data to session storage
+      // Prepare service profile data
       const serviceProfileData = {
         profession,
         yearsOfService: formData.yearsOfService,
@@ -85,8 +71,6 @@ const ServiceProfileCollection = () => {
         pensionUnknown: formData.pensionUnknown,
         state: formData.selectedState
       };
-
-      sessionStorage.setItem('serviceProfileData', JSON.stringify(serviceProfileData));
 
       navigate('/risk-assessment-questionnaire', {
         state: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import ConversionFooter from 'components/ui/ConversionFooter';
 
@@ -7,64 +7,32 @@ import RiskGauge from './components/RiskGauge';
 import GapAnalysisCard from './components/GapAnalysisCard';
 import DetailedBreakdown from './components/DetailedBreakdown';
 import CallToActionSection from './components/CallToActionSection';
-import { calculateBenefitGaps, validateUserData } from 'utils/calculationEngine';
 
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
 
-  // Load user data from session storage and calculate results
+  // Load data from navigation state
   useEffect(() => {
     try {
-      // Get data from previous steps
-      const completeData = sessionStorage.getItem('completeAssessmentData');
-      const serviceProfile = sessionStorage.getItem('serviceProfileData');
-      const riskAssessment = sessionStorage.getItem('riskAssessmentData');
-      const selectedProfession = sessionStorage.getItem('selectedProfession');
-
-      let combinedUserData = {};
-
-      if (completeData) {
-        combinedUserData = JSON.parse(completeData);
+      // Check if we have calculated results from navigation state
+      if (location.state?.calculatedResults) {
+        setCalculatedResults(location.state.calculatedResults);
       } else {
-        // Fallback: combine individual pieces
-        if (selectedProfession) {
-          combinedUserData.profession = JSON.parse(selectedProfession);
-        }
-        if (serviceProfile) {
-          const profile = JSON.parse(serviceProfile);
-          combinedUserData = { ...combinedUserData, ...profile };
-        }
-        if (riskAssessment) {
-          const assessment = JSON.parse(riskAssessment);
-          combinedUserData = { ...combinedUserData, ...assessment };
-        }
-      }
-
-      // If no data found, redirect to start
-      if (!combinedUserData.profession) {
+        // If no navigation state, redirect to start
         setCalculationError('No assessment data found. Please complete the assessment first.');
         return;
       }
 
-      // Validate and calculate
-      const validation = validateUserData(combinedUserData);
-      if (!validation.isValid) {
-        setCalculationError(`Data validation failed: ${validation.errors.join(', ')}`);
-        return;
-      }
-
-      const results = calculateBenefitGaps(combinedUserData);
-      setCalculatedResults(results);
-
     } catch (error) {
-      console.error('Error calculating results:', error);
+      console.error('Error loading results:', error);
       setCalculationError(error.message);
     }
-  }, []);
+  }, [location.state]);
 
   const professionThemes = {
     teacher: {
@@ -116,7 +84,40 @@ const DynamicResultsDashboard = () => {
   const riskLevel = calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' };
 
   const handleNavigateToCalculator = () => {
-    navigate('/gap-calculator-tool');
+    // Transform calculated results to the format expected by Gap Calculator
+    const transformedData = {
+      profession: calculatedResults.profession,
+      yearsOfService: calculatedResults.yearsOfService,
+      currentAge: calculatedResults.currentAge || 45,
+      state: calculatedResults.state,
+      monthlyPension: calculatedResults.currentPension,
+      gaps: {
+        pension: {
+          amount: calculatedResults.pensionGap * 240, // Convert monthly to 20-year total
+          risk: calculatedResults.riskComponents?.pensionRisk > 60 ? 'high' : 'medium',
+          description: `Monthly pension shortfall: $${calculatedResults.pensionGap}/month`
+        },
+        tax: {
+          amount: calculatedResults.taxTorpedo,
+          risk: calculatedResults.riskComponents?.taxRisk > 50 ? 'high' : 'medium',
+          description: `Tax torpedo impact on retirement withdrawals`
+        },
+        survivor: {
+          amount: calculatedResults.survivorGap * 240, // Convert monthly to 20-year total
+          risk: calculatedResults.riskComponents?.survivorRisk > 60 ? 'high' : 'medium',
+          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
+        }
+      },
+      totalGap: (calculatedResults.pensionGap + calculatedResults.survivorGap) * 240 + calculatedResults.taxTorpedo,
+      riskScore: calculatedResults.riskScore,
+      hiddenBenefitOpportunity: calculatedResults.hiddenBenefitOpportunity
+    };
+
+    navigate('/gap-calculator-tool', {
+      state: {
+        userData: transformedData
+      }
+    });
   };
 
   const handleEmailReport = () => {
