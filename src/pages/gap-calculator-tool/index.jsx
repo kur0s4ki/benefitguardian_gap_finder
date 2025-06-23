@@ -177,7 +177,7 @@ const GapCalculatorTool = () => {
     }
 
     // Safe gap closure calculation with bounds checking
-    const gapClosure = Math.max(0, (projectedValue / userData.totalGap) * 100);
+    const gapClosure = Math.min(100, Math.max(0, (projectedValue / userData.totalGap) * 100));
 
     // Correct calculation for monthly needed using Present Value of Annuity formula
     let monthlyNeeded;

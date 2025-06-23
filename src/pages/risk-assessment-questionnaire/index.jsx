@@ -8,7 +8,7 @@ import SurvivorPlanningSection from './components/SurvivorPlanningSection';
 import RetirementAgeSection from './components/RetirementAgeSection';
 import FinancialFearsSection from './components/FinancialFearsSection';
 import AssetInputSection from './components/AssetInputSection';
-import { calculateBenefitGaps } from 'utils/calculationEngine';
+import { calculateBenefitGaps, validateUserData } from 'utils/calculationEngine';
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
@@ -52,6 +52,29 @@ const RiskAssessmentQuestionnaire = () => {
     if (!isFormValid()) return;
 
     setIsSubmitting(true);
+
+    // Validate combined data before calculations
+    const preliminaryData = {
+      profession,
+      yearsOfService: location.state?.serviceProfile?.yearsOfService,
+      state: location.state?.serviceProfile?.state,
+      retirementAge: formData.retirementAge,
+      currentAge: 45 // default until age capture is implemented
+    };
+
+    const { isValid, errors, warnings } = validateUserData(preliminaryData);
+
+    if (!isValid) {
+      setIsSubmitting(false);
+      // Simple alert for now – replace with toast UI component
+      alert(`Please fix the following errors before continuing:\n- ${errors.join('\n- ')}`);
+      return;
+    }
+
+    if (warnings.length) {
+      // Display warnings as dismissible toast (placeholder alert)
+      alert(`Heads-up:\n- ${warnings.join('\n- ')}`);
+    }
 
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 1500));

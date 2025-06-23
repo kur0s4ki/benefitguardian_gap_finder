@@ -130,6 +130,11 @@ export const calculateBenefitGaps = (userData) => {
 
   // Calculate derived values
   const yearsUntilRetirement = Math.max(0, retirementAge - currentAge);
+
+  if (yearsUntilRetirement <= 0) {
+    throw new Error('Retirement age must be greater than current age');
+  }
+
   const retirementAgeBand = getRetirementAgeBand(retirementAge);
   const yearsUntilRetirementBand = getYearsUntilRetirementBand(yearsUntilRetirement);
 
@@ -152,11 +157,14 @@ export const calculateBenefitGaps = (userData) => {
 
   const pensionRisk = Math.min(100, Math.max(0, 80 - (colaValue * 30) + earlyRetireBonus));
   const taxRisk = Math.min(100, (otherSavings / 100000) * 25 + taxSurprisesBonus);
-  const survivorRisk = Math.round(80 * (1 - coverageLevel));
+  const survivorRisk = Math.round(80 * coverageLevel);
 
   const riskScore = Math.round(
     (pensionRisk * 0.5) + (taxRisk * 0.3) + (survivorRisk * 0.2)
   );
+
+  // Ensure riskScore stays within 0-100 bounds even as weightings evolve
+  const clampedRiskScore = Math.min(100, Math.max(0, riskScore));
 
   // C. Gap Calculations
   const pensionGap = Math.round(currentPension * 0.03 * yearsOfService);
@@ -176,9 +184,9 @@ export const calculateBenefitGaps = (userData) => {
 
   // Risk color mapping
   let riskColor;
-  if (riskScore < 40) {
+  if (clampedRiskScore < 40) {
     riskColor = 'green';
-  } else if (riskScore >= 40 && riskScore <= 70) {
+  } else if (clampedRiskScore >= 40 && clampedRiskScore <= 70) {
     riskColor = 'gold';
   } else {
     riskColor = 'red';
@@ -202,7 +210,7 @@ export const calculateBenefitGaps = (userData) => {
     
     // Calculated outputs
     hiddenBenefitOpportunity,
-    riskScore,
+    riskScore: clampedRiskScore,
     riskColor,
     pensionGap,
     taxTorpedo,
@@ -273,5 +281,5 @@ export const validateUserData = (userData) => {
     warnings
   };
 };
-
 export default calculateBenefitGaps;
+
