@@ -10,6 +10,7 @@ import FAQSection from './components/FAQSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import DeliveryInfoModal from './components/DeliveryInfoModal';
 import CalculationLog from './components/CalculationLog';
+import { downloadFullReport } from 'utils/reportGenerator';
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
@@ -147,6 +148,26 @@ const ReportDeliveryConfirmation = () => {
 
   const theme = getProfessionTheme();
 
+  const handleDownloadPdf = () => {
+    // Get the original calculation engine results from localStorage
+    try {
+      const originalResults = localStorage.getItem('calculatedResults');
+      if (originalResults) {
+        const parsedResults = JSON.parse(originalResults);
+        downloadFullReport(parsedResults, location.state?.projections || {});
+      } else if (calculatedResults) {
+        // Fallback to transformed data if original not available
+        downloadFullReport(calculatedResults, location.state?.projections || {});
+      }
+    } catch (error) {
+      console.error('Error accessing calculation results:', error);
+      // Fallback to transformed data
+      if (calculatedResults) {
+        downloadFullReport(calculatedResults, location.state?.projections || {});
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <ProgressHeader currentStep={6} totalSteps={6} profession={profession} />
@@ -163,6 +184,23 @@ const ReportDeliveryConfirmation = () => {
               <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
                 <Icon name="Mail" size={20} className="text-primary" />
                 <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={handleSendReport}
+                  className="btn-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 hover:bg-primary-700 transition-colors duration-200"
+                >
+                  <Icon name="Mail" size={24} />
+                  <span>Email My Report</span>
+                </button>
+
+                <button
+                  onClick={handleDownloadPdf}
+                  className="border border-primary text-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 hover:bg-primary-50 transition-colors duration-200"
+                >
+                  <Icon name="Download" size={24} />
+                  <span>Download PDF</span>
+                </button>
               </div>
             </div>
           )}
