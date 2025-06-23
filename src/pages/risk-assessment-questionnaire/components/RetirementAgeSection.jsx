@@ -1,34 +1,20 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
 
-const RetirementAgeSection = ({ value, onChange, profession }) => {
+const RetirementAgeSection = ({
+  value,
+  onChange,
+  currentAge,
+  onCurrentAgeChange,
+  profession
+}) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const professionData = {
-    teacher: {
-      context: "Teachers often have specific retirement eligibility rules (Rule of 80/85)",
-      earlyAge: 55,
-      normalAge: 65,
-      lateAge: 70
-    },
-    nurse: {
-      context: "Healthcare workers may retire earlier due to physical demands",
-      earlyAge: 55,
-      normalAge: 62,
-      lateAge: 67
-    },
-    'first-responder': {
-      context: "First responders often have earlier retirement eligibility",
-      earlyAge: 50,
-      normalAge: 55,
-      lateAge: 62
-    },
-    'government-employee': {
-      context: "Government employees have various retirement systems (FERS, CSRS)",
-      earlyAge: 57,
-      normalAge: 62,
-      lateAge: 67
-    }
+    teacher: { earlyAge: 58, normalAge: 62, lateAge: 67, context: "Teachers often have specific pension milestones. Retiring early might reduce your pension, while delaying could increase it." },
+    nurse: { earlyAge: 57, normalAge: 63, lateAge: 68, context: "Nurses' physically demanding roles can make early retirement appealing, but ensure your benefits are secured." },
+    'first-responder': { earlyAge: 55, normalAge: 60, lateAge: 65, context: "First responders may have early retirement options due to the high-stress nature of their jobs." },
+    'government-employee': { earlyAge: 60, normalAge: 65, lateAge: 70, context: "Government employees' pension plans are often tied to specific age and service year combinations." }
   };
 
   const currentData = professionData[profession] || professionData.teacher;
@@ -38,49 +24,33 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
     if (age <= currentData.normalAge) return 'normal';
     return 'late';
   };
+  
+  const getAgeLabel = (age) => {
+    const category = getAgeCategory(age);
+    if (category === 'early') return `Early (${currentData.earlyAge} or below)`;
+    if (category === 'normal') return `Normal (${currentData.earlyAge + 1}-${currentData.normalAge})`;
+    return `Delayed (${currentData.normalAge + 1} or above)`;
+  };
+  
+  const getAgeAdvice = (age) => {
+    const category = getAgeCategory(age);
+    if (category === 'early') return "Retiring early may provide more leisure time but could significantly reduce your monthly pension and increase healthcare costs before Medicare eligibility.";
+    if (category === 'normal') return "This is a common retirement age range that balances pension benefits with personal time. It often aligns with standard social security and pension plan rules.";
+    return "Delaying retirement can substantially boost your final pension amount and social security benefits, providing greater financial security in your later years.";
+  };
 
   const getAgeColor = (age) => {
     const category = getAgeCategory(age);
-    switch (category) {
-      case 'early': return 'text-warning';
-      case 'normal': return 'text-success';
-      case 'late': return 'text-primary';
-      default: return 'text-text-primary';
-    }
+    if (category === 'early') return 'text-warning';
+    if (category === 'normal') return 'text-success';
+    return 'text-primary';
   };
-
+  
   const getAgeBackground = (age) => {
     const category = getAgeCategory(age);
-    switch (category) {
-      case 'early': return 'bg-warning';
-      case 'normal': return 'bg-success';
-      case 'late': return 'bg-primary';
-      default: return 'bg-gray-400';
-    }
-  };
-
-  const getAgeLabel = (age) => {
-    const category = getAgeCategory(age);
-    switch (category) {
-      case 'early': return 'Early Retirement';
-      case 'normal': return 'Normal Retirement';
-      case 'late': return 'Delayed Retirement';
-      default: return 'Retirement Age';
-    }
-  };
-
-  const getAgeAdvice = (age) => {
-    const category = getAgeCategory(age);
-    switch (category) {
-      case 'early': 
-        return 'Early retirement may result in reduced benefits but more years to enjoy retirement.';
-      case 'normal': 
-        return 'Normal retirement age typically provides full pension benefits.';
-      case 'late': 
-        return 'Delayed retirement often increases pension benefits and reduces the gap.';
-      default: 
-        return '';
-    }
+    if (category === 'early') return 'bg-warning';
+    if (category === 'normal') return 'bg-success';
+    return 'bg-primary';
   };
 
   return (
@@ -94,12 +64,47 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
             Retirement Timeline
           </h2>
           <p className="text-text-secondary">
-            When do you plan to retire? This affects your benefit calculations.
+            Your age and planned retirement are key factors in your financial strategy.
           </p>
         </div>
       </div>
+      
+      {/* Current Age Section */}
+      <div className="mb-6 space-y-4">
+        <div className="text-center">
+          <label className="block text-sm font-medium text-text-primary mb-2">
+            What is your current age?
+          </label>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-white font-semibold text-lg">
+            <Icon name="User" size={20} />
+            <span>Age {currentAge || 25}</span>
+          </div>
+        </div>
 
-      {/* Context Information */}
+        <div className="relative">
+          <input
+            type="range"
+            min="25"
+            max="70"
+            value={currentAge || 25}
+            onChange={(e) => onCurrentAgeChange(parseInt(e.target.value))}
+            className="w-full h-3 rounded-lg appearance-none cursor-pointer transition-all duration-200"
+            style={{
+              background: `linear-gradient(to right, #6B7280 0%, #6B7280 100%)`
+            }}
+          />
+          
+          <div className="flex justify-between mt-2 text-xs text-text-secondary">
+            <span>25</span>
+            <span>35</span>
+            <span>45</span>
+            <span>55</span>
+            <span>65</span>
+            <span>70</span>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
         <div className="flex items-start gap-3">
           <Icon name="Info" size={18} className="text-primary flex-shrink-0 mt-0.5" />
@@ -109,10 +114,11 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
         </div>
       </div>
 
-      {/* Age Slider */}
       <div className="space-y-6">
-        {/* Current Selection Display */}
         <div className="text-center">
+            <label className="block text-sm font-medium text-text-primary mb-2">
+                At what age do you plan to retire?
+            </label>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${getAgeBackground(value)} text-white font-semibold text-lg`}>
             <Icon name="Calendar" size={20} />
             <span>Age {value}</span>
@@ -122,7 +128,6 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
           </p>
         </div>
 
-        {/* Slider */}
         <div className="relative">
           <input
             type="range"
@@ -145,7 +150,6 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
             }}
           />
           
-          {/* Age Markers */}
           <div className="flex justify-between mt-2 text-xs text-text-secondary">
             <span>50</span>
             <span>55</span>
@@ -156,7 +160,6 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
           </div>
         </div>
 
-        {/* Quick Selection Buttons */}
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => onChange(currentData.earlyAge)}
@@ -203,8 +206,17 @@ const RetirementAgeSection = ({ value, onChange, profession }) => {
             </div>
           </button>
         </div>
+        
+        {currentAge && value && value <= currentAge && (
+          <div className="p-4 bg-error-50 border border-error-200 text-error-700 rounded-lg text-sm flex items-center gap-2">
+            <Icon name="AlertTriangle" size={16} />
+            <div>
+              <div className="font-semibold">Invalid Retirement Timeline</div>
+              <div>You cannot retire at age {value} if you are currently {currentAge}. Please adjust your retirement age to be greater than your current age.</div>
+            </div>
+          </div>
+        )}
 
-        {/* Age Impact Information */}
         <div className={`p-4 rounded-lg border ${
           getAgeCategory(value) === 'early' ? 'bg-warning-50 border-warning-200' :
           getAgeCategory(value) === 'normal'? 'bg-success-50 border-success-200' : 'bg-primary-50 border-primary-200'

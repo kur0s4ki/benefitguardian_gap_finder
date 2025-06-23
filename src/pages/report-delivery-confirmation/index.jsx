@@ -9,6 +9,7 @@ import NextStepsSection from './components/NextStepsSection';
 import FAQSection from './components/FAQSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import DeliveryInfoModal from './components/DeliveryInfoModal';
+import CalculationLog from './components/CalculationLog';
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const ReportDeliveryConfirmation = () => {
   const [reportSent, setReportSent] = useState(false);
 
   useEffect(() => {
+    // Automatically show the modal as soon as the component loads
+    setShowModal(true);
+
     // Load data from navigation state
     try {
       if (location.state?.userData && location.state?.projections) {
@@ -57,7 +61,7 @@ const ReportDeliveryConfirmation = () => {
             }
           ],
           keyRecommendations: [
-            `Monthly contribution: $${projections.monthlyNeeded || 500}`,
+            `Monthly contribution: $${userData.monthlyContribution || projections.monthlyNeeded || 500}`,
             "Maximize 403(b) contributions to reduce tax torpedo impact",
             "Consider Roth IRA conversions during lower-income years",
             `Explore ${userData.profession}-specific retirement benefits`
@@ -150,50 +154,30 @@ const ReportDeliveryConfirmation = () => {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8">
-          {reportSent ? (
-            <>
+          {reportSent && (
+            <div className="mt-6">
               <SuccessAnimation profession={profession} />
-              <div className="mt-6">
-                <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
-                  Your Personalized Retirement Gap Report is on its way!
-                </h1>
-                <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
-                  <Icon name="Mail" size={20} className="text-primary" />
-                  <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
-                </div>
-                <p className="text-text-secondary">
-                  Check your inbox (and spam folder) in the next few minutes
-                </p>
-              </div>
-            </>
-          ) : (
-            <div className="max-w-2xl mx-auto">
-              <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="FileText" size={40} className="text-primary" />
-              </div>
               <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
-                Your Retirement Gap Analysis is Ready!
+                Your Personalized Retirement Gap Report is on its way!
               </h1>
-              <p className="text-lg text-text-secondary mb-8">
-                Get your personalized report with detailed insights and recommendations tailored specifically for {profession}s.
-              </p>
-              <button
-                onClick={handleSendReport}
-                className="btn-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 mx-auto hover:bg-primary-700 transition-colors duration-200"
-              >
-                <Icon name="Mail" size={24} />
-                <span>Send My Report</span>
-              </button>
+              <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
+                <Icon name="Mail" size={20} className="text-primary" />
+                <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
+              </div>
             </div>
+          )}
+          {!reportSent && (
+            <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
+              Review Your Analysis & Send Report
+            </h1>
           )}
         </div>
 
-        {reportSent && (
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Report Preview */}
-              <ReportPreview reportData={reportData} profession={profession} />
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Report Preview */}
+            <ReportPreview reportData={reportData} profession={profession} />
 
             {/* What's Included */}
             <div className="card p-6">
@@ -234,6 +218,9 @@ const ReportDeliveryConfirmation = () => {
 
             {/* FAQ Section */}
             <FAQSection profession={profession} />
+
+            {/* Calculation Log for debugging/analysis */}
+            <CalculationLog log={calculatedResults?.calculationLog} />
           </div>
 
           {/* Sidebar */}
@@ -322,7 +309,6 @@ const ReportDeliveryConfirmation = () => {
             </div>
           </div>
         </div>
-        )}
       </main>
 
       <ConversionFooter />

@@ -9,6 +9,7 @@ import RetirementAgeSection from './components/RetirementAgeSection';
 import FinancialFearsSection from './components/FinancialFearsSection';
 import AssetInputSection from './components/AssetInputSection';
 import { calculateBenefitGaps, validateUserData } from 'utils/calculationEngine';
+import { useToast } from 'components/ui/ToastProvider';
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const RiskAssessmentQuestionnaire = () => {
     inflationProtection: undefined, // This maps to 'cola' in client spec - undefined means not selected, null means "not sure"
     survivorPlanning: null,
     survivorPlanningDetails: '',
+    currentAge: '',
     retirementAge: 65,
     financialFears: [],
     currentSavings: '',
@@ -28,6 +30,9 @@ const RiskAssessmentQuestionnaire = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
+  const [submissionErrors, setSubmissionErrors] = useState([]);
+
+  const { addToast } = useToast();
 
   // Load data from navigation state
   useEffect(() => {
@@ -59,21 +64,26 @@ const RiskAssessmentQuestionnaire = () => {
       yearsOfService: location.state?.serviceProfile?.yearsOfService,
       state: location.state?.serviceProfile?.state,
       retirementAge: formData.retirementAge,
-      currentAge: 45 // default until age capture is implemented
+      currentAge: formData.currentAge,
+      pensionEstimate: location.state?.serviceProfile?.pensionEstimate,
+      pensionUnknown: location.state?.serviceProfile?.pensionUnknown,
+      currentSavings: formData.currentSavings,
+      preferNotToSay: formData.preferNotToSay
     };
 
     const { isValid, errors, warnings } = validateUserData(preliminaryData);
 
     if (!isValid) {
       setIsSubmitting(false);
-      // Simple alert for now – replace with toast UI component
-      alert(`Please fix the following errors before continuing:\n- ${errors.join('\n- ')}`);
+      setSubmissionErrors(errors);
+      addToast(`Please fix the highlighted errors before continuing.`, 'error');
       return;
+    } else {
+      setSubmissionErrors([]);
     }
 
     if (warnings.length) {
-      // Display warnings as dismissible toast (placeholder alert)
-      alert(`Heads-up:\n- ${warnings.join('\n- ')}`);
+      addToast(warnings.join('\n'), 'warning');
     }
 
     // Simulate processing time
@@ -93,7 +103,7 @@ const RiskAssessmentQuestionnaire = () => {
       pensionEstimate: allData.serviceProfile.pensionEstimate,
       pensionUnknown: allData.serviceProfile.pensionUnknown,
       state: allData.serviceProfile.state,
-      currentAge: 45, // Default age, could be added to form
+      currentAge: allData.riskAssessment.currentAge,
       retirementAge: allData.riskAssessment.retirementAge,
       inflationProtection: allData.riskAssessment.inflationProtection,
       survivorPlanning: allData.riskAssessment.survivorPlanning,
@@ -119,12 +129,16 @@ const RiskAssessmentQuestionnaire = () => {
   };
 
   const isFormValid = () => {
+    const hasValidAges = formData.currentAge && formData.retirementAge && formData.retirementAge > formData.currentAge;
+    
     return (
       formData.inflationProtection !== undefined &&
       formData.survivorPlanning !== null &&
       formData.retirementAge &&
+      formData.currentAge &&
       formData.financialFears.length > 0 &&
-      (formData.currentSavings || formData.preferNotToSay)
+      (formData.currentSavings || formData.preferNotToSay) &&
+      hasValidAges
     );
   };
 
@@ -219,7 +233,9 @@ const RiskAssessmentQuestionnaire = () => {
             />
             
             <RetirementAgeSection
+              currentAge={formData.currentAge}
               value={formData.retirementAge}
+              onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
               onChange={(value) => updateFormData('retirementAge', value)}
               profession={profession}
             />
@@ -278,7 +294,9 @@ const RiskAssessmentQuestionnaire = () => {
             
             {currentSection === 2 && (
               <RetirementAgeSection
+                currentAge={formData.currentAge}
                 value={formData.retirementAge}
+                onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
                 onChange={(value) => updateFormData('retirementAge', value)}
                 profession={profession}
               />
@@ -382,7 +400,7 @@ const RiskAssessmentQuestionnaire = () => {
         </div>
 
         {/* Form Validation Summary */}
-        {!isFormValid() && (
+        {(!isFormValid() || submissionErrors.length > 0) && (
           <div className="mt-8 p-4 bg-warning-50 border border-warning-200 rounded-lg">
             <div className="flex items-start gap-3">
               <Icon name="AlertTriangle" size={20} className="text-warning flex-shrink-0 mt-0.5" />
@@ -395,8 +413,11 @@ const RiskAssessmentQuestionnaire = () => {
                   {formData.survivorPlanning === null && (
                     <li>• Survivor income planning</li>
                   )}
-                  {!formData.retirementAge && (
-                    <li>• Retirement age preference</li>
+                  {(!formData.currentAge || !formData.retirementAge) && (
+                    <li>• Current and retirement age</li>
+                  )}
+                  {formData.currentAge && formData.retirementAge && formData.retirementAge <= formData.currentAge && (
+                    <li>• Retirement age must be greater than current age</li>
                   )}
                   {formData.financialFears.length === 0 && (
                     <li>• Financial concerns selection</li>
@@ -404,6 +425,9 @@ const RiskAssessmentQuestionnaire = () => {
                   {!formData.currentSavings && !formData.preferNotToSay && (
                     <li>• Current savings information</li>
                   )}
+                  {submissionErrors.map((err, idx) => (
+                    <li key={idx}>• {err}</li>
+                  ))}
                 </ul>
               </div>
             </div>

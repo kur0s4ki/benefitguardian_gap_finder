@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from 'components/AppIcon';
 
-const RiskGauge = ({ score, profession, showResults }) => {
+const RiskGauge = ({ score, profession, showResults, riskComponents }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -136,7 +136,7 @@ const RiskGauge = ({ score, profession, showResults }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
         <div className="text-center">
           <div className="text-2xl font-bold text-error mb-1">
-            {Math.round(animatedScore * 0.4)}
+            {riskComponents ? Math.round(riskComponents.pensionRisk) : Math.round(animatedScore * 0.4)}
           </div>
           <div className="text-sm text-text-secondary">
             Pension Risk
@@ -145,7 +145,7 @@ const RiskGauge = ({ score, profession, showResults }) => {
         
         <div className="text-center">
           <div className="text-2xl font-bold text-warning mb-1">
-            {Math.round(animatedScore * 0.35)}
+            {riskComponents ? Math.round(riskComponents.taxRisk) : Math.round(animatedScore * 0.35)}
           </div>
           <div className="text-sm text-text-secondary">
             Tax Risk
@@ -154,7 +154,7 @@ const RiskGauge = ({ score, profession, showResults }) => {
         
         <div className="text-center">
           <div className="text-2xl font-bold text-error mb-1">
-            {Math.round(animatedScore * 0.25)}
+            {riskComponents ? Math.round(riskComponents.survivorRisk) : Math.round(animatedScore * 0.25)}
           </div>
           <div className="text-sm text-text-secondary">
             Survivor Risk

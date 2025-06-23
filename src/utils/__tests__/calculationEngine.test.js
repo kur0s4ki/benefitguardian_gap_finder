@@ -50,6 +50,26 @@ describe('calculateBenefitGaps – core logic', () => {
       });
     });
   });
+
+  test('COLA protection lowers pensionRisk', () => {
+    const noCola = calculateBenefitGaps({ ...baseInput, inflationProtection: 'no' });
+    const withCola = calculateBenefitGaps({ ...baseInput, inflationProtection: 'yes' });
+
+    expect(withCola.riskComponents.pensionRisk).toBeLessThan(noCola.riskComponents.pensionRisk);
+  });
+
+  describe('Hidden Benefit Opportunity varies by profession/state', () => {
+    it('Teacher in CA vs Nurse in FL should differ', () => {
+      const teacherCA = calculateBenefitGaps({ ...baseInput, profession: 'teacher', state: 'CA' });
+      const nurseFL = calculateBenefitGaps({ ...baseInput, profession: 'nurse', state: 'FL' });
+
+      expect(teacherCA.hiddenBenefitOpportunity).not.toBe(nurseFL.hiddenBenefitOpportunity);
+      // Ensure formula responds in expected direction (nurse has 1.15 factor, FL state 1.1)
+      const expectedRatio = (1.15 * 1.1) / (1 * 1.2); // nurseFL / teacherCA factors
+      const actualRatio = nurseFL.hiddenBenefitOpportunity / teacherCA.hiddenBenefitOpportunity;
+      expect(actualRatio).toBeCloseTo(expectedRatio, 1);
+    });
+  });
 });
 
 // Helper tests for the gap-closure clamp used in the calculator view.

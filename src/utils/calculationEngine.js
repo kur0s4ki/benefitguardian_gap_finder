@@ -104,6 +104,8 @@ const getYearsUntilRetirementBand = (years) => {
  * @returns {Object} Calculated results
  */
 export const calculateBenefitGaps = (userData) => {
+  const calculationLog = ['[Log] Calculation engine started.'];
+
   // Input validation
   if (!userData) {
     throw new Error('User data is required');
@@ -120,16 +122,22 @@ export const calculateBenefitGaps = (userData) => {
   const currentAge = parseInt(userData.currentAge) || 45;
   const retirementAge = parseInt(userData.retirementAge) || 65;
 
+  calculationLog.push(`[Input] Normalized inputs: profession=${profession}, yos=${yearsOfService}, state=${state}, cola=${cola}, survivor=${survivorIncome}, savings=${otherSavings}, age=${currentAge}, retireAge=${retirementAge}`);
+
   // Handle pension estimate
   let currentPension;
   if (userData.pensionUnknown || userData.pensionEstimate === "I don't know" || !userData.pensionEstimate) {
     currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+    calculationLog.push(`[Pension] User pension unknown. Using default for ${profession}: $${currentPension}`);
   } else {
     currentPension = parseFloat(userData.pensionEstimate) || DEFAULT_PENSION_VALUES[profession];
+    calculationLog.push(`[Pension] User provided pension: $${currentPension}`);
   }
 
   // Calculate derived values
   const yearsUntilRetirement = Math.max(0, retirementAge - currentAge);
+
+  calculationLog.push(`[Derived] Years until retirement: ${yearsUntilRetirement}`);
 
   if (yearsUntilRetirement <= 0) {
     throw new Error('Retirement age must be greater than current age');
@@ -138,6 +146,8 @@ export const calculateBenefitGaps = (userData) => {
   const retirementAgeBand = getRetirementAgeBand(retirementAge);
   const yearsUntilRetirementBand = getYearsUntilRetirementBand(yearsUntilRetirement);
 
+  calculationLog.push(`[Derived] Retirement bands: age=${retirementAgeBand}, years=${yearsUntilRetirementBand}`);
+
   // Get multipliers
   const professionFactor = PROFESSION_FACTORS[profession] || 1.0;
   const stateFactor = STATE_FACTORS[state] || 1.0;
@@ -145,42 +155,62 @@ export const calculateBenefitGaps = (userData) => {
   const colaValue = COLA_VALUES[cola] || 0;
   const yearsUntilRetirementConverted = YEARS_UNTIL_RETIREMENT_CONVERSION[yearsUntilRetirementBand] || 18;
 
+  calculationLog.push(`[Factors] Multipliers: profession=${professionFactor}, state=${stateFactor}, coverage=${coverageLevel}, cola=${colaValue}, yearsBand=${yearsUntilRetirementConverted}`);
+
   // A. Hidden Benefit Opportunity
   const hiddenBenefitOpportunity = Math.round(
     1800 * (yearsOfService / 28) * professionFactor * stateFactor
   );
+
+  calculationLog.push(`[Calc] Hidden Benefit Opportunity: $${hiddenBenefitOpportunity} = 1800 * (${yearsOfService}/28) * ${professionFactor} * ${stateFactor}`);
 
   // B. Risk Score Components
   const earlyRetireBonus = (retirementAgeBand === '55-62') ? 20 : 0;
   const taxSurprisesBonus = financialFears.includes('tax-surprises') || 
                            financialFears.includes('Tax surprises') ? 30 : 0;
 
+  calculationLog.push(`[Risk] Bonuses: earlyRetire=${earlyRetireBonus}, taxSurprise=${taxSurprisesBonus}`);
+
   const pensionRisk = Math.min(100, Math.max(0, 80 - (colaValue * 30) + earlyRetireBonus));
   const taxRisk = Math.min(100, (otherSavings / 100000) * 25 + taxSurprisesBonus);
   const survivorRisk = Math.round(80 * coverageLevel);
+
+  calculationLog.push(`[Risk] Risk components: pensionRisk=${pensionRisk}, taxRisk=${taxRisk}, survivorRisk=${survivorRisk}`);
 
   const riskScore = Math.round(
     (pensionRisk * 0.5) + (taxRisk * 0.3) + (survivorRisk * 0.2)
   );
 
+  calculationLog.push(`[Risk] Raw risk score: ${riskScore}`);
+
   // Ensure riskScore stays within 0-100 bounds even as weightings evolve
   const clampedRiskScore = Math.min(100, Math.max(0, riskScore));
+
+  if (clampedRiskScore !== riskScore) calculationLog.push(`[Risk] Clamped risk score: ${clampedRiskScore}`);
 
   // C. Gap Calculations
   const pensionGap = Math.round(currentPension * 0.03 * yearsOfService);
   const taxTorpedo = Math.round(otherSavings * 0.30);
   const survivorGap = Math.round(currentPension * 0.40);
 
+  calculationLog.push(`[Gaps] Calculated gaps: pension=$${pensionGap}, taxTorpedo=$${taxTorpedo}, survivor=$${survivorGap}`);
+
   const monthlyGap = pensionGap + survivorGap + Math.round(taxTorpedo / 240);
+
+  calculationLog.push(`[Gaps] Total monthly gap: $${monthlyGap}`);
 
   // D. Monthly Contribution & Lifetime Payout
   const monthlyContribution = Math.round(
     (monthlyGap * 12) / (yearsUntilRetirementConverted * 7)
   );
 
+  calculationLog.push(`[Calc] Required monthly contribution: $${monthlyContribution}`);
+
   const lifetimePayout = Math.round(
     (monthlyContribution * 12 * yearsUntilRetirementConverted) * 3.0
   );
+
+  calculationLog.push(`[Calc] Estimated lifetime payout: $${lifetimePayout}`);
 
   // Risk color mapping
   let riskColor;
@@ -218,6 +248,7 @@ export const calculateBenefitGaps = (userData) => {
     monthlyGap,
     monthlyContribution,
     lifetimePayout,
+    calculationLog,
     
     // Risk components (for debugging/display)
     riskComponents: {
@@ -266,12 +297,16 @@ export const validateUserData = (userData) => {
     errors.push('State is required');
   }
 
+  if (!userData.currentAge || userData.currentAge < 21) {
+    errors.push('A valid current age is required');
+  }
+
   // Warnings for missing optional data
   if (!userData.pensionEstimate && !userData.pensionUnknown) {
     warnings.push('Pension estimate not provided - using profession default');
   }
 
-  if (!userData.currentSavings && userData.currentSavings !== 0) {
+  if (!userData.currentSavings && userData.currentSavings !== 0 && !userData.preferNotToSay) {
     warnings.push('Current savings not provided - assuming $0');
   }
 

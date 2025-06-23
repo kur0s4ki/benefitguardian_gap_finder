@@ -116,7 +116,8 @@ const DynamicResultsDashboard = () => {
       },
       totalGap: (calculatedResults.pensionGap + calculatedResults.survivorGap) * 240 + calculatedResults.taxTorpedo,
       riskScore: calculatedResults.riskScore,
-      hiddenBenefitOpportunity: calculatedResults.hiddenBenefitOpportunity
+      hiddenBenefitOpportunity: calculatedResults.hiddenBenefitOpportunity,
+      calculationLog: calculatedResults.calculationLog
     };
 
     navigate('/gap-calculator-tool', {
@@ -152,7 +153,8 @@ const DynamicResultsDashboard = () => {
           amount: calculatedResults.survivorGap * 240, // Convert monthly to 20-year total
           description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
         }
-      }
+      },
+      calculationLog: calculatedResults.calculationLog
     };
 
     const projections = {
@@ -291,6 +293,7 @@ const DynamicResultsDashboard = () => {
             <RiskGauge
               score={calculatedResults.riskScore}
               profession={calculatedResults.profession}
+              riskComponents={calculatedResults.riskComponents}
               showResults={showResults}
             />
           </div>
