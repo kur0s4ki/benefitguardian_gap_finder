@@ -10,6 +10,10 @@ import RiskAssessmentQuestionnaire from "pages/risk-assessment-questionnaire";
 import DynamicResultsDashboard from "pages/dynamic-results-dashboard";
 import GapCalculatorTool from "pages/gap-calculator-tool";
 import ReportDeliveryConfirmation from "pages/report-delivery-confirmation";
+import PrivacyPolicy from "pages/privacy-policy";
+import TermsOfService from "pages/terms-of-service";
+import Disclosures from "pages/disclosures";
+import Contact from "pages/contact";
 
 const Routes = () => {
   return (
@@ -24,6 +28,10 @@ const Routes = () => {
           <Route path="/dynamic-results-dashboard" element={<DynamicResultsDashboard />} />
           <Route path="/gap-calculator-tool" element={<GapCalculatorTool />} />
           <Route path="/report-delivery-confirmation" element={<ReportDeliveryConfirmation />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/disclosures" element={<Disclosures />} />
+          <Route path="/contact" element={<Contact />} />
         </RouterRoutes>
       </ErrorBoundary>
     </BrowserRouter>

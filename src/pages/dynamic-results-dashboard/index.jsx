@@ -187,7 +187,7 @@ const DynamicResultsDashboard = () => {
               Analyzing Your Retirement Profile
             </h2>
             <p className="text-text-secondary">
-              Calculating personalized gap analysis using BenefitGuardian™ engine...
+              Calculating personalized gap analysis using PublicServ Wealth Group™ engine...
             </p>
           </div>
         </div>

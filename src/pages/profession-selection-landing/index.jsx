@@ -172,15 +172,15 @@ const ProfessionSelectionLanding = () => {
             <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-text-secondary">
               <div className="flex items-center gap-2">
                 <Icon name="Shield" size={16} className="text-success" />
-                <span>SEC Registered</span>
+                <span>Trusted by Public Servants Nationwide</span>
               </div>
               <div className="flex items-center gap-2">
                 <Icon name="Lock" size={16} className="text-success" />
-                <span>Bank-Level Security</span>
+                <span>SOC 2-Compliant Data Protection</span>
               </div>
               <div className="flex items-center gap-2">
-                <Icon name="Award" size={16} className="text-success" />
-                <span>Fiduciary Standard</span>
+                <Icon name="NotepadText" size={16} className="text-success" />
+                <span>Advanced Pension Analytics</span>
               </div>
             </div>
           </motion.div>

@@ -7,17 +7,17 @@ const ConversionFooter = ({ className = "" }) => {
   const complianceItems = [
     {
       icon: 'Shield',
-      text: 'SEC Registered',
+      text: 'Trusted by Public Servants Nationwide',
       tooltip: 'Securities and Exchange Commission registered investment advisor'
     },
     {
       icon: 'Lock',
-      text: 'Bank-Level Security',
+      text: 'SOC 2-Compliant Data Protection',
       tooltip: '256-bit SSL encryption and secure data handling'
     },
     {
       icon: 'Award',
-      text: 'Fiduciary Standard',
+      text: 'Advanced Pension Analytics',
       tooltip: 'Legally bound to act in your best interest'
     }
   ];
@@ -66,13 +66,13 @@ const ConversionFooter = ({ className = "" }) => {
         {/* Disclaimer */}
         <div className="text-center space-y-2">
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            Investment advisory services offered through BenefitGuardian, LLC, a registered investment advisor.
+            Investment advisory services offered through PublicServ Wealth Group, a registered investment advisor.
             This analysis is for educational purposes and does not constitute personalized investment advice.
             Past performance does not guarantee future results. All investments involve risk of loss.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-xs text-text-muted">
-            <span>© {currentYear} BenefitGuardian, LLC</span>
+            <span>© {currentYear} PublicServ Wealth Group</span>
             <span className="hidden sm:inline">•</span>
             <span>All rights reserved</span>
             <span className="hidden sm:inline">•</span>
@@ -88,11 +88,11 @@ const ConversionFooter = ({ className = "" }) => {
             <div className="flex items-center space-x-2">
               <img
                 src="/assets/images/logo.png"
-                alt="BenefitGuardian Logo"
+                alt="PublicServ Wealth Group Logo"
                 className="w-6 h-6 object-contain"
               />
               <div className="text-white">
-                <div className="font-semibold text-sm">BenefitGuardian</div>
+                <div className="font-semibold text-sm">PublicServ Wealth Group</div>
               </div>
             </div>
           </div>

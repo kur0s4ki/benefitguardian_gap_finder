@@ -1,4 +1,4 @@
-// BenefitGuardian™ Gap Finder - Calculation Engine
+// PublicServ Wealth Group™ Gap Finder - Calculation Engine
 // Implements the client's specified calculation logic
 
 /**
