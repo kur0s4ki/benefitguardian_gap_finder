@@ -140,7 +140,7 @@ const ReportDeliveryConfirmation = () => {
       teacher: { emoji: '🍎', bg: 'bg-gradient-to-br from-primary-50 to-accent-50' },
       nurse: { emoji: '⚕️', bg: 'bg-gradient-to-br from-primary-50 to-success-50' },
       'first-responder': { emoji: '🚒', bg: 'bg-gradient-to-br from-primary-50 to-error-50' },
-      'government-employee': { emoji: '🏛️', bg: 'bg-gradient-to-br from-primary-50 to-secondary-50' }
+      'government-employee': { emoji: '💼', bg: 'bg-gradient-to-br from-primary-50 to-secondary-50' }
     };
     return themes[profession] || themes.teacher;
   };

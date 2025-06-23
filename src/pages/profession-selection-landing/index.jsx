@@ -44,7 +44,7 @@ const ProfessionSelectionLanding = () => {
     {
       id: 'government-employee',
       name: 'State/Local Hero',
-      emoji: '🏛️',
+      emoji: '💼',
       icon: 'Building2',
       descriptor: 'Government Service',
       bgTheme: 'bg-gradient-to-br from-secondary-50 to-primary-50',

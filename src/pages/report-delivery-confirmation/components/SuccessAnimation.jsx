@@ -20,7 +20,7 @@ const SuccessAnimation = ({ profession = 'teacher' }) => {
       teacher: '🍎',
       nurse: '⚕️',
       'first-responder': '🚒',
-      'government-employee': '🏛️'
+      'government-employee': '💼'
     };
     return icons[profession] || icons.teacher;
   };

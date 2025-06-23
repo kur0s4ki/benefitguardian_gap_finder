@@ -22,7 +22,7 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
       urgencyMessage: 'Protect your family\'s future like you protect your community'
     },
     'government-employee': {
-      emoji: '🏛️',
+      emoji: '💼',
       title: 'Public Servant',
       urgencyMessage: 'Your service deserves a secure retirement plan'
     }

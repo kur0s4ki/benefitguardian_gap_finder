@@ -60,7 +60,7 @@ const DynamicResultsDashboard = () => {
       accentColor: 'text-error'
     },
     'government-employee': {
-      emoji: '🏛️',
+      emoji: '💼',
       title: 'Public Servant',
       bgGradient: 'from-slate-50 to-gray-50',
       accentColor: 'text-secondary'
