@@ -74,7 +74,14 @@ const RetirementAgeSection = ({
           <label className="block text-sm font-medium text-text-primary mb-2">
             What is your current age?
           </label>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-white font-semibold text-lg">
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-white font-semibold text-lg transition-colors duration-200`}
+            style={{
+              backgroundColor: 
+                (currentAge || 25) <= 35 ? '#2A9D8F' :
+                (currentAge || 25) <= 50 ? '#0F5E9C' :
+                (currentAge || 25) <= 65 ? '#F59E0B' : '#E63946'
+            }}
+          >
             <Icon name="User" size={20} />
             <span>Age {currentAge || 25}</span>
           </div>
