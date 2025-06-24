@@ -54,7 +54,13 @@ const RiskAssessmentQuestionnaire = () => {
   };
 
   const handleSubmit = async () => {
-    if (!isFormValid()) return;
+    // First check local form validation
+    if (!isFormValid()) {
+      const validationErrors = getValidationErrors();
+      setSubmissionErrors(validationErrors);
+      addToast(`Please complete all required fields:\n${validationErrors.join('\n')}`, 'error');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -68,7 +74,10 @@ const RiskAssessmentQuestionnaire = () => {
       pensionEstimate: location.state?.serviceProfile?.pensionEstimate,
       pensionUnknown: location.state?.serviceProfile?.pensionUnknown,
       currentSavings: formData.currentSavings,
-      preferNotToSay: formData.preferNotToSay
+      preferNotToSay: formData.preferNotToSay,
+      inflationProtection: formData.inflationProtection,
+      survivorPlanning: formData.survivorPlanning,
+      financialFears: formData.financialFears
     };
 
     const { isValid, errors, warnings } = validateUserData(preliminaryData);
@@ -76,13 +85,13 @@ const RiskAssessmentQuestionnaire = () => {
     if (!isValid) {
       setIsSubmitting(false);
       setSubmissionErrors(errors);
-      addToast(`Please fix the highlighted errors before continuing.`, 'error');
+      addToast(`Please fix the highlighted errors before continuing:\n${errors.join('\n')}`, 'error');
       return;
     } else {
       setSubmissionErrors([]);
     }
 
-    if (warnings.length) {
+    if (warnings.length > 0) {
       addToast(warnings.join('\n'), 'warning');
     }
 
@@ -97,19 +106,35 @@ const RiskAssessmentQuestionnaire = () => {
     };
 
     // Calculate results and navigate with data
-    const results = calculateBenefitGaps({
-      profession: allData.profession,
-      yearsOfService: allData.serviceProfile.yearsOfService,
-      pensionEstimate: allData.serviceProfile.pensionEstimate,
-      pensionUnknown: allData.serviceProfile.pensionUnknown,
-      state: allData.serviceProfile.state,
-      currentAge: allData.riskAssessment.currentAge,
-      retirementAge: allData.riskAssessment.retirementAge,
-      inflationProtection: allData.riskAssessment.inflationProtection,
-      survivorPlanning: allData.riskAssessment.survivorPlanning,
-      currentSavings: parseFloat(allData.riskAssessment.currentSavings) || 0,
-      financialFears: allData.riskAssessment.financialFears
-    });
+    let results;
+    try {
+      results = calculateBenefitGaps({
+        profession: allData.profession,
+        yearsOfService: allData.serviceProfile.yearsOfService,
+        pensionEstimate: allData.serviceProfile.pensionEstimate,
+        pensionUnknown: allData.serviceProfile.pensionUnknown,
+        state: allData.serviceProfile.state,
+        currentAge: allData.riskAssessment.currentAge,
+        retirementAge: allData.riskAssessment.retirementAge,
+        inflationProtection: allData.riskAssessment.inflationProtection,
+        survivorPlanning: allData.riskAssessment.survivorPlanning,
+        currentSavings: parseFloat(allData.riskAssessment.currentSavings) || 0,
+        financialFears: allData.riskAssessment.financialFears
+      });
+
+      // Check if calculation returned an error
+      if (results.error) {
+        setIsSubmitting(false);
+        addToast(`Calculation error: ${results.error}`, 'error');
+        console.error('Calculation engine error:', results.error, results.calculationLog);
+        return;
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      addToast(`Unexpected error during calculation: ${error.message}`, 'error');
+      console.error('Calculation error:', error);
+      return;
+    }
 
     // Store results in localStorage for persistence
     try {
@@ -129,17 +154,73 @@ const RiskAssessmentQuestionnaire = () => {
   };
 
   const isFormValid = () => {
-    const hasValidAges = formData.currentAge && formData.retirementAge && formData.retirementAge > formData.currentAge;
+    // Age validation
+    const currentAge = parseInt(formData.currentAge);
+    const retirementAge = parseInt(formData.retirementAge);
+    
+    const hasValidCurrentAge = currentAge && currentAge >= 21 && currentAge <= 80;
+    const hasValidRetirementAge = retirementAge && retirementAge >= 50 && retirementAge <= 80;
+    const hasValidAgeRelationship = hasValidCurrentAge && hasValidRetirementAge && retirementAge > currentAge;
+    
+    // Required field validation
+    const hasInflationProtection = formData.inflationProtection !== undefined;
+    const hasSurvivorPlanning = formData.survivorPlanning !== null;
+    const hasFinancialFears = Array.isArray(formData.financialFears) && formData.financialFears.length > 0;
+    
+    // Savings validation - either has savings value or prefers not to say
+    const hasSavingsInfo = formData.preferNotToSay || 
+                          (formData.currentSavings !== '' && 
+                           !isNaN(parseFloat(formData.currentSavings)) && 
+                           parseFloat(formData.currentSavings) >= 0);
     
     return (
-      formData.inflationProtection !== undefined &&
-      formData.survivorPlanning !== null &&
-      formData.retirementAge &&
-      formData.currentAge &&
-      formData.financialFears.length > 0 &&
-      (formData.currentSavings || formData.preferNotToSay) &&
-      hasValidAges
+      hasInflationProtection &&
+      hasSurvivorPlanning &&
+      hasValidAgeRelationship &&
+      hasFinancialFears &&
+      hasSavingsInfo
     );
+  };
+
+  // Helper function to get validation errors for display
+  const getValidationErrors = () => {
+    const errors = [];
+    
+    const currentAge = parseInt(formData.currentAge);
+    const retirementAge = parseInt(formData.retirementAge);
+    
+    if (!currentAge || currentAge < 21 || currentAge > 80) {
+      errors.push('Current age must be between 21 and 80');
+    }
+    
+    if (!retirementAge || retirementAge < 50 || retirementAge > 80) {
+      errors.push('Retirement age must be between 50 and 80');
+    }
+    
+    if (currentAge && retirementAge && retirementAge <= currentAge) {
+      errors.push('Retirement age must be greater than current age');
+    }
+    
+    if (formData.inflationProtection === undefined) {
+      errors.push('Please select your inflation protection preference');
+    }
+    
+    if (formData.survivorPlanning === null) {
+      errors.push('Please select your survivor planning preference');
+    }
+    
+    if (!Array.isArray(formData.financialFears) || formData.financialFears.length === 0) {
+      errors.push('Please select at least one financial concern');
+    }
+    
+    if (!formData.preferNotToSay && 
+        (formData.currentSavings === '' || 
+         isNaN(parseFloat(formData.currentSavings)) || 
+         parseFloat(formData.currentSavings) < 0)) {
+      errors.push('Please enter a valid savings amount or select "Prefer not to say"');
+    }
+    
+    return errors;
   };
 
   const getProfessionTheme = () => {

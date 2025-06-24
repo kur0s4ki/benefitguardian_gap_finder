@@ -120,6 +120,15 @@ const InteractiveCalculator = ({
           </div>
           
           <div className="relative">
+            {/* Custom slider track with fill */}
+            <div className="relative w-full h-3 bg-primary-100 rounded-lg">
+              <div 
+                className="absolute top-0 left-0 h-full bg-primary rounded-lg transition-all duration-200 ease-out"
+                style={{ 
+                  width: `${((scenario.monthlyContribution - 100) / (2000 - 100)) * 100}%` 
+                }}
+              />
+            </div>
             <input
               type="range"
               min="100"
@@ -127,7 +136,7 @@ const InteractiveCalculator = ({
               step="25"
               value={scenario.monthlyContribution}
               onChange={(e) => handleSliderChange('monthlyContribution', parseInt(e.target.value))}
-              className="w-full h-3 bg-primary-100 rounded-lg appearance-none cursor-pointer slider"
+              className="absolute top-0 left-0 w-full h-3 appearance-none cursor-pointer bg-transparent slider-thumb-only"
             />
             <div className="flex justify-between text-xs text-text-muted mt-2">
               <span>$100</span>
@@ -167,6 +176,15 @@ const InteractiveCalculator = ({
           </div>
           
           <div className="relative">
+            {/* Custom slider track with fill */}
+            <div className="relative w-full h-3 bg-secondary-100 rounded-lg">
+              <div 
+                className="absolute top-0 left-0 h-full bg-secondary rounded-lg transition-all duration-200 ease-out"
+                style={{ 
+                  width: `${((scenario.targetRetirementAge - 55) / (70 - 55)) * 100}%` 
+                }}
+              />
+            </div>
             <input
               type="range"
               min="55"
@@ -174,7 +192,7 @@ const InteractiveCalculator = ({
               step="1"
               value={scenario.targetRetirementAge}
               onChange={(e) => handleSliderChange('targetRetirementAge', parseInt(e.target.value))}
-              className="w-full h-3 bg-secondary-100 rounded-lg appearance-none cursor-pointer slider"
+              className="absolute top-0 left-0 w-full h-3 appearance-none cursor-pointer bg-transparent slider-thumb-secondary"
             />
             <div className="flex justify-between text-xs text-text-muted mt-2">
               <span>55</span>
@@ -256,31 +274,140 @@ const InteractiveCalculator = ({
         </div>
       )}
 
-      {/* Mobile Haptic Feedback Simulation */}
+      {/* Enhanced Slider Styles */}
       <style jsx>{`
-        .slider::-webkit-slider-thumb {
+        /* Monthly Contribution Slider - Primary color theme */
+        .slider-thumb-only::-webkit-slider-thumb {
           appearance: none;
-          height: 24px;
-          width: 24px;
+          height: 28px;
+          width: 28px;
           border-radius: 50%;
-          background: var(--color-primary);
+          background: white;
           cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          transition: transform 0.1s ease;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-primary);
+          transition: all 0.2s ease;
+          position: relative;
+          z-index: 10;
         }
         
-        .slider::-webkit-slider-thumb:active {
+        .slider-thumb-only::-webkit-slider-thumb:hover {
           transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 4px var(--color-primary);
         }
         
-        .slider::-moz-range-thumb {
-          height: 24px;
-          width: 24px;
+        .slider-thumb-only::-webkit-slider-thumb:active {
+          transform: scale(1.15);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 4px var(--color-primary-200);
+        }
+        
+        .slider-thumb-only::-moz-range-thumb {
+          height: 28px;
+          width: 28px;
           border-radius: 50%;
-          background: var(--color-primary);
+          background: white;
           cursor: pointer;
+          border: 3px solid var(--color-primary);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+        
+        .slider-thumb-only::-moz-range-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .slider-thumb-only::-moz-range-thumb:active {
+          transform: scale(1.15);
+        }
+        
+        /* Remove default track styling */
+        .slider-thumb-only::-webkit-slider-track {
+          background: transparent;
+        }
+        
+        .slider-thumb-only::-moz-range-track {
+          background: transparent;
           border: none;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Focus styles for accessibility */
+        .slider-thumb-only:focus {
+          outline: none;
+        }
+        
+        .slider-thumb-only:focus::-webkit-slider-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-primary), 0 0 0 5px var(--color-primary-200);
+        }
+        
+        .slider-thumb-only:focus::-moz-range-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-primary-200);
+        }
+        
+        /* Retirement Age Slider - Secondary color theme */
+        .slider-thumb-secondary::-webkit-slider-thumb {
+          appearance: none;
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-secondary);
+          transition: all 0.2s ease;
+          position: relative;
+          z-index: 10;
+        }
+        
+        .slider-thumb-secondary::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 4px var(--color-secondary);
+        }
+        
+        .slider-thumb-secondary::-webkit-slider-thumb:active {
+          transform: scale(1.15);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 4px var(--color-secondary-200);
+        }
+        
+        .slider-thumb-secondary::-moz-range-thumb {
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 3px solid var(--color-secondary);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+        
+        .slider-thumb-secondary::-moz-range-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .slider-thumb-secondary::-moz-range-thumb:active {
+          transform: scale(1.15);
+        }
+        
+        /* Remove default track styling for secondary slider */
+        .slider-thumb-secondary::-webkit-slider-track {
+          background: transparent;
+        }
+        
+        .slider-thumb-secondary::-moz-range-track {
+          background: transparent;
+          border: none;
+        }
+        
+        /* Focus styles for secondary slider */
+        .slider-thumb-secondary:focus {
+          outline: none;
+        }
+        
+        .slider-thumb-secondary:focus::-webkit-slider-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-secondary), 0 0 0 5px var(--color-secondary-200);
+        }
+        
+        .slider-thumb-secondary:focus::-moz-range-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px var(--color-secondary-200);
         }
       `}</style>
     </div>

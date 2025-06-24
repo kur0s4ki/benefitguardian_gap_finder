@@ -206,9 +206,9 @@ const GapCalculatorTool = () => {
       gapClosure: Math.round(gapClosure * 10) / 10, // Round to 1 decimal place
       yearsToRetirement,
       monthlyNeeded: Math.ceil(monthlyNeeded),
-      annualRate: annualRate * 100, // Return as percentage for display
-      realAnnualRate: realRate * 100,
-      inflationRate: inflationRate * 100
+      annualRate: Math.round(annualRate * 100), // Return as clean percentage
+      realAnnualRate: Math.round(realRate * 100 * 10) / 10, // Round to 1 decimal place
+      inflationRate: Math.round(inflationRate * 100) // Return as clean percentage
     };
   };
 
@@ -533,7 +533,7 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           </div>
           <div className="text-sm text-text-secondary">Years to Retirement</div>
           <div className="text-xs text-text-muted mt-1">
-            {projections.annualRate.toFixed(1)}% growth rate
+            {projections.annualRate}% growth rate
           </div>
         </div>
       </div>

@@ -106,10 +106,11 @@ const getYearsUntilRetirementBand = (years) => {
 export const calculateBenefitGaps = (userData) => {
   const calculationLog = ['[Log] Calculation engine started.'];
 
-  // Input validation
-  if (!userData) {
-    throw new Error('User data is required');
-  }
+  try {
+    // Input validation
+    if (!userData) {
+      throw new Error('User data is required');
+    }
 
   // Extract and normalize data
   const profession = userData.profession?.toLowerCase() || 'teacher';
@@ -222,6 +223,11 @@ export const calculateBenefitGaps = (userData) => {
     riskColor = 'red';
   }
 
+  // Calculate total gap for downstream components
+  const totalGap = (pensionGap + survivorGap) * 240 + taxTorpedo;
+
+  calculationLog.push(`[Total] Total gap calculated: $${totalGap} = (${pensionGap} + ${survivorGap}) * 240 + ${taxTorpedo}`);
+
   // Return calculated results
   return {
     // Input data (normalized)
@@ -248,6 +254,7 @@ export const calculateBenefitGaps = (userData) => {
     monthlyGap,
     monthlyContribution,
     lifetimePayout,
+    totalGap, // Add totalGap to standardize data structure
     calculationLog,
     
     // Risk components (for debugging/display)
@@ -266,8 +273,63 @@ export const calculateBenefitGaps = (userData) => {
       coverageLevel,
       colaValue,
       yearsUntilRetirementConverted
+    },
+
+    // Structured gap data for downstream components
+    gaps: {
+      pension: {
+        amount: pensionGap * 240, // Convert monthly to 20-year total
+        monthly: pensionGap,
+        risk: pensionRisk > 60 ? 'high' : pensionRisk > 30 ? 'medium' : 'low',
+        description: `Monthly pension gap: $${pensionGap}/month`
+      },
+      tax: {
+        amount: taxTorpedo,
+        risk: taxRisk > 60 ? 'high' : taxRisk > 30 ? 'medium' : 'low',
+        description: `Tax torpedo impact: $${taxTorpedo}`
+      },
+      survivor: {
+        amount: survivorGap * 240, // Convert monthly to 20-year total
+        monthly: survivorGap,
+        risk: survivorRisk > 60 ? 'high' : survivorRisk > 30 ? 'medium' : 'low',
+        description: `Monthly survivor benefit gap: $${survivorGap}/month`
+      }
     }
   };
+
+  } catch (error) {
+    calculationLog.push(`[Error] Calculation failed: ${error.message}`);
+    
+    // Return a safe fallback result with error information
+    return {
+      error: error.message,
+      calculationLog,
+      // Provide safe defaults
+      profession: userData?.profession || 'unknown',
+      riskScore: 50,
+      riskColor: 'gold',
+      totalGap: 0,
+      pensionGap: 0,
+      taxTorpedo: 0,
+      survivorGap: 0,
+      monthlyGap: 0,
+      monthlyContribution: 0,
+      lifetimePayout: 0,
+      hiddenBenefitOpportunity: 0,
+      riskComponents: {
+        pensionRisk: 0,
+        taxRisk: 0,
+        survivorRisk: 0,
+        earlyRetireBonus: 0,
+        taxSurprisesBonus: 0
+      },
+      gaps: {
+        pension: { amount: 0, monthly: 0, risk: 'low', description: 'Error in calculation' },
+        tax: { amount: 0, risk: 'low', description: 'Error in calculation' },
+        survivor: { amount: 0, monthly: 0, risk: 'low', description: 'Error in calculation' }
+      }
+    };
+  }
 };
 
 /**
@@ -284,7 +346,7 @@ export const validateUserData = (userData) => {
     return { isValid: false, errors, warnings };
   }
 
-  // Required fields
+  // Required fields validation
   if (!userData.profession) {
     errors.push('Profession is required');
   }
@@ -297,8 +359,46 @@ export const validateUserData = (userData) => {
     errors.push('State is required');
   }
 
-  if (!userData.currentAge || userData.currentAge < 21) {
-    errors.push('A valid current age is required');
+  // Age validation with comprehensive checks
+  const currentAge = parseInt(userData.currentAge);
+  const retirementAge = parseInt(userData.retirementAge);
+
+  if (!currentAge || currentAge < 21 || currentAge > 80) {
+    errors.push('Current age must be between 21 and 80');
+  }
+
+  if (!retirementAge || retirementAge < 50 || retirementAge > 80) {
+    errors.push('Retirement age must be between 50 and 80');
+  }
+
+  // Cross-field validation for ages
+  if (currentAge && retirementAge) {
+    if (retirementAge <= currentAge) {
+      errors.push('Retirement age must be greater than current age');
+    }
+    
+    const yearsToRetirement = retirementAge - currentAge;
+    if (yearsToRetirement > 50) {
+      warnings.push('Very long time until retirement - consider reviewing your timeline');
+    }
+    
+    if (yearsToRetirement < 5) {
+      warnings.push('Short time until retirement - consider aggressive savings strategies');
+    }
+  }
+
+  // Pension validation
+  if (userData.pensionEstimate && (isNaN(parseFloat(userData.pensionEstimate)) || parseFloat(userData.pensionEstimate) < 0)) {
+    errors.push('Pension estimate must be a valid positive number');
+  }
+
+  if (userData.pensionEstimate && parseFloat(userData.pensionEstimate) > 20000) {
+    warnings.push('Very high pension estimate - please verify this amount');
+  }
+
+  // Savings validation
+  if (userData.currentSavings && (isNaN(parseFloat(userData.currentSavings)) || parseFloat(userData.currentSavings) < 0)) {
+    errors.push('Current savings must be a valid positive number');
   }
 
   // Warnings for missing optional data
@@ -308,6 +408,14 @@ export const validateUserData = (userData) => {
 
   if (!userData.currentSavings && userData.currentSavings !== 0 && !userData.preferNotToSay) {
     warnings.push('Current savings not provided - assuming $0');
+  }
+
+  if (!userData.inflationProtection && userData.inflationProtection !== false) {
+    warnings.push('Inflation protection preference not specified - this affects risk calculations');
+  }
+
+  if (!userData.survivorPlanning && userData.survivorPlanning !== false) {
+    warnings.push('Survivor planning preference not specified - this affects risk calculations');
   }
 
   return {

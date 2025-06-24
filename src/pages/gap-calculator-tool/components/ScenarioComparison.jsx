@@ -145,6 +145,17 @@ const ScenarioComparison = ({
                   highlight={true}
                 />
                 <ComparisonRow 
+                  label="Risk Tolerance"
+                  values={comparisonData.map(s => {
+                    const riskMap = {
+                      'conservative': '5% (Conservative)',
+                      'moderate': '7% (Moderate)',
+                      'aggressive': '9% (Aggressive)'
+                    };
+                    return riskMap[s.riskTolerance] || s.riskTolerance;
+                  })}
+                />
+                <ComparisonRow 
                   label="Gap Closure"
                   values={comparisonData.map(s => `${s.projections.gapClosure.toFixed(1)}%`)}
                   highlight={true}

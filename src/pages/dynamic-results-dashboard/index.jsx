@@ -90,16 +90,18 @@ const DynamicResultsDashboard = () => {
   const riskLevel = calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' };
 
   const handleNavigateToCalculator = () => {
-    // Transform calculated results to the format expected by Gap Calculator
+    // Use the standardized data structure from calculation engine
     const transformedData = {
       profession: calculatedResults.profession,
       yearsOfService: calculatedResults.yearsOfService,
       currentAge: calculatedResults.currentAge || 45,
       state: calculatedResults.state,
       monthlyPension: calculatedResults.currentPension,
-      gaps: {
+      gaps: calculatedResults.gaps || {
+        // Fallback for older data format
         pension: {
-          amount: calculatedResults.pensionGap * 240, // Convert monthly to 20-year total
+          amount: calculatedResults.pensionGap * 240,
+          monthly: calculatedResults.pensionGap,
           risk: calculatedResults.riskComponents?.pensionRisk > 60 ? 'high' : 'medium',
           description: `Monthly pension shortfall: $${calculatedResults.pensionGap}/month`
         },
@@ -109,15 +111,20 @@ const DynamicResultsDashboard = () => {
           description: `Tax torpedo impact on retirement withdrawals`
         },
         survivor: {
-          amount: calculatedResults.survivorGap * 240, // Convert monthly to 20-year total
+          amount: calculatedResults.survivorGap * 240,
+          monthly: calculatedResults.survivorGap,
           risk: calculatedResults.riskComponents?.survivorRisk > 60 ? 'high' : 'medium',
           description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
         }
       },
-      totalGap: (calculatedResults.pensionGap + calculatedResults.survivorGap) * 240 + calculatedResults.taxTorpedo,
+      totalGap: calculatedResults.totalGap || ((calculatedResults.pensionGap + calculatedResults.survivorGap) * 240 + calculatedResults.taxTorpedo),
       riskScore: calculatedResults.riskScore,
+      riskColor: calculatedResults.riskColor,
       hiddenBenefitOpportunity: calculatedResults.hiddenBenefitOpportunity,
-      calculationLog: calculatedResults.calculationLog
+      calculationLog: calculatedResults.calculationLog,
+      monthlyContribution: calculatedResults.monthlyContribution,
+      lifetimePayout: calculatedResults.lifetimePayout,
+      riskComponents: calculatedResults.riskComponents
     };
 
     navigate('/gap-calculator-tool', {

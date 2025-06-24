@@ -8,7 +8,6 @@ const RetirementAgeSection = ({
   onCurrentAgeChange,
   profession
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
 
   const professionData = {
     teacher: { earlyAge: 58, normalAge: 62, lateAge: 67, context: "Teachers often have specific pension milestones. Retiring early might reduce your pension, while delaying could increase it." },
@@ -82,16 +81,26 @@ const RetirementAgeSection = ({
         </div>
 
         <div className="relative">
+          {/* Multi-colored current age slider track */}
+          <div className="relative w-full h-3 rounded-lg overflow-hidden">
+            <div 
+              className="absolute top-0 left-0 w-full h-full"
+              style={{
+                background: `linear-gradient(to right, 
+                  #2A9D8F 0%, #2A9D8F ${((35 - 25) / (70 - 25)) * 100}%, 
+                  #0F5E9C ${((35 - 25) / (70 - 25)) * 100}%, #0F5E9C ${((50 - 25) / (70 - 25)) * 100}%, 
+                  #F59E0B ${((50 - 25) / (70 - 25)) * 100}%, #F59E0B ${((65 - 25) / (70 - 25)) * 100}%, 
+                  #E63946 ${((65 - 25) / (70 - 25)) * 100}%, #E63946 100%)`
+              }}
+            />
+          </div>
           <input
             type="range"
             min="25"
             max="70"
             value={currentAge || 25}
             onChange={(e) => onCurrentAgeChange(parseInt(e.target.value))}
-            className="w-full h-3 rounded-lg appearance-none cursor-pointer transition-all duration-200"
-            style={{
-              background: `linear-gradient(to right, #6B7280 0%, #6B7280 100%)`
-            }}
+            className="absolute top-0 left-0 w-full h-3 appearance-none cursor-pointer bg-transparent current-age-slider"
           />
           
           <div className="flex justify-between mt-2 text-xs text-text-secondary">
@@ -129,25 +138,25 @@ const RetirementAgeSection = ({
         </div>
 
         <div className="relative">
+          {/* Multi-colored slider track */}
+          <div className="relative w-full h-3 rounded-lg overflow-hidden">
+            <div 
+              className="absolute top-0 left-0 w-full h-full"
+              style={{
+                background: `linear-gradient(to right, 
+                  #F59E0B 0%, #F59E0B ${((currentData.earlyAge - 50) / 25) * 100}%, 
+                  #2A9D8F ${((currentData.earlyAge - 50) / 25) * 100}%, #2A9D8F ${((currentData.normalAge - 50) / 25) * 100}%, 
+                  #0F5E9C ${((currentData.normalAge - 50) / 25) * 100}%, #0F5E9C 100%)`
+              }}
+            />
+          </div>
           <input
             type="range"
             min="50"
             max="75"
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => setIsDragging(false)}
-            className={`w-full h-3 rounded-lg appearance-none cursor-pointer transition-all duration-200 ${
-              isDragging ? 'scale-105' : ''
-            }`}
-            style={{
-              background: `linear-gradient(to right, 
-                #F59E0B 0%, #F59E0B ${((currentData.earlyAge - 50) / 25) * 100}%, 
-                #2A9D8F ${((currentData.earlyAge - 50) / 25) * 100}%, #2A9D8F ${((currentData.normalAge - 50) / 25) * 100}%, 
-                #0F5E9C ${((currentData.normalAge - 50) / 25) * 100}%, #0F5E9C 100%)`
-            }}
+            className="absolute top-0 left-0 w-full h-3 appearance-none cursor-pointer bg-transparent retirement-age-slider"
           />
           
           <div className="flex justify-between mt-2 text-xs text-text-secondary">
@@ -250,6 +259,131 @@ const RetirementAgeSection = ({
           </div>
         </div>
       </div>
+
+      {/* Enhanced Slider Styles */}
+      <style jsx>{`
+        /* Current Age Slider - Dynamic thumb color based on age */
+        .current-age-slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px ${
+            (currentAge || 25) <= 35 ? '#2A9D8F' :
+            (currentAge || 25) <= 50 ? '#0F5E9C' :
+            (currentAge || 25) <= 65 ? '#F59E0B' : '#E63946'
+          };
+          transition: all 0.2s ease;
+          position: relative;
+          z-index: 10;
+        }
+        
+        .current-age-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 4px ${
+            (currentAge || 25) <= 35 ? '#2A9D8F' :
+            (currentAge || 25) <= 50 ? '#0F5E9C' :
+            (currentAge || 25) <= 65 ? '#F59E0B' : '#E63946'
+          };
+        }
+        
+        .current-age-slider::-webkit-slider-thumb:active {
+          transform: scale(1.15);
+        }
+        
+        .current-age-slider::-moz-range-thumb {
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 3px solid ${
+            (currentAge || 25) <= 35 ? '#2A9D8F' :
+            (currentAge || 25) <= 50 ? '#0F5E9C' :
+            (currentAge || 25) <= 65 ? '#F59E0B' : '#E63946'
+          };
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+        
+        /* Retirement Age Slider - Dynamic thumb color based on retirement category */
+        .retirement-age-slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px ${
+            getAgeCategory(value) === 'early' ? '#F59E0B' :
+            getAgeCategory(value) === 'normal' ? '#2A9D8F' : '#0F5E9C'
+          };
+          transition: all 0.2s ease;
+          position: relative;
+          z-index: 10;
+        }
+        
+        .retirement-age-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 4px ${
+            getAgeCategory(value) === 'early' ? '#F59E0B' :
+            getAgeCategory(value) === 'normal' ? '#2A9D8F' : '#0F5E9C'
+          };
+        }
+        
+        .retirement-age-slider::-webkit-slider-thumb:active {
+          transform: scale(1.15);
+        }
+        
+        .retirement-age-slider::-moz-range-thumb {
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 3px solid ${
+            getAgeCategory(value) === 'early' ? '#F59E0B' :
+            getAgeCategory(value) === 'normal' ? '#2A9D8F' : '#0F5E9C'
+          };
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+        }
+        
+        /* Remove default track styling */
+        .current-age-slider::-webkit-slider-track,
+        .retirement-age-slider::-webkit-slider-track {
+          background: transparent;
+        }
+        
+        .current-age-slider::-moz-range-track,
+        .retirement-age-slider::-moz-range-track {
+          background: transparent;
+          border: none;
+        }
+        
+        /* Focus styles for accessibility */
+        .current-age-slider:focus,
+        .retirement-age-slider:focus {
+          outline: none;
+        }
+        
+        .current-age-slider:focus::-webkit-slider-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px ${
+            (currentAge || 25) <= 35 ? '#2A9D8F' :
+            (currentAge || 25) <= 50 ? '#0F5E9C' :
+            (currentAge || 25) <= 65 ? '#F59E0B' : '#E63946'
+          }, 0 0 0 5px rgba(15, 94, 156, 0.2);
+        }
+        
+        .retirement-age-slider:focus::-webkit-slider-thumb {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 0 0 3px ${
+            getAgeCategory(value) === 'early' ? '#F59E0B' :
+            getAgeCategory(value) === 'normal' ? '#2A9D8F' : '#0F5E9C'
+          }, 0 0 0 5px rgba(15, 94, 156, 0.2);
+        }
+      `}</style>
     </div>
   );
 };

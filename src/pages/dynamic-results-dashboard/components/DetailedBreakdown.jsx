@@ -145,7 +145,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
 
                     <div className="text-xs text-text-muted">
                       <Icon name="Info" size={14} className="inline mr-1" />
-                      Based on 7% annual return over remaining working years
+                      Based on moderate growth assumptions over remaining working years
                     </div>
                   </div>
 

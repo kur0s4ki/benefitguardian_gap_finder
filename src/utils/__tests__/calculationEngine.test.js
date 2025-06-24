@@ -30,6 +30,34 @@ describe('calculateBenefitGaps – core logic', () => {
     expect(result.riskScore).toBeGreaterThanOrEqual(0);
   });
 
+  test('totalGap is calculated correctly', () => {
+    const result = calculateBenefitGaps({
+      ...baseInput,
+      survivorPlanning: 'no'
+    });
+
+    const expectedTotalGap = (result.pensionGap + result.survivorGap) * 240 + result.taxTorpedo;
+    expect(result.totalGap).toBe(expectedTotalGap);
+    expect(result.totalGap).toBeGreaterThan(0);
+  });
+
+  test('gaps structure is properly formatted', () => {
+    const result = calculateBenefitGaps({
+      ...baseInput,
+      survivorPlanning: 'no'
+    });
+
+    expect(result.gaps).toBeDefined();
+    expect(result.gaps.pension).toBeDefined();
+    expect(result.gaps.tax).toBeDefined();
+    expect(result.gaps.survivor).toBeDefined();
+    
+    // Check that gap amounts are consistent
+    expect(result.gaps.pension.amount).toBe(result.pensionGap * 240);
+    expect(result.gaps.survivor.amount).toBe(result.survivorGap * 240);
+    expect(result.gaps.tax.amount).toBe(result.taxTorpedo);
+  });
+
   describe('yearsUntilRetirementBand edge cases', () => {
     const cases = [
       { diff: 5, exp: '5-10' },

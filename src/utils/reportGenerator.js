@@ -46,15 +46,24 @@ const buildDoc = (userData, projections = {}) => {
   // Section: Detailed Risk Analysis
   addHeading('1. Detailed Risk Analysis');
   addBody(`Risk Score: ${userData.riskScore} / 100`);
+  addBody(`Risk Level: ${userData.riskColor === 'red' ? 'High' : userData.riskColor === 'gold' ? 'Moderate' : 'Low'}`);
   addBody(`Pension Risk: ${userData.riskComponents?.pensionRisk ?? 'N/A'}`);
   addBody(`Tax Risk: ${userData.riskComponents?.taxRisk ?? 'N/A'}`);
   addBody(`Survivor Risk: ${userData.riskComponents?.survivorRisk ?? 'N/A'}`);
 
   // Section: Gap Calculations
   addHeading('2. Gap Calculations');
-  addBody(`Pension Gap: $${(userData.pensionGap || 0).toLocaleString()}/month ($${((userData.pensionGap || 0)*240).toLocaleString()} over 20 years)`);
-  addBody(`Tax Torpedo Risk: $${(userData.taxTorpedo || 0).toLocaleString()}`);
-  addBody(`Survivor Protection Gap: $${(userData.survivorGap || 0).toLocaleString()}/month ($${((userData.survivorGap || 0)*240).toLocaleString()} over 20 years)`);
+  if (userData.gaps) {
+    addBody(`Pension Gap: $${userData.gaps.pension.monthly || 0}/month ($${userData.gaps.pension.amount.toLocaleString()} over 20 years)`);
+    addBody(`Tax Torpedo Risk: $${userData.gaps.tax.amount.toLocaleString()}`);
+    addBody(`Survivor Protection Gap: $${userData.gaps.survivor.monthly || 0}/month ($${userData.gaps.survivor.amount.toLocaleString()} over 20 years)`);
+  } else {
+    // Fallback for older data format
+    addBody(`Pension Gap: $${(userData.pensionGap || 0).toLocaleString()}/month ($${((userData.pensionGap || 0)*240).toLocaleString()} over 20 years)`);
+    addBody(`Tax Torpedo Risk: $${(userData.taxTorpedo || 0).toLocaleString()}`);
+    addBody(`Survivor Protection Gap: $${(userData.survivorGap || 0).toLocaleString()}/month ($${((userData.survivorGap || 0)*240).toLocaleString()} over 20 years)`);
+  }
+  addBody(`Total Gap: $${(userData.totalGap || 0).toLocaleString()}`);
 
   // Section: Action Plan
   addHeading('3. Action Plan');
