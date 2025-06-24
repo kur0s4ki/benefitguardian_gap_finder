@@ -255,25 +255,27 @@ const ServiceProfileCollection = () => {
             <button
               onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
               disabled={currentSection === 0}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors duration-150 ${
+              className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
                 currentSection === 0
-                  ? 'text-text-muted cursor-not-allowed' :'text-primary hover:bg-primary-50'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white text-primary hover:bg-primary-50 hover:shadow-lg active:transform active:scale-95'
               }`}
+              aria-label="Previous section"
             >
-              <Icon name="ChevronLeft" size={18} />
-              <span>Previous</span>
+              <Icon name="ChevronLeft" size={24} />
             </button>
 
             <button
               onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
               disabled={currentSection === sections.length - 1}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors duration-150 ${
+              className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
                 currentSection === sections.length - 1
-                  ? 'text-text-muted cursor-not-allowed' :'text-primary hover:bg-primary-50'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-primary text-white hover:bg-primary-700 hover:shadow-lg active:transform active:scale-95'
               }`}
+              aria-label="Next section"
             >
-              <span>Next</span>
-              <Icon name="ChevronRight" size={18} />
+              <Icon name="ChevronRight" size={24} />
             </button>
           </div>
         </div>

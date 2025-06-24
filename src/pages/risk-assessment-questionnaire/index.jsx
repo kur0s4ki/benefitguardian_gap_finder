@@ -406,42 +406,40 @@ const RiskAssessmentQuestionnaire = () => {
               <button
                 onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
                 disabled={currentSection === 0}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors duration-150 ${
+                className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
                   currentSection === 0
-                    ? 'text-text-muted cursor-not-allowed' :'text-primary hover:bg-primary-50'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-white text-primary hover:bg-primary-50 hover:shadow-lg active:transform active:scale-95'
                 }`}
+                aria-label="Previous section"
               >
-                <Icon name="ChevronLeft" size={18} />
-                <span>Previous</span>
+                <Icon name="ChevronLeft" size={24} />
               </button>
 
               {currentSection < sections.length - 1 ? (
                 <button
                   onClick={() => setCurrentSection(currentSection + 1)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150"
+                  className="w-12 h-12 flex items-center justify-center bg-primary text-white rounded-full shadow-md hover:bg-primary-700 hover:shadow-lg transition-all duration-200 active:transform active:scale-95"
+                  aria-label="Next section"
                 >
-                  <span>Next</span>
-                  <Icon name="ChevronRight" size={18} />
+                  <Icon name="ChevronRight" size={24} />
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
                   disabled={!isFormValid() || isSubmitting}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-150 ${
+                  className={`h-12 px-6 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
                     isFormValid() && !isSubmitting
-                      ? 'bg-accent text-secondary hover:bg-accent-500 hover:shadow-lg transform hover:-translate-y-0.5'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-accent text-secondary hover:bg-accent-500 hover:shadow-lg active:transform active:scale-95'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
-                      <span>Calculating...</span>
-                    </>
+                    <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Icon name="Calculator" size={20} />
-                      <span>Calculate My Results</span>
+                      <Icon name="CheckCircle" size={20} className="mr-2" />
+                      <span>Complete</span>
                     </>
                   )}
                 </button>
