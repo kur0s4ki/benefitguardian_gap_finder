@@ -112,27 +112,38 @@ export const calculateBenefitGaps = (userData) => {
       throw new Error('User data is required');
     }
 
-  // Extract and normalize data
+  // Extract and normalize data with proper validation
   const profession = userData.profession?.toLowerCase() || 'teacher';
-  const yearsOfService = parseInt(userData.yearsOfService) || 15;
+  
+  // Validate and parse numeric inputs
+  const yearsOfService = Math.max(0, Math.min(50, parseInt(userData.yearsOfService) || 15));
+  const currentAge = Math.max(18, Math.min(100, parseInt(userData.currentAge) || 45));
+  const retirementAge = Math.max(currentAge + 1, Math.min(100, parseInt(userData.retirementAge) || 65));
+  const otherSavings = Math.max(0, parseFloat(userData.otherSavings || userData.currentSavings) || 0);
+  
   const state = userData.state || 'CA';
-  const cola = userData.cola || userData.inflationProtection || 'no';
-  const survivorIncome = userData.survivorIncome || userData.survivorPlanning || 'no';
-  const otherSavings = parseFloat(userData.otherSavings || userData.currentSavings) || 0;
-  const financialFears = userData.financialFears || [];
-  const currentAge = parseInt(userData.currentAge) || 45;
-  const retirementAge = parseInt(userData.retirementAge) || 65;
+  
+  // Normalize boolean/string inputs
+  const cola = String(userData.cola || userData.inflationProtection || 'no').toLowerCase();
+  const survivorIncome = String(userData.survivorIncome || userData.survivorPlanning || 'no').toLowerCase();
+  const financialFears = Array.isArray(userData.financialFears) ? userData.financialFears : [];
 
   calculationLog.push(`[Input] Normalized inputs: profession=${profession}, yos=${yearsOfService}, state=${state}, cola=${cola}, survivor=${survivorIncome}, savings=${otherSavings}, age=${currentAge}, retireAge=${retirementAge}`);
 
-  // Handle pension estimate
+  // Handle pension estimate with validation
   let currentPension;
   if (userData.pensionUnknown || userData.pensionEstimate === "I don't know" || !userData.pensionEstimate) {
     currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
     calculationLog.push(`[Pension] User pension unknown. Using default for ${profession}: $${currentPension}`);
   } else {
-    currentPension = parseFloat(userData.pensionEstimate) || DEFAULT_PENSION_VALUES[profession];
-    calculationLog.push(`[Pension] User provided pension: $${currentPension}`);
+    const parsedPension = parseFloat(userData.pensionEstimate);
+    if (isNaN(parsedPension) || parsedPension < 0) {
+      currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+      calculationLog.push(`[Pension] Invalid pension value provided. Using default for ${profession}: $${currentPension}`);
+    } else {
+      currentPension = Math.min(50000, parsedPension); // Cap at reasonable maximum
+      calculationLog.push(`[Pension] User provided pension: $${currentPension}`);
+    }
   }
 
   // Calculate derived values
@@ -201,9 +212,11 @@ export const calculateBenefitGaps = (userData) => {
   calculationLog.push(`[Gaps] Total monthly gap: $${monthlyGap}`);
 
   // D. Monthly Contribution & Lifetime Payout
-  const monthlyContribution = Math.round(
-    (monthlyGap * 12) / (yearsUntilRetirementConverted * 7)
-  );
+  // Protect against division by zero
+  const contributionDivisor = yearsUntilRetirementConverted * 7;
+  const monthlyContribution = contributionDivisor > 0 ? Math.round(
+    (monthlyGap * 12) / contributionDivisor
+  ) : 0;
 
   calculationLog.push(`[Calc] Required monthly contribution: $${monthlyContribution}`);
 
@@ -223,10 +236,10 @@ export const calculateBenefitGaps = (userData) => {
     riskColor = 'red';
   }
 
-  // Calculate total gap for downstream components
-  const totalGap = (pensionGap + survivorGap) * 240 + taxTorpedo;
+  // Calculate total gap for downstream components (fixed calculation)
+  const totalGap = (pensionGap * 240) + (survivorGap * 240) + taxTorpedo;
 
-  calculationLog.push(`[Total] Total gap calculated: $${totalGap} = (${pensionGap} + ${survivorGap}) * 240 + ${taxTorpedo}`);
+  calculationLog.push(`[Total] Total gap calculated: $${totalGap} = (${pensionGap} * 240) + (${survivorGap} * 240) + ${taxTorpedo}`);
 
   // Return calculated results
   return {

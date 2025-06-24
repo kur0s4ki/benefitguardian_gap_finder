@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import ConversionFooter from 'components/ui/ConversionFooter';
@@ -67,7 +67,10 @@ const DynamicResultsDashboard = () => {
     }
   };
 
-  const currentTheme = professionThemes[calculatedResults?.profession] || professionThemes.teacher;
+  const currentTheme = useMemo(() => 
+    professionThemes[calculatedResults?.profession] || professionThemes.teacher,
+    [calculatedResults?.profession]
+  );
 
   // Loading effect after calculation is complete
   useEffect(() => {
@@ -87,9 +90,18 @@ const DynamicResultsDashboard = () => {
     return { level: 'High', color: 'text-error', bgColor: 'bg-error-50' };
   };
 
-  const riskLevel = calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' };
+  const riskLevel = useMemo(() => 
+    calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' },
+    [calculatedResults?.riskScore]
+  );
 
-  const handleNavigateToCalculator = () => {
+  const handleNavigateToCalculator = useCallback(() => {
+    // Validate calculatedResults before transformation
+    if (!calculatedResults) {
+      console.error('No calculated results available for navigation');
+      return;
+    }
+
     // Use the standardized data structure from calculation engine
     const transformedData = {
       profession: calculatedResults.profession,
@@ -98,26 +110,26 @@ const DynamicResultsDashboard = () => {
       state: calculatedResults.state,
       monthlyPension: calculatedResults.currentPension,
       gaps: calculatedResults.gaps || {
-        // Fallback for older data format
+        // Fallback for older data format - fixed calculation
         pension: {
-          amount: calculatedResults.pensionGap * 240,
-          monthly: calculatedResults.pensionGap,
-          risk: calculatedResults.riskComponents?.pensionRisk > 60 ? 'high' : 'medium',
-          description: `Monthly pension shortfall: $${calculatedResults.pensionGap}/month`
+          amount: (calculatedResults.pensionGap || 0) * 240,
+          monthly: calculatedResults.pensionGap || 0,
+          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? 'high' : 'medium',
+          description: `Monthly pension shortfall: $${calculatedResults.pensionGap || 0}/month`
         },
         tax: {
-          amount: calculatedResults.taxTorpedo,
-          risk: calculatedResults.riskComponents?.taxRisk > 50 ? 'high' : 'medium',
+          amount: calculatedResults.taxTorpedo || 0,
+          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 50 ? 'high' : 'medium',
           description: `Tax torpedo impact on retirement withdrawals`
         },
         survivor: {
-          amount: calculatedResults.survivorGap * 240,
-          monthly: calculatedResults.survivorGap,
-          risk: calculatedResults.riskComponents?.survivorRisk > 60 ? 'high' : 'medium',
-          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
+          amount: (calculatedResults.survivorGap || 0) * 240,
+          monthly: calculatedResults.survivorGap || 0,
+          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? 'high' : 'medium',
+          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap || 0}/month`
         }
       },
-      totalGap: calculatedResults.totalGap || ((calculatedResults.pensionGap + calculatedResults.survivorGap) * 240 + calculatedResults.taxTorpedo),
+      totalGap: calculatedResults.totalGap || (((calculatedResults.pensionGap || 0) * 240) + ((calculatedResults.survivorGap || 0) * 240) + (calculatedResults.taxTorpedo || 0)),
       riskScore: calculatedResults.riskScore,
       riskColor: calculatedResults.riskColor,
       hiddenBenefitOpportunity: calculatedResults.hiddenBenefitOpportunity,
@@ -132,9 +144,15 @@ const DynamicResultsDashboard = () => {
         userData: transformedData
       }
     });
-  };
+  }, [calculatedResults, navigate]);
 
-  const handleEmailReport = async () => {
+  const handleEmailReport = useCallback(async () => {
+    // Validate calculatedResults before processing
+    if (!calculatedResults) {
+      console.error('No calculated results available for email report');
+      return;
+    }
+
     // HubSpot integration would go here
     console.log('Email report requested');
 
@@ -149,23 +167,23 @@ const DynamicResultsDashboard = () => {
                  calculatedResults.riskScore >= 40 ? 'gold' : 'green',
       gaps: {
         pension: {
-          amount: calculatedResults.pensionGap * 240, // Convert monthly to 20-year total
-          description: `Monthly pension shortfall: $${calculatedResults.pensionGap}/month`
+          amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total
+          description: `Monthly pension shortfall: $${calculatedResults.pensionGap || 0}/month`
         },
         tax: {
-          amount: calculatedResults.taxTorpedo,
+          amount: calculatedResults.taxTorpedo || 0,
           description: `Tax torpedo impact on retirement withdrawals`
         },
         survivor: {
-          amount: calculatedResults.survivorGap * 240, // Convert monthly to 20-year total
-          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
+          amount: (calculatedResults.survivorGap || 0) * 240, // Convert monthly to 20-year total
+          description: `Monthly survivor benefit gap: $${calculatedResults.survivorGap || 0}/month`
         }
       },
       calculationLog: calculatedResults.calculationLog
     };
 
     const projections = {
-      monthlyNeeded: Math.round((calculatedResults.pensionGap + calculatedResults.survivorGap) * 0.8) || 500
+      monthlyNeeded: Math.round(((calculatedResults.pensionGap || 0) + (calculatedResults.survivorGap || 0)) * 0.8) || 500
     };
 
     // Small delay to show loading state
@@ -177,13 +195,13 @@ const DynamicResultsDashboard = () => {
         projections: projections
       }
     });
-  };
+  }, [calculatedResults, navigate]);
 
-  const handleBookAudit = () => {
+  const handleBookAudit = useCallback(() => {
     // Calendly integration would go here
     console.log('Audit booking requested');
     window.open('https://calendly.com/publicserv-wealth', '_blank');
-  };
+  }, []);
 
   if (isLoading) {
     return (

@@ -1,33 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from 'components/AppIcon';
 
 const RiskGauge = ({ score, profession, showResults, riskComponents }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const animationTimerRef = useRef(null);
+  const delayTimerRef = useRef(null);
 
-  useEffect(() => {
-    if (showResults) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => {
-        animateScore();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [showResults, score]);
-
-  const animateScore = () => {
+  const animateScore = useCallback(() => {
     let current = 0;
     const increment = score / 50;
-    const timer = setInterval(() => {
+    
+    // Clear any existing animation
+    if (animationTimerRef.current) {
+      clearInterval(animationTimerRef.current);
+    }
+    
+    animationTimerRef.current = setInterval(() => {
       current += increment;
       if (current >= score) {
         current = score;
-        clearInterval(timer);
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
         setIsAnimating(false);
       }
       setAnimatedScore(Math.round(current));
     }, 40);
-  };
+  }, [score]);
+
+  useEffect(() => {
+    if (showResults) {
+      setIsAnimating(true);
+      delayTimerRef.current = setTimeout(() => {
+        animateScore();
+      }, 500);
+    }
+
+    // Cleanup function
+    return () => {
+      if (delayTimerRef.current) {
+        clearTimeout(delayTimerRef.current);
+        delayTimerRef.current = null;
+      }
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
+      }
+    };
+  }, [showResults, animateScore]);
 
   const getRiskData = (currentScore) => {
     if (currentScore < 40) {

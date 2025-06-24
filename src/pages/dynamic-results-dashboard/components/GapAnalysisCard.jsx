@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from 'components/AppIcon';
 
 const GapAnalysisCard = ({ 
@@ -13,38 +13,61 @@ const GapAnalysisCard = ({
   const [isVisible, setIsVisible] = useState(false);
   const [showAmount, setShowAmount] = useState(false);
   const [animatedAmount, setAnimatedAmount] = useState(0);
+  const visibilityTimerRef = useRef(null);
+  const amountTimerRef = useRef(null);
+  const animationTimerRef = useRef(null);
+
+  const animateAmount = useCallback(() => {
+    let current = 0;
+    const increment = amount / 30;
+    
+    // Clear any existing animation
+    if (animationTimerRef.current) {
+      clearInterval(animationTimerRef.current);
+    }
+    
+    animationTimerRef.current = setInterval(() => {
+      current += increment;
+      if (current >= amount) {
+        current = amount;
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
+      }
+      setAnimatedAmount(Math.round(current));
+    }, 50);
+  }, [amount]);
+
+  const playChaChing = useCallback(() => {
+    // Sound effect implementation would go here
+    console.log('Cha-ching sound effect played');
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    visibilityTimerRef.current = setTimeout(() => {
       setIsVisible(true);
-      setTimeout(() => {
+      amountTimerRef.current = setTimeout(() => {
         setShowAmount(true);
         animateAmount();
-        // Play "cha-ching" sound effect here
         playChaChing();
       }, 300);
     }, delay);
 
-    return () => clearTimeout(timer);
-  }, [delay, amount]);
-
-  const animateAmount = () => {
-    let current = 0;
-    const increment = amount / 30;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= amount) {
-        current = amount;
-        clearInterval(timer);
+    // Cleanup function
+    return () => {
+      if (visibilityTimerRef.current) {
+        clearTimeout(visibilityTimerRef.current);
+        visibilityTimerRef.current = null;
       }
-      setAnimatedAmount(Math.round(current));
-    }, 50);
-  };
-
-  const playChaChing = () => {
-    // Sound effect implementation would go here
-    console.log('Cha-ching sound effect played');
-  };
+      if (amountTimerRef.current) {
+        clearTimeout(amountTimerRef.current);
+        amountTimerRef.current = null;
+      }
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
+      }
+    };
+  }, [delay, animateAmount, playChaChing]);
 
   const getRiskStyles = () => {
     switch (riskLevel) {
