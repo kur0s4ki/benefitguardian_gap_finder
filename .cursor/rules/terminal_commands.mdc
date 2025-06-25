@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Terminal Command Execution Guidelines
+
+Rules for when the AI should execute terminal commands during development work.
+
+## When NOT to Run Terminal Commands
+
+- **Never run terminal commands automatically** after making code changes
+- **Don't assume** the user wants builds, servers, or tests run without explicit request
+- **Avoid automatic `npm run build`** after file modifications
+- **Don't start development servers** (`npm start`, `npm run dev`) unless asked
+- **Skip automatic test runs** unless specifically requested
+
+## When TO Run Terminal Commands
+
+- **Only when explicitly requested** by the user
+- **When the user asks** to build, start server, run tests, or install packages
+- **For diagnostic purposes** when troubleshooting specific issues
+- **When the user provides specific commands** to execute
+
+## Best Practices
+
+- **Ask permission** before running potentially long-running commands
+- **Explain what the command will do** before executing it
+- **Use `is_background: false`** for commands that should complete before proceeding
+- **Use `is_background: true`** only for dev servers when explicitly requested
+
+## Examples
+
+```bash
+# ✅ DO: Only when user asks
+User: "Can you build the project?"
+Assistant: [runs npm run build]
+
+User: "Start the dev server"
+Assistant: [runs npm run dev]
+
+# ❌ DON'T: Automatic execution
+Assistant: [makes code changes]
+Assistant: [automatically runs npm run build] # WRONG
+
+# ✅ DO: Offer instead of assuming
+Assistant: "I've updated the code. Would you like me to build it to test the changes?"
+```
+
+## Command Categories
+
+**Safe to run when requested:**
+- `npm install` / `npm ci`
+- `npm run build`
+- `npm run test`
+- `npm start` / `npm run dev`
+- `git status`, `git add`, `git commit`
+
+**Always ask before running:**
+- Commands that modify files outside the project
+- System-level commands
+- Commands that might affect global configuration
+- Database migrations or resets
+
+## User Workflow Respect
+
+- **Let users control their workflow** - they may have specific timing for builds/tests
+- **Users may have unsaved work** in editors that could be affected
+- **Build processes can be resource-intensive** - user should choose when to run them
+- **Development servers should only run when needed** for testing
+

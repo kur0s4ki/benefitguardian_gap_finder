@@ -282,7 +282,13 @@ const GapCalculatorTool = () => {
         <div className="bg-surface border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between mb-4">
-              <BackNavigation />
+              <button
+                onClick={() => navigate('/dynamic-results-dashboard')}
+                className="flex items-center gap-2 px-4 py-2 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150"
+              >
+                <Icon name="ChevronLeft" size={18} />
+                <span className="font-medium">Back to Results</span>
+              </button>
               <ResultsNavigation variant="link" />
             </div>
             
@@ -296,21 +302,21 @@ const GapCalculatorTool = () => {
               </p>
             </div>
 
-            {/* Tab Navigation */}
+            {/* Simple Tab Navigation */}
             <div className="flex justify-center">
               <div className="flex bg-primary-50 rounded-lg p-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-md font-medium transition-colors duration-200 ${
                       activeTab === tab.id
                         ? 'bg-primary text-white shadow-sm'
                         : 'text-primary hover:bg-primary-100'
                     }`}
                   >
                     <Icon name={tab.icon} size={18} />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
