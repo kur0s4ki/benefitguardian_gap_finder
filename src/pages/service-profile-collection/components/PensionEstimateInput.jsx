@@ -100,6 +100,9 @@ If you're unsure, we'll use government employee averages to provide accurate cal
 
   const context = getProfessionContext();
 
+  // Common pension ranges - 4 options covering typical spectrum
+  const quickAmounts = [1500, 2500, 3500, 5000];
+
   return (
     <div className={`${mobile ? 'flex-1 flex flex-col' : ''}`}>
       <div className="flex items-center justify-between mb-4">
@@ -134,82 +137,101 @@ If you're unsure, we'll use government employee averages to provide accurate cal
       <div className={`${mobile ? 'flex-1 flex flex-col justify-center' : ''}`}>
         {/* Toggle Switch */}
         <div className="mb-6">
-          <div className="flex items-center justify-between p-4 bg-accent-50 rounded-lg border border-accent-200">
+          <div className={`flex items-center justify-between ${mobile ? 'p-5' : 'p-4'} bg-accent-50 rounded-lg border border-accent-200`}>
             <div>
-              <p className="font-medium text-text-primary">I don't know my pension estimate</p>
-              <p className="text-sm text-text-secondary">We'll calculate using profession averages</p>
+              <p className={`font-medium text-text-primary ${mobile ? 'text-base' : ''}`}>I don't know my pension estimate</p>
+              <p className={`text-sm text-text-secondary ${mobile ? 'mt-1' : ''}`}>We'll calculate using profession averages</p>
             </div>
             <button
               onClick={() => onUnknownToggle(!unknown)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+              className={`relative inline-flex ${mobile ? 'h-7 w-12' : 'h-6 w-11'} items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${mobile ? 'mobile-touch-feedback' : ''} ${
                 unknown ? 'bg-primary' : 'bg-gray-300'
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                  unknown ? 'translate-x-6' : 'translate-x-1'
+                className={`inline-block ${mobile ? 'h-5 w-5' : 'h-4 w-4'} transform rounded-full bg-white transition-transform duration-200 ${
+                  unknown ? (mobile ? 'translate-x-6' : 'translate-x-6') : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
         </div>
 
-        {!unknown ? (
-          <>
-            {/* Manual Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                Monthly Pension Amount
+        {/* Input Field */}
+        {!unknown && (
+          <div className="space-y-4">
+            <div className="relative">
+              <label htmlFor="pensionEstimate" className={`block font-medium text-text-primary mb-2 ${mobile ? 'text-base' : ''}`}>
+                Monthly pension estimate
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-text-secondary text-lg">$</span>
-                </div>
+                <span className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-text-secondary ${mobile ? 'text-lg' : ''}`}>
+                  $
+                </span>
                 <input
-                  type="text"
-                  value={value}
-                  onChange={handleInputChange}
-                  placeholder="3,500"
-                  className={`input-field w-full pl-8 pr-4 py-4 text-lg font-medium ${
-                    mobile ? 'text-center' : ''
-                  } ${error ? 'border-error focus:border-error focus:ring-error-100' : ''}`}
+                  id="pensionEstimate"
+                  type="number"
+                  value={value || ''}
+                  onChange={(e) => onChange(e.target.value)}
+                  placeholder="2,500"
+                  min="0"
+                  max="20000"
+                  step="50"
+                  className={`${mobile ? 'mobile-input-field text-lg' : 'input-field'} w-full ${mobile ? 'pl-8 pr-4' : 'pl-7 pr-3'} ${
+                    error ? 'border-error focus:border-error focus:ring-error-100' : ''
+                  } ${mobile ? 'mobile-touch-feedback' : ''}`}
                 />
               </div>
-              {value && (
-                <p className="mt-2 text-sm text-text-secondary">
-                  Monthly estimate: {formatCurrency(value)}
+              {error && (
+                <p className={`mt-2 text-error ${mobile ? 'text-sm' : 'text-xs'} flex items-center gap-1`}>
+                  <Icon name="AlertCircle" size={mobile ? 16 : 14} />
+                  {error}
                 </p>
               )}
             </div>
 
-            {/* Quick Amount Buttons */}
-            <div className="mb-6">
-              <p className="text-sm font-medium text-text-secondary mb-3">Common Ranges:</p>
-              <div className="grid grid-cols-3 gap-3">
-                {Object.entries(context.averages).map(([level, amount]) => (
-                  <button
-                    key={level}
-                    onClick={() => onChange(amount.replace(/[$,]/g, ''))}
-                    className="p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors duration-150 text-center"
-                  >
-                    <div className="text-sm font-medium text-primary capitalize">{level}</div>
-                    <div className="text-lg font-bold text-primary">{amount}</div>
-                  </button>
-                ))}
-              </div>
+            {/* Helpful Range Indicator */}
+            <div className={`text-center ${mobile ? 'mt-4' : 'mt-3'}`}>
+              <p className={`text-text-muted ${mobile ? 'text-sm' : 'text-xs'}`}>
+                Typical range: $1,500 - $4,500/month
+              </p>
             </div>
-          </>
-        ) : (
-          /* Unknown State Display - Compact Version */
-          <div className="mb-6 p-4 bg-success-50 rounded-lg border border-success-200">
+          </div>
+        )}
+
+        {/* Quick Amount Buttons */}
+        {!unknown && (
+          <div className={`${mobile ? 'mt-6' : 'mb-6'}`}>
+            <p className={`font-medium text-text-secondary mb-3 ${mobile ? 'text-sm' : ''}`}>Common Monthly Amounts:</p>
+            <div className={`grid ${mobile ? 'grid-cols-2 gap-3' : 'grid-cols-4 gap-3'}`}>
+              {quickAmounts.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => onChange(amount.toString())}
+                  className={`${mobile ? 'py-3 px-4 mobile-touch-feedback' : 'py-2 px-4'} rounded-lg font-medium transition-colors duration-150 ${
+                    parseInt(value) === amount
+                      ? 'bg-primary text-white' 
+                      : 'bg-primary-50 text-primary hover:bg-primary-100'
+                  }`}
+                >
+                  ${amount.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Unknown State Display */}
+        {unknown && (
+          <div className={`${mobile ? 'mt-6' : 'mb-6'} p-4 bg-success-50 rounded-lg border border-success-200`}>
             <div className="flex items-center gap-3">
               <Icon name="Calculator" size={24} className="text-success flex-shrink-0" />
               <div className="flex-1">
-                <h4 className="font-semibold text-success-600 mb-1">We'll Calculate For You</h4>
-                <p className="text-sm text-text-secondary">
+                <h4 className={`font-semibold text-success-600 mb-1 ${mobile ? 'text-base' : ''}`}>We'll Calculate For You</h4>
+                <p className={`text-sm text-text-secondary ${mobile ? 'mobile-text-readable' : ''}`}>
                   Using industry-standard calculations based on your profession and years of service.
                 </p>
-                <p className="text-xs text-text-secondary mt-1">
+                <p className={`text-xs text-text-secondary mt-1 ${mobile ? 'text-sm' : ''}`}>
                   Typical range: {context.averages.low} - {context.averages.high}
                 </p>
               </div>

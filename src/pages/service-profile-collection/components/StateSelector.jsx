@@ -315,86 +315,73 @@ const StateSelector = ({
             ref={inputRef}
             onClick={() => setIsOpen(!isOpen)}
             onKeyDown={handleKeyDown}
-            className={`input-field w-full px-4 py-4 text-left flex items-center justify-between ${
+            className={`${mobile ? 'mobile-input-field' : 'input-field'} w-full px-4 ${mobile ? 'py-4' : 'py-4'} text-left flex items-center justify-between ${
               error ? 'border-error focus:border-error focus:ring-error-100' : ''
-            }`}
+            } ${mobile ? 'mobile-touch-feedback' : ''}`}
             aria-expanded={isOpen}
             aria-haspopup="listbox"
           >
             <div className="flex items-center gap-3">
               {selectedState ? (
                 <>
-                  <div className="w-8 h-6 bg-primary rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">{selectedState.code}</span>
+                  <div className={`${mobile ? 'w-10 h-7' : 'w-8 h-6'} bg-primary rounded flex items-center justify-center`}>
+                    <span className={`text-white ${mobile ? 'text-sm' : 'text-xs'} font-bold`}>{selectedState.code}</span>
                   </div>
-                  <span className="font-medium text-text-primary">{selectedState.name}</span>
+                  <span className={`font-medium text-text-primary ${mobile ? 'text-base' : ''}`}>{selectedState.name}</span>
                 </>
               ) : (
-                <span className="text-text-muted">Select your state...</span>
+                <span className={`text-text-muted ${mobile ? 'text-base' : ''}`}>Select your state...</span>
               )}
             </div>
             <Icon 
               name={isOpen ? "ChevronUp" : "ChevronDown"} 
-              size={20} 
+              size={mobile ? 24 : 20} 
               className="text-text-secondary" 
             />
           </button>
 
           {/* Dropdown */}
           {isOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-modal max-h-64 overflow-hidden">
-              {/* Search Input */}
-              <div className="p-3 border-b border-border">
-                <div className="relative">
-                  <Icon name="Search" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" />
+            <div className={`absolute z-50 w-full mt-2 bg-white border border-border rounded-lg shadow-lg ${mobile ? 'max-h-80' : 'max-h-60'} overflow-hidden`}>
+              {/* Search */}
+              <div className={`p-3 border-b border-border ${mobile ? 'p-4' : ''}`}>
                   <input
                     type="text"
                     placeholder="Search states..."
                     value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setHighlightedIndex(-1);
-                    }}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-md focus:border-primary focus:ring-1 focus:ring-primary-100 focus:outline-none"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full ${mobile ? 'mobile-input-field text-base' : 'input-field'} ${mobile ? 'py-3' : ''}`}
                     autoFocus
                   />
-                </div>
               </div>
 
-              {/* States List */}
-              <div className="max-h-48 overflow-y-auto">
+              {/* State List */}
+              <div className="overflow-y-auto" style={{ maxHeight: mobile ? '240px' : '180px' }}>
                 {filteredStates.length > 0 ? (
                   filteredStates.map((state, index) => (
                     <button
                       key={state.code}
                       onClick={() => handleStateSelect(state)}
-                      className={`w-full px-4 py-3 text-left hover:bg-primary-50 transition-colors duration-150 ${
+                      className={`w-full text-left ${mobile ? 'px-4 py-4' : 'px-3 py-2'} hover:bg-primary-50 transition-colors duration-150 ${
                         index === highlightedIndex ? 'bg-primary-50' : ''
-                      } ${value === state.code ? 'bg-primary-100 text-primary' : ''}`}
+                      } ${mobile ? 'mobile-touch-feedback min-h-touch' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-6 rounded flex items-center justify-center ${
-                          value === state.code ? 'bg-primary' : 'bg-secondary-200'
-                        }`}>
-                          <span className={`text-xs font-bold ${
-                            value === state.code ? 'text-white' : 'text-secondary'
-                          }`}>
-                            {state.code}
-                          </span>
+                        <div className={`${mobile ? 'w-8 h-6' : 'w-6 h-4'} bg-primary rounded flex items-center justify-center flex-shrink-0`}>
+                          <span className={`text-white ${mobile ? 'text-xs' : 'text-[10px]'} font-bold`}>{state.code}</span>
                         </div>
-                        <div>
-                          <div className="font-medium text-text-primary">{state.name}</div>
-                          <div className="text-xs text-text-muted truncate max-w-xs">
-                            {state.pensionSystem}
+                        <div className="min-w-0 flex-1">
+                          <div className={`font-medium text-text-primary ${mobile ? 'text-base' : 'text-sm'}`}>{state.name}</div>
+                          <div className={`text-text-secondary ${mobile ? 'text-sm' : 'text-xs'} truncate`}>
+                            {getPensionSystemName(state.name, state.code)}
                           </div>
                         </div>
                       </div>
                     </button>
                   ))
                 ) : (
-                  <div className="px-4 py-6 text-center text-text-muted">
-                    <Icon name="Search" size={24} className="mx-auto mb-2 opacity-50" />
-                    <p>No states found matching "{searchTerm}"</p>
+                  <div className={`${mobile ? 'px-4 py-6' : 'px-3 py-4'} text-center text-text-muted ${mobile ? 'text-base' : 'text-sm'}`}>
+                    No states found matching "{searchTerm}"
                   </div>
                 )}
               </div>

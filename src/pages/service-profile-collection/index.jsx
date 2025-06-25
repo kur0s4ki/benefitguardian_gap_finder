@@ -136,10 +136,10 @@ const ServiceProfileCollection = () => {
   const sections = ['Years of Service', 'Pension Estimate', 'State Selection'];
 
   return (
-    <div className={`min-h-screen ${theme.bg} flex flex-col`}>
+    <div className={`min-h-screen ${theme.bg}`}>
       <ProgressHeader currentStep={2} totalSteps={6} profession={profession} />
       
-      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
+      <main className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header Section */}
         <div className="text-center mb-8 lg:mb-12">
           <div className="flex justify-center mb-4">
@@ -157,8 +157,8 @@ const ServiceProfileCollection = () => {
         </div>
 
         {/* Mobile Progress Indicator */}
-        <div className="lg:hidden mb-6">
-          <div className="flex justify-between items-center mb-2">
+        <div className="lg:hidden mb-4">
+          <div className="flex justify-between items-center mb-2 px-1">
             <span className="text-sm font-medium text-text-secondary">
               Step {currentSection + 1} of {sections.length}
             </span>
@@ -166,7 +166,7 @@ const ServiceProfileCollection = () => {
               {Math.round(((currentSection + 1) / sections.length) * 100)}% Complete
             </span>
           </div>
-          <div className="w-full h-2 bg-primary-100 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-primary-100 rounded-full overflow-hidden mx-1">
             <div
               className="h-full bg-primary transition-all duration-300 ease-out"
               style={{ width: `${((currentSection + 1) / sections.length) * 100}%` }}
@@ -216,66 +216,90 @@ const ServiceProfileCollection = () => {
 
         {/* Mobile Layout - One Section at a Time */}
         <div className="lg:hidden">
-          <div className="card p-6 min-h-[400px] flex flex-col">
+          <div className="min-h-[450px]">
             {currentSection === 0 && (
-              <YearsOfServiceSlider
-                value={formData.yearsOfService}
-                onChange={(value) => handleInputChange('yearsOfService', value)}
-                error={errors.yearsOfService}
-                profession={profession}
-                mobile={true}
-              />
+              <div className="swipe-enter">
+                <YearsOfServiceSlider
+                  value={formData.yearsOfService}
+                  onChange={(value) => handleInputChange('yearsOfService', value)}
+                  error={errors.yearsOfService}
+                  profession={profession}
+                  mobile={true}
+                />
+              </div>
             )}
             
             {currentSection === 1 && (
-              <PensionEstimateInput
-                value={formData.pensionEstimate}
-                unknown={formData.pensionUnknown}
-                onChange={(value) => handleInputChange('pensionEstimate', value)}
-                onUnknownToggle={(unknown) => handleInputChange('pensionUnknown', unknown)}
-                error={errors.pensionEstimate}
-                profession={profession}
-                mobile={true}
-              />
+              <div className="swipe-enter">
+                <PensionEstimateInput
+                  value={formData.pensionEstimate}
+                  unknown={formData.pensionUnknown}
+                  onChange={(value) => handleInputChange('pensionEstimate', value)}
+                  onUnknownToggle={(unknown) => handleInputChange('pensionUnknown', unknown)}
+                  error={errors.pensionEstimate}
+                  profession={profession}
+                  mobile={true}
+                />
+              </div>
             )}
             
             {currentSection === 2 && (
-              <StateSelector
-                value={formData.selectedState}
-                onChange={(value) => handleInputChange('selectedState', value)}
-                error={errors.selectedState}
-                profession={profession}
-                mobile={true}
-              />
+              <div className="swipe-enter">
+                <StateSelector
+                  value={formData.selectedState}
+                  onChange={(value) => handleInputChange('selectedState', value)}
+                  error={errors.selectedState}
+                  profession={profession}
+                  mobile={true}
+                />
+              </div>
             )}
           </div>
 
-          {/* Mobile Navigation */}
-          <div className="flex justify-between items-center mt-6">
+          {/* Enhanced Mobile Navigation */}
+          <div className="flex justify-between items-center mt-6 px-1">
             <button
               onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
               disabled={currentSection === 0}
-              className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
+              className={`mobile-nav-button ${
                 currentSection === 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-white text-primary hover:bg-primary-50 hover:shadow-lg active:transform active:scale-95'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
+                  : 'bg-white text-primary hover:bg-primary-50 hover:shadow-xl mobile-touch-feedback'
               }`}
               aria-label="Previous section"
             >
-              <Icon name="ChevronLeft" size={24} />
+              <Icon name="ChevronLeft" size={28} />
             </button>
+
+            {/* Mobile Progress Dots */}
+            <div className="flex items-center space-x-4">
+              {sections.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSection(index)}
+                  className="p-2 transition-all duration-200"
+                  aria-label={`Go to ${sections[index]}`}
+                >
+                  <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentSection
+                      ? 'bg-primary scale-150' 
+                      : 'bg-gray-300'
+                  }`} />
+                </button>
+              ))}
+            </div>
 
             <button
               onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
               disabled={currentSection === sections.length - 1}
-              className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
+              className={`mobile-nav-button ${
                 currentSection === sections.length - 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-primary text-white hover:bg-primary-700 hover:shadow-lg active:transform active:scale-95'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
+                  : 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl mobile-touch-feedback'
               }`}
               aria-label="Next section"
             >
-              <Icon name="ChevronRight" size={24} />
+              <Icon name="ChevronRight" size={28} />
             </button>
           </div>
         </div>

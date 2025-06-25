@@ -21,6 +21,9 @@ This document tracks the analysis, refactoring, and feature implementation for t
   - [x] Replaced browser alerts with a dismissible toast notification system.
   - [x] Fixed toast visibility by increasing its `z-index`.
   - [x] Corrected UI display of risk components and contribution recommendations.
+  - [x] Enhanced pension estimate input with 4 common range buttons ($1,500-$5,000).
+  - [x] Styled pension range buttons consistently with years of service buttons.
+  - [x] Optimized mobile responsive design with proper padding and native app feel.
 - [x] **Features & Debugging:**
   - [x] Implemented a detailed calculation log within the engine.
   - [x] Displayed the calculation log on the report delivery page.

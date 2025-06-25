@@ -263,7 +263,7 @@ const RiskAssessmentQuestionnaire = () => {
     <div className={`min-h-screen ${theme.bg}`}>
       <ProgressHeader currentStep={3} totalSteps={6} profession={profession} />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header Section */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -339,111 +339,154 @@ const RiskAssessmentQuestionnaire = () => {
           {/* Mobile Layout - One section at a time */}
           <div className="lg:hidden">
             <div className="mb-6">
-              <div className="flex justify-center space-x-2">
+              <div className="flex justify-center space-x-4">
                 {sections.map((_, index) => (
-                  <div
+                  <button
                     key={index}
-                    className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                      index <= currentSection ? 'bg-primary' : 'bg-primary-100'
-                    }`}
-                  />
+                    onClick={() => setCurrentSection(index)}
+                    className="p-2 transition-all duration-200"
+                    aria-label={`Go to ${sections[index]?.title}`}
+                  >
+                    <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      index === currentSection 
+                        ? 'bg-primary scale-150' 
+                        : 'bg-gray-300'
+                    }`} />
+                  </button>
                 ))}
               </div>
-              <p className="text-center text-sm text-text-secondary mt-2">
+              <p className="text-center text-sm font-medium text-primary mt-2">
                 {sections[currentSection]?.title}
               </p>
             </div>
 
-            {/* Current Section */}
-            {currentSection === 0 && (
-              <InflationProtectionSection
-                value={formData.inflationProtection}
-                onChange={(value) => updateFormData('inflationProtection', value)}
-                profession={profession}
-              />
-            )}
-            
-            {currentSection === 1 && (
-              <SurvivorPlanningSection
-                value={formData.survivorPlanning}
-                details={formData.survivorPlanningDetails}
-                onChange={(value) => updateFormData('survivorPlanning', value)}
-                onDetailsChange={(value) => updateFormData('survivorPlanningDetails', value)}
-                profession={profession}
-              />
-            )}
-            
-            {currentSection === 2 && (
-              <RetirementAgeSection
-                currentAge={formData.currentAge}
-                value={formData.retirementAge}
-                onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
-                onChange={(value) => updateFormData('retirementAge', value)}
-                profession={profession}
-              />
-            )}
-            
-            {currentSection === 3 && (
-              <FinancialFearsSection
-                value={formData.financialFears}
-                onChange={(value) => updateFormData('financialFears', value)}
-                profession={profession}
-              />
-            )}
-            
-            {currentSection === 4 && (
-              <AssetInputSection
-                savings={formData.currentSavings}
-                preferNotToSay={formData.preferNotToSay}
-                onSavingsChange={(value) => updateFormData('currentSavings', value)}
-                onPreferNotToSayChange={(value) => updateFormData('preferNotToSay', value)}
-                profession={profession}
-              />
-            )}
+            {/* Enhanced Mobile Content Container */}
+            <div className="min-h-[450px] flex flex-col">
+              {/* Current Section with Swipe Animation */}
+              {currentSection === 0 && (
+                <div className="swipe-enter">
+                  <InflationProtectionSection
+                    value={formData.inflationProtection}
+                    onChange={(value) => updateFormData('inflationProtection', value)}
+                    profession={profession}
+                  />
+                </div>
+              )}
+              
+              {currentSection === 1 && (
+                <div className="swipe-enter">
+                  <SurvivorPlanningSection
+                    value={formData.survivorPlanning}
+                    details={formData.survivorPlanningDetails}
+                    onChange={(value) => updateFormData('survivorPlanning', value)}
+                    onDetailsChange={(value) => updateFormData('survivorPlanningDetails', value)}
+                    profession={profession}
+                  />
+                </div>
+              )}
+              
+              {currentSection === 2 && (
+                <div className="swipe-enter">
+                  <RetirementAgeSection
+                    currentAge={formData.currentAge}
+                    value={formData.retirementAge}
+                    onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
+                    onChange={(value) => updateFormData('retirementAge', value)}
+                    profession={profession}
+                  />
+                </div>
+              )}
+              
+              {currentSection === 3 && (
+                <div className="swipe-enter">
+                  <AssetInputSection
+                    currentSavings={formData.currentSavings}
+                    otherIncome={formData.otherIncome}
+                    onCurrentSavingsChange={(value) => updateFormData('currentSavings', value)}
+                    onOtherIncomeChange={(value) => updateFormData('otherIncome', value)}
+                    profession={profession}
+                  />
+                </div>
+              )}
+              
+              {currentSection === 4 && (
+                <div className="swipe-enter">
+                  <FinancialFearsSection
+                    value={formData.financialFears}
+                    onChange={(value) => updateFormData('financialFears', value)}
+                    profession={profession}
+                  />
+                </div>
+              )}
+            </div>
 
-            {/* Mobile Navigation */}
-            <div className="flex justify-between mt-8">
+            {/* Enhanced Mobile Navigation */}
+            <div className="flex justify-between items-center mt-6 px-1">
               <button
                 onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
                 disabled={currentSection === 0}
-                className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
+                className={`mobile-nav-button ${
                   currentSection === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white text-primary hover:bg-primary-50 hover:shadow-lg active:transform active:scale-95'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
+                    : 'bg-white text-primary hover:bg-primary-50 hover:shadow-xl mobile-touch-feedback'
                 }`}
                 aria-label="Previous section"
               >
-                <Icon name="ChevronLeft" size={24} />
+                <Icon name="ChevronLeft" size={28} />
               </button>
 
-              {currentSection < sections.length - 1 ? (
-                <button
-                  onClick={() => setCurrentSection(currentSection + 1)}
-                  className="w-12 h-12 flex items-center justify-center bg-primary text-white rounded-full shadow-md hover:bg-primary-700 hover:shadow-lg transition-all duration-200 active:transform active:scale-95"
-                  aria-label="Next section"
-                >
-                  <Icon name="ChevronRight" size={24} />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={!isFormValid() || isSubmitting}
-                  className={`h-12 px-6 flex items-center justify-center rounded-full shadow-md transition-all duration-200 ${
-                    isFormValid() && !isSubmitting
-                      ? 'bg-accent text-secondary hover:bg-accent-500 hover:shadow-lg active:transform active:scale-95'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Icon name="CheckCircle" size={20} className="mr-2" />
-                      <span>Complete</span>
-                    </>
-                  )}
-                </button>
-              )}
+              {/* Section Counter */}
+              <div className="text-center">
+                <div className="text-sm font-medium text-text-secondary">
+                  {currentSection + 1} of {sections.length}
+                </div>
+                <div className="text-xs text-primary font-medium">
+                  {Math.round(((currentSection + 1) / sections.length) * 100)}% Complete
+                </div>
+              </div>
+
+              <button
+                onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
+                disabled={currentSection === sections.length - 1}
+                className={`mobile-nav-button ${
+                  currentSection === sections.length - 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
+                    : 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl mobile-touch-feedback'
+                }`}
+                aria-label="Next section"
+              >
+                <Icon name="ChevronRight" size={28} />
+              </button>
+            </div>
+
+            {/* Mobile Submit Button */}
+            <div className="mt-6 px-1">
+              <button
+                onClick={handleSubmit}
+                disabled={!isFormValid() || isSubmitting}
+                className={`w-full mobile-touch-feedback h-14 rounded-xl font-bold text-lg transition-all duration-200 ${
+                  isFormValid() && !isSubmitting
+                    ? 'bg-accent text-secondary hover:bg-accent-500 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-sm'
+                }`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-6 h-6 border-3 border-secondary border-t-transparent rounded-full animate-spin" />
+                    <span>Calculating Your Results...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <Icon name="Calculator" size={24} />
+                    <span>Calculate My Results</span>
+                    <Icon name="ArrowRight" size={20} />
+                  </div>
+                )}
+              </button>
+              
+              <p className="text-sm text-text-secondary mt-4 text-center max-w-md mx-auto mobile-text-readable">
+                Get your personalized GrowthGuard Risk Score and discover hidden benefit opportunities
+              </p>
             </div>
           </div>
         </div>

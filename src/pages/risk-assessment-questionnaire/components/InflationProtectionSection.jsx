@@ -24,7 +24,7 @@ const InflationProtectionSection = ({ value, onChange, profession }) => {
   const currentData = professionData[profession] || professionData.teacher;
 
   return (
-    <div className="card p-6 lg:p-8">
+    <div className="card p-4 lg:p-8">
       <div className="flex items-start gap-4 mb-6">
         <div className="w-12 h-12 bg-warning-100 rounded-full flex items-center justify-center flex-shrink-0">
           <Icon name="TrendingUp" size={24} className="text-warning" />
