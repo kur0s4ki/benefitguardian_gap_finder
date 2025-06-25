@@ -99,6 +99,100 @@ const getYearsUntilRetirementBand = (years) => {
 };
 
 /**
+ * Convert technical error messages to user-friendly ones
+ * @param {string} technicalError - The original error message
+ * @param {Object} context - Additional context for the error
+ * @returns {string} User-friendly error message
+ */
+const createUserFriendlyError = (technicalError, context = {}) => {
+  const errorMap = {
+    'User data is required': 'Please complete the assessment form before viewing results.',
+    'Input validation failed': 'Please check your information and ensure all required fields are completed correctly.',
+    'Invalid years of service': 'Please enter a valid number of years of service (between 5 and 40 years).',
+    'Invalid current age': 'Please enter a valid current age (between 21 and 80 years).',
+    'Invalid retirement age': 'Please enter a valid retirement age (between 50 and 80 years).',
+    'Retirement age must be greater than current age': 'Your retirement age must be later than your current age. Please adjust your retirement timeline.',
+    'Unable to parse': 'Please check that all numbers are entered correctly without special characters.',
+    'Invalid pension estimate': 'Please enter a valid pension estimate or select "I don\'t know".',
+    'Division by zero': 'Unable to calculate results with the provided information. Please review your inputs.',
+    'Calculation overflow': 'The calculated values are too large. Please check your inputs for accuracy.'
+  };
+
+  // Find matching error pattern
+  for (const [pattern, friendlyMessage] of Object.entries(errorMap)) {
+    if (technicalError.includes(pattern)) {
+      return friendlyMessage;
+    }
+  }
+
+  // Default fallback for unknown errors
+  return 'We encountered an issue calculating your results. Please review your information and try again, or contact support if the problem persists.';
+};
+
+/**
+ * Enhanced error result with both technical and user-friendly messages
+ * @param {Error} error - The original error
+ * @param {Object} userData - User input data
+ * @param {Array} calculationLog - Calculation log entries
+ * @returns {Object} Enhanced error result
+ */
+const createErrorResult = (error, userData, calculationLog) => {
+  const userFriendlyMessage = createUserFriendlyError(error.message);
+  
+  return {
+    error: error.message, // Technical error for debugging
+    userFriendlyError: userFriendlyMessage, // User-facing error
+    calculationLog,
+    isError: true,
+    errorDetails: {
+      type: 'calculation_error',
+      timestamp: new Date().toISOString(),
+      inputData: userData ? {
+        profession: userData.profession,
+        yearsOfService: userData.yearsOfService,
+        currentAge: userData.currentAge,
+        retirementAge: userData.retirementAge
+      } : null
+    },
+    // Provide safe defaults so the UI doesn't break
+    profession: userData?.profession || 'unknown',
+    riskScore: 50,
+    riskColor: 'gold',
+    totalGap: 0,
+    pensionGap: 0,
+    taxTorpedo: 0,
+    survivorGap: 0,
+    monthlyGap: 0,
+    monthlyContribution: 0,
+    lifetimePayout: 0,
+    hiddenBenefitOpportunity: 0,
+    yearsOfService: userData?.yearsOfService || 0,
+    currentAge: userData?.currentAge || 0,
+    retirementAge: userData?.retirementAge || 0,
+    yearsUntilRetirement: 0,
+    riskComponents: {
+      pensionRisk: 0,
+      taxRisk: 0,
+      survivorRisk: 0,
+      earlyRetireBonus: 0,
+      taxSurprisesBonus: 0
+    },
+    multipliers: {
+      professionFactor: 1.0,
+      stateFactor: 1.0,
+      coverageLevel: 1.0,
+      colaValue: 0,
+      yearsUntilRetirementConverted: 18
+    },
+    gaps: {
+      pension: { amount: 0, monthly: 0, risk: 'low', description: 'Unable to calculate - please check your inputs' },
+      tax: { amount: 0, risk: 'low', description: 'Unable to calculate - please check your inputs' },
+      survivor: { amount: 0, monthly: 0, risk: 'low', description: 'Unable to calculate - please check your inputs' }
+    }
+  };
+};
+
+/**
  * Main calculation engine
  * @param {Object} userData - User input data
  * @returns {Object} Calculated results
@@ -107,241 +201,279 @@ export const calculateBenefitGaps = (userData) => {
   const calculationLog = ['[Log] Calculation engine started.'];
 
   try {
-    // Input validation
+    // Enhanced input validation with specific error messages
     if (!userData) {
       throw new Error('User data is required');
     }
 
-  // Extract and normalize data with proper validation
-  const profession = userData.profession?.toLowerCase() || 'teacher';
-  
-  // Validate and parse numeric inputs
-  const yearsOfService = Math.max(0, Math.min(50, parseInt(userData.yearsOfService) || 15));
-  const currentAge = Math.max(18, Math.min(100, parseInt(userData.currentAge) || 45));
-  const retirementAge = Math.max(currentAge + 1, Math.min(100, parseInt(userData.retirementAge) || 65));
-  const otherSavings = Math.max(0, parseFloat(userData.otherSavings || userData.currentSavings) || 0);
-  
-  const state = userData.state || 'CA';
-  
-  // Normalize boolean/string inputs
-  const cola = String(userData.cola || userData.inflationProtection || 'no').toLowerCase();
-  const survivorIncome = String(userData.survivorIncome || userData.survivorPlanning || 'no').toLowerCase();
-  const financialFears = Array.isArray(userData.financialFears) ? userData.financialFears : [];
-
-  calculationLog.push(`[Input] Normalized inputs: profession=${profession}, yos=${yearsOfService}, state=${state}, cola=${cola}, survivor=${survivorIncome}, savings=${otherSavings}, age=${currentAge}, retireAge=${retirementAge}`);
-
-  // Handle pension estimate with validation
-  let currentPension;
-  if (userData.pensionUnknown || userData.pensionEstimate === "I don't know" || !userData.pensionEstimate) {
-    currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
-    calculationLog.push(`[Pension] User pension unknown. Using default for ${profession}: $${currentPension}`);
-  } else {
-    const parsedPension = parseFloat(userData.pensionEstimate);
-    if (isNaN(parsedPension) || parsedPension < 0) {
-      currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
-      calculationLog.push(`[Pension] Invalid pension value provided. Using default for ${profession}: $${currentPension}`);
-    } else {
-      currentPension = Math.min(50000, parsedPension); // Cap at reasonable maximum
-      calculationLog.push(`[Pension] User provided pension: $${currentPension}`);
+    // Use the validation function to check input quality
+    const validation = validateUserData(userData);
+    if (!validation.isValid) {
+      throw new Error(`Input validation failed: ${validation.errors.join(', ')}`);
     }
-  }
 
-  // Calculate derived values
-  const yearsUntilRetirement = Math.max(0, retirementAge - currentAge);
+    // Log any warnings for debugging
+    if (validation.warnings.length > 0) {
+      calculationLog.push(`[Warning] Input warnings: ${validation.warnings.join(', ')}`);
+    }
 
-  calculationLog.push(`[Derived] Years until retirement: ${yearsUntilRetirement}`);
-
-  if (yearsUntilRetirement <= 0) {
-    throw new Error('Retirement age must be greater than current age');
-  }
-
-  const retirementAgeBand = getRetirementAgeBand(retirementAge);
-  const yearsUntilRetirementBand = getYearsUntilRetirementBand(yearsUntilRetirement);
-
-  calculationLog.push(`[Derived] Retirement bands: age=${retirementAgeBand}, years=${yearsUntilRetirementBand}`);
-
-  // Get multipliers
-  const professionFactor = PROFESSION_FACTORS[profession] || 1.0;
-  const stateFactor = STATE_FACTORS[state] || 1.0;
-  const coverageLevel = COVERAGE_LEVELS[survivorIncome] || 1.0;
-  const colaValue = COLA_VALUES[cola] || 0;
-  const yearsUntilRetirementConverted = YEARS_UNTIL_RETIREMENT_CONVERSION[yearsUntilRetirementBand] || 18;
-
-  calculationLog.push(`[Factors] Multipliers: profession=${professionFactor}, state=${stateFactor}, coverage=${coverageLevel}, cola=${colaValue}, yearsBand=${yearsUntilRetirementConverted}`);
-
-  // A. Hidden Benefit Opportunity
-  const hiddenBenefitOpportunity = Math.round(
-    1800 * (yearsOfService / 28) * professionFactor * stateFactor
-  );
-
-  calculationLog.push(`[Calc] Hidden Benefit Opportunity: $${hiddenBenefitOpportunity} = 1800 * (${yearsOfService}/28) * ${professionFactor} * ${stateFactor}`);
-
-  // B. Risk Score Components
-  const earlyRetireBonus = (retirementAgeBand === '55-62') ? 20 : 0;
-  const taxSurprisesBonus = financialFears.includes('tax-surprises') || 
-                           financialFears.includes('Tax surprises') ? 30 : 0;
-
-  calculationLog.push(`[Risk] Bonuses: earlyRetire=${earlyRetireBonus}, taxSurprise=${taxSurprisesBonus}`);
-
-  const pensionRisk = Math.min(100, Math.max(0, 80 - (colaValue * 30) + earlyRetireBonus));
-  const taxRisk = Math.min(100, (otherSavings / 100000) * 25 + taxSurprisesBonus);
-  const survivorRisk = Math.round(80 * coverageLevel);
-
-  calculationLog.push(`[Risk] Risk components: pensionRisk=${pensionRisk}, taxRisk=${taxRisk}, survivorRisk=${survivorRisk}`);
-
-  const riskScore = Math.round(
-    (pensionRisk * 0.5) + (taxRisk * 0.3) + (survivorRisk * 0.2)
-  );
-
-  calculationLog.push(`[Risk] Raw risk score: ${riskScore}`);
-
-  // Ensure riskScore stays within 0-100 bounds even as weightings evolve
-  const clampedRiskScore = Math.min(100, Math.max(0, riskScore));
-
-  if (clampedRiskScore !== riskScore) calculationLog.push(`[Risk] Clamped risk score: ${clampedRiskScore}`);
-
-  // C. Gap Calculations
-  const pensionGap = Math.round(currentPension * 0.03 * yearsOfService);
-  const taxTorpedo = Math.round(otherSavings * 0.30);
-  const survivorGap = Math.round(currentPension * 0.40);
-
-  calculationLog.push(`[Gaps] Calculated gaps: pension=$${pensionGap}, taxTorpedo=$${taxTorpedo}, survivor=$${survivorGap}`);
-
-  const monthlyGap = pensionGap + survivorGap + Math.round(taxTorpedo / 240);
-
-  calculationLog.push(`[Gaps] Total monthly gap: $${monthlyGap}`);
-
-  // D. Monthly Contribution & Lifetime Payout
-  // Protect against division by zero
-  const contributionDivisor = yearsUntilRetirementConverted * 7;
-  const monthlyContribution = contributionDivisor > 0 ? Math.round(
-    (monthlyGap * 12) / contributionDivisor
-  ) : 0;
-
-  calculationLog.push(`[Calc] Required monthly contribution: $${monthlyContribution}`);
-
-  const lifetimePayout = Math.round(
-    (monthlyContribution * 12 * yearsUntilRetirementConverted) * 3.0
-  );
-
-  calculationLog.push(`[Calc] Estimated lifetime payout: $${lifetimePayout}`);
-
-  // Risk color mapping
-  let riskColor;
-  if (clampedRiskScore < 40) {
-    riskColor = 'green';
-  } else if (clampedRiskScore >= 40 && clampedRiskScore <= 70) {
-    riskColor = 'gold';
-  } else {
-    riskColor = 'red';
-  }
-
-  // Calculate total gap for downstream components (fixed calculation)
-  const totalGap = (pensionGap * 240) + (survivorGap * 240) + taxTorpedo;
-
-  calculationLog.push(`[Total] Total gap calculated: $${totalGap} = (${pensionGap} * 240) + (${survivorGap} * 240) + ${taxTorpedo}`);
-
-  // Return calculated results
-  return {
-    // Input data (normalized)
-    profession,
-    yearsOfService,
-    currentPension,
-    state,
-    cola,
-    survivorIncome,
-    otherSavings,
-    currentAge,
-    retirementAge,
-    yearsUntilRetirement,
-    retirementAgeBand,
-    yearsUntilRetirementBand,
+    // Extract and normalize data with enhanced validation
+    const profession = userData.profession?.toLowerCase() || 'teacher';
     
-    // Calculated outputs
-    hiddenBenefitOpportunity,
-    riskScore: clampedRiskScore,
-    riskColor,
-    pensionGap,
-    taxTorpedo,
-    survivorGap,
-    monthlyGap,
-    monthlyContribution,
-    lifetimePayout,
-    totalGap, // Add totalGap to standardize data structure
-    calculationLog,
+    // Enhanced numeric input validation with meaningful error messages
+    let yearsOfService, currentAge, retirementAge, otherSavings;
     
-    // Risk components (for debugging/display)
-    riskComponents: {
-      pensionRisk,
-      taxRisk,
-      survivorRisk,
-      earlyRetireBonus,
-      taxSurprisesBonus
-    },
-    
-    // Multipliers used (for debugging/display)
-    multipliers: {
-      professionFactor,
-      stateFactor,
-      coverageLevel,
-      colaValue,
-      yearsUntilRetirementConverted
-    },
+    try {
+      yearsOfService = parseInt(userData.yearsOfService);
+      if (isNaN(yearsOfService) || yearsOfService < 0 || yearsOfService > 50) {
+        throw new Error(`Invalid years of service: ${userData.yearsOfService}. Must be between 0 and 50.`);
+      }
+      yearsOfService = Math.max(0, Math.min(50, yearsOfService));
+    } catch (parseError) {
+      throw new Error(`Unable to parse years of service: ${userData.yearsOfService}`);
+    }
 
-    // Structured gap data for downstream components
-    gaps: {
-      pension: {
-        amount: pensionGap * 240, // Convert monthly to 20-year total
-        monthly: pensionGap,
-        risk: pensionRisk > 60 ? 'high' : pensionRisk > 30 ? 'medium' : 'low',
-        description: `Monthly pension gap: $${pensionGap}/month`
-      },
-      tax: {
-        amount: taxTorpedo,
-        risk: taxRisk > 60 ? 'high' : taxRisk > 30 ? 'medium' : 'low',
-        description: `Tax torpedo impact: $${taxTorpedo}`
-      },
-      survivor: {
-        amount: survivorGap * 240, // Convert monthly to 20-year total
-        monthly: survivorGap,
-        risk: survivorRisk > 60 ? 'high' : survivorRisk > 30 ? 'medium' : 'low',
-        description: `Monthly survivor benefit gap: $${survivorGap}/month`
+    try {
+      currentAge = parseInt(userData.currentAge);
+      if (isNaN(currentAge) || currentAge < 18 || currentAge > 100) {
+        throw new Error(`Invalid current age: ${userData.currentAge}. Must be between 18 and 100.`);
+      }
+      currentAge = Math.max(18, Math.min(100, currentAge));
+    } catch (parseError) {
+      throw new Error(`Unable to parse current age: ${userData.currentAge}`);
+    }
+
+    try {
+      retirementAge = parseInt(userData.retirementAge);
+      if (isNaN(retirementAge) || retirementAge < 50 || retirementAge > 100) {
+        throw new Error(`Invalid retirement age: ${userData.retirementAge}. Must be between 50 and 100.`);
+      }
+      if (retirementAge <= currentAge) {
+        throw new Error(`Retirement age (${retirementAge}) must be greater than current age (${currentAge}).`);
+      }
+      retirementAge = Math.max(currentAge + 1, Math.min(100, retirementAge));
+    } catch (parseError) {
+      throw new Error(`Unable to parse retirement age: ${userData.retirementAge}`);
+    }
+
+    try {
+      otherSavings = parseFloat(userData.otherSavings || userData.currentSavings || 0);
+      if (isNaN(otherSavings) || otherSavings < 0) {
+        calculationLog.push('[Warning] Invalid savings amount, defaulting to 0');
+        otherSavings = 0;
+      }
+      otherSavings = Math.max(0, otherSavings);
+    } catch (parseError) {
+      calculationLog.push('[Warning] Unable to parse savings amount, defaulting to 0');
+      otherSavings = 0;
+    }
+    
+    // Validate state input
+    const state = userData.state || 'CA';
+    if (!STATE_FACTORS.hasOwnProperty(state)) {
+      calculationLog.push(`[Warning] Unknown state '${state}', using default factor`);
+    }
+    
+    // Normalize boolean/string inputs with validation
+    const cola = String(userData.cola || userData.inflationProtection || 'no').toLowerCase();
+    const survivorIncome = String(userData.survivorIncome || userData.survivorPlanning || 'no').toLowerCase();
+    const financialFears = Array.isArray(userData.financialFears) ? userData.financialFears : [];
+
+    calculationLog.push(`[Input] Validated inputs: profession=${profession}, yos=${yearsOfService}, state=${state}, cola=${cola}, survivor=${survivorIncome}, savings=${otherSavings}, age=${currentAge}, retireAge=${retirementAge}`);
+
+    // Handle pension estimate with validation
+    let currentPension;
+    if (userData.pensionUnknown || userData.pensionEstimate === "I don't know" || !userData.pensionEstimate) {
+      currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+      calculationLog.push(`[Pension] User pension unknown. Using default for ${profession}: $${currentPension}`);
+    } else {
+      const parsedPension = parseFloat(userData.pensionEstimate);
+      if (isNaN(parsedPension) || parsedPension < 0) {
+        currentPension = DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+        calculationLog.push(`[Pension] Invalid pension value provided. Using default for ${profession}: $${currentPension}`);
+      } else {
+        currentPension = Math.min(50000, parsedPension); // Cap at reasonable maximum
+        calculationLog.push(`[Pension] User provided pension: $${currentPension}`);
       }
     }
-  };
+
+    // Calculate derived values
+    const yearsUntilRetirement = Math.max(0, retirementAge - currentAge);
+
+    calculationLog.push(`[Derived] Years until retirement: ${yearsUntilRetirement}`);
+
+    if (yearsUntilRetirement <= 0) {
+      throw new Error('Retirement age must be greater than current age');
+    }
+
+    const retirementAgeBand = getRetirementAgeBand(retirementAge);
+    const yearsUntilRetirementBand = getYearsUntilRetirementBand(yearsUntilRetirement);
+
+    calculationLog.push(`[Derived] Retirement bands: age=${retirementAgeBand}, years=${yearsUntilRetirementBand}`);
+
+    // Get multipliers
+    const professionFactor = PROFESSION_FACTORS[profession] || 1.0;
+    const stateFactor = STATE_FACTORS[state] || 1.0;
+    const coverageLevel = COVERAGE_LEVELS[survivorIncome] || 1.0;
+    const colaValue = COLA_VALUES[cola] || 0;
+    const yearsUntilRetirementConverted = YEARS_UNTIL_RETIREMENT_CONVERSION[yearsUntilRetirementBand] || 18;
+
+    calculationLog.push(`[Factors] Multipliers: profession=${professionFactor}, state=${stateFactor}, coverage=${coverageLevel}, cola=${colaValue}, yearsBand=${yearsUntilRetirementConverted}`);
+
+    // A. Hidden Benefit Opportunity
+    const hiddenBenefitOpportunity = Math.round(
+      1800 * (yearsOfService / 28) * professionFactor * stateFactor
+    );
+
+    calculationLog.push(`[Calc] Hidden Benefit Opportunity: $${hiddenBenefitOpportunity} = 1800 * (${yearsOfService}/28) * ${professionFactor} * ${stateFactor}`);
+
+    // B. Risk Score Components
+    const earlyRetireBonus = (retirementAgeBand === '55-62') ? 20 : 0;
+    const taxSurprisesBonus = financialFears.includes('tax-surprises') || 
+                             financialFears.includes('Tax surprises') ? 30 : 0;
+
+    calculationLog.push(`[Risk] Bonuses: earlyRetire=${earlyRetireBonus}, taxSurprise=${taxSurprisesBonus}`);
+
+    const pensionRisk = Math.min(100, Math.max(0, 80 - (colaValue * 30) + earlyRetireBonus));
+    const taxRisk = Math.min(100, (otherSavings / 100000) * 25 + taxSurprisesBonus);
+    const survivorRisk = Math.round(80 * coverageLevel);
+
+    calculationLog.push(`[Risk] Risk components: pensionRisk=${pensionRisk}, taxRisk=${taxRisk}, survivorRisk=${survivorRisk}`);
+
+    const riskScore = Math.round(
+      (pensionRisk * 0.5) + (taxRisk * 0.3) + (survivorRisk * 0.2)
+    );
+
+    calculationLog.push(`[Risk] Raw risk score: ${riskScore}`);
+
+    // Ensure riskScore stays within 0-100 bounds even as weightings evolve
+    const clampedRiskScore = Math.min(100, Math.max(0, riskScore));
+
+    if (clampedRiskScore !== riskScore) calculationLog.push(`[Risk] Clamped risk score: ${clampedRiskScore}`);
+
+    // C. Gap Calculations
+    const pensionGap = Math.round(currentPension * 0.03 * yearsOfService);
+    const taxTorpedo = Math.round(otherSavings * 0.30);
+    const survivorGap = Math.round(currentPension * 0.40);
+
+    calculationLog.push(`[Gaps] Calculated gaps: pension=$${pensionGap}, taxTorpedo=$${taxTorpedo}, survivor=$${survivorGap}`);
+
+    const monthlyGap = pensionGap + survivorGap + Math.round(taxTorpedo / 240);
+
+    calculationLog.push(`[Gaps] Total monthly gap: $${monthlyGap}`);
+
+    // D. Monthly Contribution & Lifetime Payout
+    // Protect against division by zero
+    const contributionDivisor = yearsUntilRetirementConverted * 7;
+    const monthlyContribution = contributionDivisor > 0 ? Math.round(
+      (monthlyGap * 12) / contributionDivisor
+    ) : 0;
+
+    calculationLog.push(`[Calc] Required monthly contribution: $${monthlyContribution}`);
+
+    const lifetimePayout = Math.round(
+      (monthlyContribution * 12 * yearsUntilRetirementConverted) * 3.0
+    );
+
+    calculationLog.push(`[Calc] Estimated lifetime payout: $${lifetimePayout}`);
+
+    // Risk color mapping
+    let riskColor;
+    if (clampedRiskScore < 40) {
+      riskColor = 'green';
+    } else if (clampedRiskScore >= 40 && clampedRiskScore <= 70) {
+      riskColor = 'gold';
+    } else {
+      riskColor = 'red';
+    }
+
+    // Calculate total gap for downstream components (fixed calculation)
+    const totalGap = (pensionGap * 240) + (survivorGap * 240) + taxTorpedo;
+
+    calculationLog.push(`[Total] Total gap calculated: $${totalGap} = (${pensionGap} * 240) + (${survivorGap} * 240) + ${taxTorpedo}`);
+
+    // Return calculated results
+    return {
+      // Input data (normalized)
+      profession,
+      yearsOfService,
+      currentPension,
+      state,
+      cola,
+      survivorIncome,
+      otherSavings,
+      currentAge,
+      retirementAge,
+      yearsUntilRetirement,
+      retirementAgeBand,
+      yearsUntilRetirementBand,
+      
+      // Calculated outputs
+      hiddenBenefitOpportunity,
+      riskScore: clampedRiskScore,
+      riskColor,
+      pensionGap,
+      taxTorpedo,
+      survivorGap,
+      monthlyGap,
+      monthlyContribution,
+      lifetimePayout,
+      totalGap, // Add totalGap to standardize data structure
+      calculationLog,
+      
+      // Risk components (for debugging/display)
+      riskComponents: {
+        pensionRisk,
+        taxRisk,
+        survivorRisk,
+        earlyRetireBonus,
+        taxSurprisesBonus
+      },
+      
+      // Multipliers used (for debugging/display)
+      multipliers: {
+        professionFactor,
+        stateFactor,
+        coverageLevel,
+        colaValue,
+        yearsUntilRetirementConverted
+      },
+
+      // Structured gap data for downstream components
+      gaps: {
+        pension: {
+          amount: pensionGap * 240, // Convert monthly to 20-year total
+          monthly: pensionGap,
+          risk: pensionRisk > 60 ? 'high' : pensionRisk > 30 ? 'medium' : 'low',
+          description: `Monthly pension gap: $${pensionGap}/month`
+        },
+        tax: {
+          amount: taxTorpedo,
+          risk: taxRisk > 60 ? 'high' : taxRisk > 30 ? 'medium' : 'low',
+          description: `Tax torpedo impact: $${taxTorpedo}`
+        },
+        survivor: {
+          amount: survivorGap * 240, // Convert monthly to 20-year total
+          monthly: survivorGap,
+          risk: survivorRisk > 60 ? 'high' : survivorRisk > 30 ? 'medium' : 'low',
+          description: `Monthly survivor benefit gap: $${survivorGap}/month`
+        }
+      }
+    };
 
   } catch (error) {
     calculationLog.push(`[Error] Calculation failed: ${error.message}`);
     
-    // Return a safe fallback result with error information
-    return {
+    // Enhanced error logging with more details
+    console.error('Calculation Engine Error:', {
       error: error.message,
-      calculationLog,
-      // Provide safe defaults
-      profession: userData?.profession || 'unknown',
-      riskScore: 50,
-      riskColor: 'gold',
-      totalGap: 0,
-      pensionGap: 0,
-      taxTorpedo: 0,
-      survivorGap: 0,
-      monthlyGap: 0,
-      monthlyContribution: 0,
-      lifetimePayout: 0,
-      hiddenBenefitOpportunity: 0,
-      riskComponents: {
-        pensionRisk: 0,
-        taxRisk: 0,
-        survivorRisk: 0,
-        earlyRetireBonus: 0,
-        taxSurprisesBonus: 0
-      },
-      gaps: {
-        pension: { amount: 0, monthly: 0, risk: 'low', description: 'Error in calculation' },
-        tax: { amount: 0, risk: 'low', description: 'Error in calculation' },
-        survivor: { amount: 0, monthly: 0, risk: 'low', description: 'Error in calculation' }
-      }
-    };
+      stack: error.stack,
+      userData: userData,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Return a safe fallback result with error information
+    return createErrorResult(error, userData, calculationLog);
   }
 };
 

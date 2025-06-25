@@ -1,0 +1,97 @@
+{
+  "version": "1.0",
+  "globalConfig": {
+    "defaultTag": "master"
+  },
+  "tags": {
+    "master": {
+      "name": "master",
+      "description": "Main development tasks",
+      "metadata": {
+        "createdAt": "2025-01-25T13:30:00Z"
+      },
+      "tasks": [
+        {
+          "id": 1,
+          "title": "Fix State Selector Profession Display Issue ✅",
+          "description": "Resolve the issue where state selector always shows 'Teachers' retirement systems regardless of selected profession",
+          "status": "done",
+          "priority": "high",
+          "dependencies": [],
+          "details": "COMPLETED: Updated StateSelector.jsx to use generic pension system names instead of hardcoded 'Teachers' systems.",
+          "testStrategy": "Test all profession types -> state selection flow, verify appropriate pension system names display"
+        },
+        {
+          "id": 2,
+          "title": "Enhance Calculation Engine Error Handling ✅",
+          "description": "Improve the calculation engine with comprehensive error handling and validation",
+          "status": "done",
+          "priority": "high",
+          "dependencies": [],
+          "details": "COMPLETED: Enhanced error handling with user-friendly messages, fixed syntax errors, integrated validation, and added comprehensive logging. Build tests successful - no errors detected.",
+          "testStrategy": "Test with invalid inputs, edge cases, and boundary values"
+        },
+        {
+          "id": 3,
+          "title": "Implement Comprehensive Form Validation",
+          "description": "Add client-side and enhanced validation for all form inputs throughout the application",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": [],
+          "details": "Strengthen form validation across all steps: profession selection, service profile, risk assessment. Include real-time validation and clear error states.",
+          "testStrategy": "Test all forms with various invalid inputs, verify validation messages appear immediately"
+        },
+        {
+          "id": 4,
+          "title": "Optimize Mobile Responsive Design",
+          "description": "Improve mobile experience and responsive design across all application screens",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": [],
+          "details": "Enhance mobile responsiveness, touch interactions, and mobile-specific UI optimizations.",
+          "testStrategy": "Test on various mobile devices and screen sizes"
+        },
+        {
+          "id": 5,
+          "title": "Add Comprehensive Error Boundaries",
+          "description": "Implement React error boundaries throughout the application for graceful error handling",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": [],
+          "details": "Add error boundaries to catch JavaScript errors anywhere in the component tree, log errors, and display fallback UI instead of crashing the entire application.",
+          "testStrategy": "Simulate component errors and verify error boundaries catch them and display appropriate fallback UI"
+        },
+        {
+          "id": 6,
+          "title": "Implement Session Management and Progress Saving",
+          "description": "Add ability to save user progress and resume sessions across browser sessions",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": [],
+          "details": "Implement local storage or session storage to save user progress through the multi-step assessment. Allow users to return and continue where they left off.",
+          "testStrategy": "Test progress saving at each step, verify users can return and resume their assessment"
+        },
+        {
+          "id": 7,
+          "title": "Enhance Loading States and User Feedback",
+          "description": "Add comprehensive loading states, progress indicators, and user feedback throughout the application",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": [],
+          "details": "Implement loading spinners, progress bars, and feedback messages for all async operations, calculations, and navigation between steps.",
+          "testStrategy": "Test all loading states and verify appropriate feedback is shown during operations"
+        },
+        {
+          "id": 8,
+          "title": "Implement Advanced Accessibility Features",
+          "description": "Enhance accessibility compliance including keyboard navigation, screen reader support, and WCAG guidelines",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": [],
+          "details": "Ensure the application meets accessibility standards for government workers and public servants, including full keyboard navigation, proper ARIA labels, and screen reader compatibility.",
+          "testStrategy": "Test with screen readers, keyboard-only navigation, and accessibility testing tools"
+        }
+      ]
+    }
+  }
+} 
