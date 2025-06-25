@@ -24,6 +24,7 @@ This document tracks the analysis, refactoring, and feature implementation for t
   - [x] Enhanced pension estimate input with 4 common range buttons ($1,500-$5,000).
   - [x] Styled pension range buttons consistently with years of service buttons.
   - [x] Optimized mobile responsive design with proper padding and native app feel.
+  - [x] Updated compliance footer: Replaced FINRA/SIPC with NAIC membership.
 - [x] **Features & Debugging:**
   - [x] Implemented a detailed calculation log within the engine.
   - [x] Displayed the calculation log on the report delivery page.

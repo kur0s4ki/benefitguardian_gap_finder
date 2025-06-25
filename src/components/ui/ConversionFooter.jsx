@@ -76,7 +76,7 @@ const ConversionFooter = ({ className = "" }) => {
             <span className="hidden sm:inline">•</span>
             <span>All rights reserved</span>
             <span className="hidden sm:inline">•</span>
-            <span>Member FINRA/SIPC</span>
+            <span>Member NAIC</span>
           </div>
         </div>
       </div>
