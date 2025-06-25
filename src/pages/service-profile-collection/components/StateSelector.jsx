@@ -14,58 +14,192 @@ const StateSelector = ({
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
-  const states = [
-    { code: 'AL', name: 'Alabama', pensionSystem: 'Alabama Retirement Systems' },
-    { code: 'AK', name: 'Alaska', pensionSystem: 'Alaska Retirement Systems' },
-    { code: 'AZ', name: 'Arizona', pensionSystem: 'Arizona State Retirement System' },
-    { code: 'AR', name: 'Arkansas', pensionSystem: 'Arkansas Public Employees Retirement System' },
-    { code: 'CA', name: 'California', pensionSystem: 'California Public Employees\' Retirement System (CalPERS)' },
-    { code: 'CO', name: 'Colorado', pensionSystem: 'Colorado Public Employees\' Retirement Association (PERA)' },
-    { code: 'CT', name: 'Connecticut', pensionSystem: 'Connecticut Retirement Plans and Trust Funds' },
-    { code: 'DE', name: 'Delaware', pensionSystem: 'Delaware Public Employees\' Retirement System' },
-    { code: 'FL', name: 'Florida', pensionSystem: 'Florida Retirement System' },
-    { code: 'GA', name: 'Georgia', pensionSystem: 'Employees\' Retirement System of Georgia' },
-    { code: 'HI', name: 'Hawaii', pensionSystem: 'Employees\' Retirement System of Hawaii' },
-    { code: 'ID', name: 'Idaho', pensionSystem: 'Public Employee Retirement System of Idaho' },
-    { code: 'IL', name: 'Illinois', pensionSystem: 'Illinois Public Employee Retirement Systems' },
-    { code: 'IN', name: 'Indiana', pensionSystem: 'Indiana Public Retirement System' },
-    { code: 'IA', name: 'Iowa', pensionSystem: 'Iowa Public Employees\' Retirement System' },
-    { code: 'KS', name: 'Kansas', pensionSystem: 'Kansas Public Employees Retirement System' },
-    { code: 'KY', name: 'Kentucky', pensionSystem: 'Kentucky Retirement Systems' },
-    { code: 'LA', name: 'Louisiana', pensionSystem: 'Louisiana State Employees\' Retirement System' },
-    { code: 'ME', name: 'Maine', pensionSystem: 'Maine Public Employees Retirement System' },
-    { code: 'MD', name: 'Maryland', pensionSystem: 'Maryland State Retirement and Pension System' },
-    { code: 'MA', name: 'Massachusetts', pensionSystem: 'Massachusetts Public Employee Retirement Administration' },
-    { code: 'MI', name: 'Michigan', pensionSystem: 'Michigan Public Employee Retirement Systems' },
-    { code: 'MN', name: 'Minnesota', pensionSystem: 'Minnesota State Retirement System' },
-    { code: 'MS', name: 'Mississippi', pensionSystem: 'Mississippi Public Employees\' Retirement System' },
-    { code: 'MO', name: 'Missouri', pensionSystem: 'Missouri State Employees\' Retirement System' },
-    { code: 'MT', name: 'Montana', pensionSystem: 'Montana Public Employee Retirement Systems' },
-    { code: 'NE', name: 'Nebraska', pensionSystem: 'Nebraska Public Employees Retirement Systems' },
-    { code: 'NV', name: 'Nevada', pensionSystem: 'Nevada Public Employees\' Retirement System' },
-    { code: 'NH', name: 'New Hampshire', pensionSystem: 'New Hampshire Retirement System' },
-    { code: 'NJ', name: 'New Jersey', pensionSystem: 'New Jersey Public Employee Retirement Systems' },
-    { code: 'NM', name: 'New Mexico', pensionSystem: 'New Mexico Public Employee Retirement Systems' },
-    { code: 'NY', name: 'New York', pensionSystem: 'New York State and Local Retirement Systems' },
-    { code: 'NC', name: 'North Carolina', pensionSystem: 'North Carolina Retirement Systems' },
-    { code: 'ND', name: 'North Dakota', pensionSystem: 'North Dakota Public Employees Retirement System' },
-    { code: 'OH', name: 'Ohio', pensionSystem: 'Ohio Public Employees Retirement System' },
-    { code: 'OK', name: 'Oklahoma', pensionSystem: 'Oklahoma Public Employees Retirement System' },
-    { code: 'OR', name: 'Oregon', pensionSystem: 'Oregon Public Employees Retirement System' },
-    { code: 'PA', name: 'Pennsylvania', pensionSystem: 'Pennsylvania Public Employee Retirement Systems' },
-    { code: 'RI', name: 'Rhode Island', pensionSystem: 'Rhode Island Employees\' Retirement System' },
-    { code: 'SC', name: 'South Carolina', pensionSystem: 'South Carolina Retirement Systems' },
-    { code: 'SD', name: 'South Dakota', pensionSystem: 'South Dakota Retirement System' },
-    { code: 'TN', name: 'Tennessee', pensionSystem: 'Tennessee Consolidated Retirement System' },
-    { code: 'TX', name: 'Texas', pensionSystem: 'Texas Public Employee Retirement Systems' },
-    { code: 'UT', name: 'Utah', pensionSystem: 'Utah Retirement Systems' },
-    { code: 'VT', name: 'Vermont', pensionSystem: 'Vermont State Retirement Systems' },
-    { code: 'VA', name: 'Virginia', pensionSystem: 'Virginia Retirement System' },
-    { code: 'WA', name: 'Washington', pensionSystem: 'Washington State Department of Retirement Systems' },
-    { code: 'WV', name: 'West Virginia', pensionSystem: 'West Virginia Retirement Systems' },
-    { code: 'WI', name: 'Wisconsin', pensionSystem: 'Wisconsin Retirement System' },
-    { code: 'WY', name: 'Wyoming', pensionSystem: 'Wyoming Retirement System' }
+  // Base state data with generic retirement system names
+  const baseStates = [
+    { code: 'AL', name: 'Alabama' },
+    { code: 'AK', name: 'Alaska' },
+    { code: 'AZ', name: 'Arizona' },
+    { code: 'AR', name: 'Arkansas' },
+    { code: 'CA', name: 'California' },
+    { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' },
+    { code: 'DE', name: 'Delaware' },
+    { code: 'FL', name: 'Florida' },
+    { code: 'GA', name: 'Georgia' },
+    { code: 'HI', name: 'Hawaii' },
+    { code: 'ID', name: 'Idaho' },
+    { code: 'IL', name: 'Illinois' },
+    { code: 'IN', name: 'Indiana' },
+    { code: 'IA', name: 'Iowa' },
+    { code: 'KS', name: 'Kansas' },
+    { code: 'KY', name: 'Kentucky' },
+    { code: 'LA', name: 'Louisiana' },
+    { code: 'ME', name: 'Maine' },
+    { code: 'MD', name: 'Maryland' },
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' },
+    { code: 'MN', name: 'Minnesota' },
+    { code: 'MS', name: 'Mississippi' },
+    { code: 'MO', name: 'Missouri' },
+    { code: 'MT', name: 'Montana' },
+    { code: 'NE', name: 'Nebraska' },
+    { code: 'NV', name: 'Nevada' },
+    { code: 'NH', name: 'New Hampshire' },
+    { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'New Mexico' },
+    { code: 'NY', name: 'New York' },
+    { code: 'NC', name: 'North Carolina' },
+    { code: 'ND', name: 'North Dakota' },
+    { code: 'OH', name: 'Ohio' },
+    { code: 'OK', name: 'Oklahoma' },
+    { code: 'OR', name: 'Oregon' },
+    { code: 'PA', name: 'Pennsylvania' },
+    { code: 'RI', name: 'Rhode Island' },
+    { code: 'SC', name: 'South Carolina' },
+    { code: 'SD', name: 'South Dakota' },
+    { code: 'TN', name: 'Tennessee' },
+    { code: 'TX', name: 'Texas' },
+    { code: 'UT', name: 'Utah' },
+    { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginia' },
+    { code: 'WA', name: 'Washington' },
+    { code: 'WV', name: 'West Virginia' },
+    { code: 'WI', name: 'Wisconsin' },
+    { code: 'WY', name: 'Wyoming' }
   ];
+
+  // Function to get profession-appropriate pension system name
+  const getPensionSystemName = (stateName, stateCode) => {
+    const professionTemplates = {
+      teacher: {
+        // Most states have dedicated teacher retirement systems
+        specific: {
+          'CA': 'California State Teachers\' Retirement System (CalSTRS)',
+          'TX': 'Teacher Retirement System of Texas',
+          'NY': 'New York State Teachers\' Retirement System',
+          'FL': 'Florida Retirement System (Teachers)',
+          'IL': 'Illinois Teachers\' Retirement System',
+          'PA': 'Pennsylvania Public School Employees\' Retirement System',
+          'OH': 'Ohio State Teachers Retirement System',
+          'MI': 'Michigan Public School Employees Retirement System',
+          'GA': 'Teachers Retirement System of Georgia',
+          'NC': 'North Carolina Teachers\' and State Employees\' Retirement System',
+          'VA': 'Virginia Retirement System (Education)',
+          'WA': 'Washington Teachers\' Retirement System',
+          'AZ': 'Arizona State Retirement System (Education)',
+          'MA': 'Massachusetts Teachers\' Retirement System',
+          'TN': 'Tennessee Teachers Retirement System',
+          'MO': 'Missouri Public School Retirement System',
+          'WI': 'Wisconsin Teachers Retirement System',
+          'MD': 'Maryland Teachers\' Retirement and Pension System',
+          'MN': 'Minnesota Teachers Retirement Association',
+          'CO': 'Colorado Public Employees\' Retirement Association (Education)',
+          'AL': 'Alabama Teachers\' Retirement System',
+          'LA': 'Louisiana Teachers\' Retirement System',
+          'KY': 'Kentucky Teachers\' Retirement System',
+          'OR': 'Oregon Public Employees Retirement System (Education)',
+          'OK': 'Oklahoma Teachers\' Retirement System',
+          'CT': 'Connecticut Teachers\' Retirement System',
+          'IA': 'Iowa Public Employees\' Retirement System (Education)',
+          'AR': 'Arkansas Teacher Retirement System',
+          'MS': 'Mississippi Public Employees\' Retirement System (Education)',
+          'KS': 'Kansas Public Employees Retirement System (Education)',
+          'UT': 'Utah Retirement Systems (Education)',
+          'NV': 'Nevada Public Employees\' Retirement System (Education)',
+          'NM': 'New Mexico Educational Retirement Board',
+          'WV': 'West Virginia Teachers\' Retirement System',
+          'ID': 'Idaho Public Employee Retirement System (Education)',
+          'NH': 'New Hampshire Teachers\' Retirement System',
+          'ME': 'Maine Public Employees Retirement System (Education)',
+          'HI': 'Hawaii Employees\' Retirement System (Education)',
+          'RI': 'Rhode Island Employees\' Retirement System (Education)',
+          'MT': 'Montana Teachers\' Retirement System',
+          'DE': 'Delaware Public Employees\' Retirement System (Education)',
+          'SD': 'South Dakota Teachers Retirement System',
+          'ND': 'North Dakota Teachers\' Fund for Retirement',
+          'AK': 'Alaska Teachers\' Retirement System',
+          'VT': 'Vermont Teachers\' Retirement System',
+          'WY': 'Wyoming Public Employees\' Retirement System (Education)',
+          'NJ': 'New Jersey Teachers\' Pension and Annuity Fund',
+          'IN': 'Indiana Teachers\' Retirement Fund',
+          'SC': 'South Carolina Teachers and Employees Retirement System'
+        },
+        default: `${stateName} Teachers\' Retirement System`
+      },
+      nurse: {
+        // Nurses often participate in general public employee or healthcare-specific systems
+        specific: {
+          'CA': 'California Public Employees\' Retirement System (CalPERS)',
+          'TX': 'Employees Retirement System of Texas',
+          'NY': 'New York State and Local Employees\' Retirement System',
+          'FL': 'Florida Retirement System (Healthcare)',
+          'IL': 'Illinois Municipal Retirement Fund',
+          'PA': 'Pennsylvania Public Employee Retirement System',
+          'OH': 'Ohio Public Employees Retirement System',
+          'MI': 'Michigan Municipal Employees Retirement System',
+          'GA': 'Employees\' Retirement System of Georgia',
+          'NC': 'North Carolina Local Governmental Employees\' Retirement System',
+          'VA': 'Virginia Retirement System (Healthcare)',
+          'WA': 'Washington Public Employees\' Retirement System',
+          'AZ': 'Arizona State Retirement System',
+          'MA': 'Massachusetts State Employees\' Retirement System',
+          'TN': 'Tennessee Consolidated Retirement System'
+        },
+        default: `${stateName} Public Employees\' Retirement System`
+      },
+      'first-responder': {
+        // First responders often have dedicated public safety retirement systems
+        specific: {
+          'CA': 'California Public Safety Officers\' Retirement System',
+          'TX': 'Texas Public Safety Personnel Retirement System',
+          'NY': 'New York Police and Fire Retirement System',
+          'FL': 'Florida Retirement System (Special Risk)',
+          'IL': 'Illinois Police Officers\' Retirement System',
+          'PA': 'Pennsylvania Municipal Police Officers\' Retirement System',
+          'OH': 'Ohio Police and Fire Pension Fund',
+          'MI': 'Michigan Public Safety Employees Retirement System',
+          'GA': 'Georgia Public Safety Retirement System',
+          'NC': 'North Carolina Local Governmental Employees\' Retirement System (Law Enforcement)',
+          'VA': 'Virginia Retirement System (Public Safety)',
+          'WA': 'Washington Law Enforcement Officers\' and Firefighters\' Retirement System',
+          'AZ': 'Arizona Public Safety Personnel Retirement System',
+          'MA': 'Massachusetts State Police Retirement System',
+          'TN': 'Tennessee Police Officers and Firefighters Pension Plan'
+        },
+        default: `${stateName} Public Safety Retirement System`
+      },
+      'government-employee': {
+        // Government employees typically use general public employee systems
+        specific: {
+          'CA': 'California Public Employees\' Retirement System (CalPERS)',
+          'TX': 'Employees Retirement System of Texas',
+          'NY': 'New York State and Local Employees\' Retirement System',
+          'FL': 'Florida Retirement System',
+          'IL': 'Illinois State Employees\' Retirement System',
+          'PA': 'Pennsylvania State Employees\' Retirement System',
+          'OH': 'Ohio Public Employees Retirement System',
+          'MI': 'Michigan State Employees\' Retirement System',
+          'GA': 'Employees\' Retirement System of Georgia',
+          'NC': 'North Carolina State and Local Government Workers\' Retirement System',
+          'VA': 'Virginia Retirement System',
+          'WA': 'Washington State Department of Retirement Systems',
+          'AZ': 'Arizona State Retirement System',
+          'MA': 'Massachusetts State Employees\' Retirement System',
+          'TN': 'Tennessee Consolidated Retirement System'
+        },
+        default: `${stateName} State Employees\' Retirement System`
+      }
+    };
+
+    const professionTemplate = professionTemplates[profession] || professionTemplates['government-employee'];
+    return professionTemplate.specific[stateCode] || professionTemplate.default;
+  };
+
+  // Generate states with profession-specific pension systems
+  const states = baseStates.map(state => ({
+    ...state,
+    pensionSystem: getPensionSystemName(state.name, state.code)
+  }));
 
   const filteredStates = states.filter(state =>
     state.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
