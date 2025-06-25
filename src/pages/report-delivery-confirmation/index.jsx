@@ -281,7 +281,7 @@ const ReportDeliveryConfirmation = () => {
                 className="w-full btn-primary py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
               >
                 <Icon name="Calendar" size={18} />
-                Book Priority Audit
+                Book Priority Benefits Audit
               </button>
             </div>
 

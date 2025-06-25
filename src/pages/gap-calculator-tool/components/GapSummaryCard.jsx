@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from 'components/AppIcon';
+import { getRiskLevel } from 'utils/riskUtils';
 
 const GapSummaryCard = ({ userData }) => {
   const gaps = [
@@ -129,27 +130,43 @@ const GapSummaryCard = ({ userData }) => {
       </div>
 
       {/* Overall Risk Score */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-error-50 to-warning-50 rounded-lg border border-error-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-error rounded-full flex items-center justify-center">
-              <Icon name="Shield" size={24} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-text-primary">GrowthGuard Risk Score</h3>
-              <p className="text-sm text-text-secondary">
-                Your overall retirement security rating
-              </p>
+      {(() => {
+        const riskData = getRiskLevel(userData.riskScore);
+        const score = userData.riskScore;
+        
+        // Determine background and border classes based on risk score
+        const bgGradient = score < 40 ? 'from-success-50 to-success-50' :
+                          score < 70 ? 'from-warning-50 to-warning-50' :
+                          'from-error-50 to-error-50';
+        
+        const borderClass = score < 40 ? 'border-success-200' :
+                           score < 70 ? 'border-warning-200' :
+                           'border-error-200';
+        
+        return (
+          <div className={`mt-6 p-4 bg-gradient-to-r ${bgGradient} rounded-lg border ${borderClass}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 ${riskData.bgColor} rounded-full flex items-center justify-center`}>
+                  <Icon name={riskData.icon} size={24} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-text-primary">GrowthGuard Risk Score</h3>
+                  <p className="text-sm text-text-secondary">
+                    Your overall retirement security rating
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-3xl font-bold ${riskData.color}`}>
+                  {userData.riskScore}
+                </div>
+                <div className={`text-sm ${riskData.color} font-medium`}>{riskData.level}</div>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-error">
-              {userData.riskScore}
-            </div>
-            <div className="text-sm text-error font-medium">High Risk</div>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
     </div>
   );
 };

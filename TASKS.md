@@ -25,6 +25,10 @@ This document tracks the analysis, refactoring, and feature implementation for t
   - [x] Styled pension range buttons consistently with years of service buttons.
   - [x] Optimized mobile responsive design with proper padding and native app feel.
   - [x] Updated compliance footer: Replaced FINRA/SIPC with NAIC membership.
+  - [x] Fixed button text: Added "Benefits" to audit buttons (now reads "Book Priority Benefits Audit").
+  - [x] Created centralized risk utilities to prevent risk score display inconsistencies.
+  - [x] Ensured consistent risk thresholds across all components (< 40: Low, 40-70: Moderate, >= 70: High).
+  - [x] Fixed gap-calculator-tool risk score display: Score 37 now correctly shows as "Low Risk" (green) instead of "High Risk" (red).
 - [x] **Features & Debugging:**
   - [x] Implemented a detailed calculation log within the engine.
   - [x] Displayed the calculation log on the report delivery page.

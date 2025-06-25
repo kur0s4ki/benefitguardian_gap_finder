@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from 'components/AppIcon';
+import { getRiskLevel } from 'utils/riskUtils';
 
 const RiskGauge = ({ score, profession, showResults, riskComponents }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
@@ -49,41 +50,7 @@ const RiskGauge = ({ score, profession, showResults, riskComponents }) => {
     };
   }, [showResults, animateScore]);
 
-  const getRiskData = (currentScore) => {
-    if (currentScore < 40) {
-      return {
-        level: 'Low Risk',
-        color: 'text-success',
-        bgColor: 'bg-success',
-        ringColor: 'stroke-success',
-        description: 'Your retirement plan shows strong fundamentals with minimal gaps.',
-        icon: 'Shield',
-        shieldClass: 'text-success'
-      };
-    }
-    if (currentScore < 70) {
-      return {
-        level: 'Moderate Risk',
-        color: 'text-warning',
-        bgColor: 'bg-warning',
-        ringColor: 'stroke-warning',
-        description: 'Some gaps identified that could impact your retirement security.',
-        icon: 'ShieldAlert',
-        shieldClass: 'text-warning'
-      };
-    }
-    return {
-      level: 'High Risk',
-      color: 'text-error',
-      bgColor: 'bg-error',
-      ringColor: 'stroke-error',
-      description: 'Critical gaps detected that require immediate attention.',
-      icon: 'ShieldX',
-      shieldClass: 'text-error animate-pulse'
-    };
-  };
-
-  const riskData = getRiskData(animatedScore);
+  const riskData = getRiskLevel(animatedScore);
   const circumference = 2 * Math.PI * 90;
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;

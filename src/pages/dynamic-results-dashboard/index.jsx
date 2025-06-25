@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import ConversionFooter from 'components/ui/ConversionFooter';
+import { getRiskLevel } from 'utils/riskUtils';
 
 import RiskGauge from './components/RiskGauge';
 import GapAnalysisCard from './components/GapAnalysisCard';
@@ -84,14 +85,8 @@ const DynamicResultsDashboard = () => {
     }
   }, [calculatedResults, calculationError]);
 
-  const getRiskLevel = (score) => {
-    if (score < 40) return { level: 'Low', color: 'text-success', bgColor: 'bg-success-50' };
-    if (score < 70) return { level: 'Moderate', color: 'text-warning', bgColor: 'bg-warning-50' };
-    return { level: 'High', color: 'text-error', bgColor: 'bg-error-50' };
-  };
-
   const riskLevel = useMemo(() => 
-    calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', color: 'text-gray-500', bgColor: 'bg-gray-50' },
+    calculatedResults ? getRiskLevel(calculatedResults.riskScore) : { level: 'Unknown', shortLevel: 'Unknown', color: 'text-gray-500', bgColorLight: 'bg-gray-50' },
     [calculatedResults?.riskScore]
   );
 
@@ -163,8 +158,7 @@ const DynamicResultsDashboard = () => {
       currentAge: calculatedResults.currentAge || 45,
       state: calculatedResults.state,
       riskScore: calculatedResults.riskScore,
-      riskColor: calculatedResults.riskScore >= 70 ? 'red' :
-                 calculatedResults.riskScore >= 40 ? 'gold' : 'green',
+      riskColor: getRiskLevel(calculatedResults.riskScore).riskColor,
       gaps: {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total
@@ -281,7 +275,7 @@ const DynamicResultsDashboard = () => {
         {/* Hero Section */}
         <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
           <div className="max-w-4xl mx-auto text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${riskLevel.bgColor} mb-4`}>
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${riskLevel.bgColorLight} mb-4`}>
               <span className="text-2xl">{currentTheme.emoji}</span>
               <span className={`font-semibold ${riskLevel.color}`}>
                 {currentTheme.title} Risk Analysis

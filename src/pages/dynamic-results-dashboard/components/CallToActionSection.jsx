@@ -169,7 +169,7 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
               </div>
               
               <h4 className="font-semibold mb-2">
-                Book Priority Audit
+                Book Priority Benefits Audit
               </h4>
               
               <p className="text-sm text-primary-100 mb-4">

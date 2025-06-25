@@ -377,11 +377,11 @@ export const calculateBenefitGaps = (userData) => {
 
     calculationLog.push(`[Calc] Estimated lifetime payout: $${lifetimePayout}`);
 
-    // Risk color mapping
+    // Risk color mapping - consistent with centralized thresholds
     let riskColor;
     if (clampedRiskScore < 40) {
       riskColor = 'green';
-    } else if (clampedRiskScore >= 40 && clampedRiskScore <= 70) {
+    } else if (clampedRiskScore < 70) {
       riskColor = 'gold';
     } else {
       riskColor = 'red';
