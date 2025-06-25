@@ -223,15 +223,18 @@ const RetirementAgeSection = ({
           </button>
         </div>
         
-        {currentAge && value && value <= currentAge && (
-          <div className="p-4 bg-error-50 border border-error-200 text-error-700 rounded-lg text-sm flex items-center gap-2">
-            <Icon name="AlertTriangle" size={16} />
-            <div>
-              <div className="font-semibold">Invalid Retirement Timeline</div>
-              <div>You cannot retire at age {value} if you are currently {currentAge}. Please adjust your retirement age to be greater than your current age.</div>
+        {/* Validation Message Area - Fixed height to prevent layout shifts */}
+        <div className="min-h-[60px] flex items-start">
+          {currentAge && value && value <= currentAge && (
+            <div className="w-full p-4 bg-error-50 border border-error-200 text-error-700 rounded-lg text-sm flex items-center gap-2">
+              <Icon name="AlertTriangle" size={16} />
+              <div>
+                <div className="font-semibold">Invalid Retirement Timeline</div>
+                <div>You cannot retire at age {value} if you are currently {currentAge}. Please adjust your retirement age to be greater than your current age.</div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className={`p-4 rounded-lg border ${
           getAgeCategory(value) === 'early' ? 'bg-warning-50 border-warning-200' :

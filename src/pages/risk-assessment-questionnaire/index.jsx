@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import ConversionFooter from 'components/ui/ConversionFooter';
@@ -34,19 +34,64 @@ const RiskAssessmentQuestionnaire = () => {
 
   const { addToast } = useToast();
 
-  // Helper function to scroll to top smoothly
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
+  // Ref for the mobile section container
+  const mobileSectionRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
+
+  // Enhanced scroll function to scroll to section container
+  const scrollToSection = () => {
+    // Clear any pending scroll operations
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (mobileSectionRef.current) {
+        // For sections with dynamic content (like retirement timeline), 
+        // wait a bit longer to ensure all content has rendered
+        const isRetirementSection = currentSection === 2;
+        
+        const performScroll = () => {
+          mobileSectionRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+        };
+        
+        if (isRetirementSection) {
+          // Extra delay for retirement section to account for dynamic validation messages
+          scrollTimeoutRef.current = setTimeout(performScroll, 50);
+        } else {
+          performScroll();
+        }
+      }
     });
   };
 
-  // Enhanced section navigation with scroll to top
+  // Enhanced section navigation with proper timing
   const handleSectionChange = (newSection) => {
+    // Prevent rapid section changes
+    if (newSection === currentSection) return;
+    
+    // Update section first
     setCurrentSection(newSection);
-    scrollToTop();
+    
+    // Delay scroll to allow React state update and animation to start
+    setTimeout(() => {
+      scrollToSection();
+    }, 150); // Longer delay to ensure content is fully rendered
   };
+
+  // Cleanup scroll timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Load data from navigation state
   useEffect(() => {
@@ -375,7 +420,7 @@ const RiskAssessmentQuestionnaire = () => {
             </div>
 
             {/* Enhanced Mobile Content Container */}
-            <div className="min-h-[450px] flex flex-col">
+            <div className="min-h-[450px] flex flex-col" ref={mobileSectionRef}>
               {/* Current Section with Swipe Animation */}
               {currentSection === 0 && (
                 <div className="swipe-enter">

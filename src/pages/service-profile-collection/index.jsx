@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressHeader from 'components/ui/ProgressHeader';
 import BackNavigation from 'components/ui/BackNavigation';
@@ -48,18 +48,36 @@ const ServiceProfileCollection = () => {
   const [errors, setErrors] = useState({});
   const [isValid, setIsValid] = useState(false);
 
-  // Helper function to scroll to top smoothly
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
+  // Ref for the mobile section container
+  const mobileSectionRef = useRef(null);
+
+  // Enhanced scroll function to scroll to section container
+  const scrollToSection = () => {
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (mobileSectionRef.current) {
+        // Scroll to the mobile section container with smooth behavior
+        mobileSectionRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
     });
   };
 
-  // Enhanced section navigation with scroll to top
+  // Enhanced section navigation with proper timing
   const handleSectionChange = (newSection) => {
+    // Prevent rapid section changes
+    if (newSection === currentSection) return;
+    
+    // Update section first
     setCurrentSection(newSection);
-    scrollToTop();
+    
+    // Delay scroll to allow React state update and animation to start
+    setTimeout(() => {
+      scrollToSection();
+    }, 150); // Longer delay to ensure content is fully rendered
   };
 
   // Validate form on changes
@@ -230,7 +248,7 @@ const ServiceProfileCollection = () => {
 
         {/* Mobile Layout - One Section at a Time */}
         <div className="lg:hidden">
-          <div className="min-h-[450px]">
+          <div className="min-h-[450px]" ref={mobileSectionRef}>
             {currentSection === 0 && (
               <div className="swipe-enter">
                 <YearsOfServiceSlider
