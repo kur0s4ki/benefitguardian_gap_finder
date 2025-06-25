@@ -201,17 +201,17 @@ If you're unsure, we'll use government employee averages to provide accurate cal
 
         {/* Quick Amount Buttons */}
         {!unknown && (
-          <div className={`${mobile ? 'mt-6' : 'mb-6'}`}>
+          <div className={`${mobile ? 'mt-6 mb-8' : 'mb-6'}`}>
             <p className={`font-medium text-text-secondary mb-3 ${mobile ? 'text-sm' : ''}`}>Common Monthly Amounts:</p>
             <div className={`grid ${mobile ? 'grid-cols-2 gap-3' : 'grid-cols-4 gap-3'}`}>
               {quickAmounts.map((amount) => (
                 <button
                   key={amount}
                   onClick={() => onChange(amount.toString())}
-                  className={`${mobile ? 'py-3 px-4 mobile-touch-feedback' : 'py-2 px-4'} rounded-lg font-medium transition-colors duration-150 ${
+                  className={`p-2 rounded-lg transition-all duration-150 text-sm font-medium ${
                     parseInt(value) === amount
                       ? 'bg-primary text-white' 
-                      : 'bg-primary-50 text-primary hover:bg-primary-100'
+                      : 'bg-white border border-border hover:border-primary-200 hover:bg-primary-50 text-text-secondary'
                   }`}
                 >
                   ${amount.toLocaleString()}

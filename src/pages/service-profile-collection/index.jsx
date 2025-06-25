@@ -48,6 +48,20 @@ const ServiceProfileCollection = () => {
   const [errors, setErrors] = useState({});
   const [isValid, setIsValid] = useState(false);
 
+  // Helper function to scroll to top smoothly
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Enhanced section navigation with scroll to top
+  const handleSectionChange = (newSection) => {
+    setCurrentSection(newSection);
+    scrollToTop();
+  };
+
   // Validate form on changes
   useEffect(() => {
     validateForm();
@@ -259,7 +273,7 @@ const ServiceProfileCollection = () => {
           {/* Enhanced Mobile Navigation */}
           <div className="flex justify-between items-center mt-6 px-1">
             <button
-              onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+              onClick={() => handleSectionChange(Math.max(0, currentSection - 1))}
               disabled={currentSection === 0}
               className={`mobile-nav-button ${
                 currentSection === 0
@@ -276,7 +290,7 @@ const ServiceProfileCollection = () => {
               {sections.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentSection(index)}
+                  onClick={() => handleSectionChange(index)}
                   className="p-2 transition-all duration-200"
                   aria-label={`Go to ${sections[index]}`}
                 >
@@ -290,7 +304,7 @@ const ServiceProfileCollection = () => {
             </div>
 
             <button
-              onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
+              onClick={() => handleSectionChange(Math.min(sections.length - 1, currentSection + 1))}
               disabled={currentSection === sections.length - 1}
               className={`mobile-nav-button ${
                 currentSection === sections.length - 1
@@ -305,20 +319,26 @@ const ServiceProfileCollection = () => {
         </div>
 
         {/* Navigation Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 lg:mt-12">
-          <BackNavigation />
+        <div className="flex flex-col gap-4 mt-8 lg:mt-12 lg:flex-row lg:justify-between lg:items-center">
+          <button
+            onClick={() => navigate('/profession-selection-landing')}
+            className="w-full lg:w-auto px-8 py-3 rounded-lg font-semibold text-lg border border-border bg-white text-text-primary hover:border-primary-200 hover:bg-primary-50 transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Icon name="ChevronLeft" size={20} />
+            <span>Back</span>
+          </button>
           
           <button
             onClick={handleContinue}
             disabled={!isValid}
-            className={`w-full sm:w-auto px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 ${
+            className={`w-full lg:w-auto px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
               isValid
                 ? 'btn-primary hover:bg-primary-700 hover:shadow-lg transform hover:-translate-y-0.5'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            Continue to Risk Assessment
-            <Icon name="ArrowRight" size={20} className="ml-2 inline" />
+            <span>Continue to Risk Assessment</span>
+            <Icon name="ArrowRight" size={20} />
           </button>
         </div>
 

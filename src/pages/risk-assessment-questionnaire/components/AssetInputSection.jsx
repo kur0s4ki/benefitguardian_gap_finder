@@ -6,7 +6,8 @@ const AssetInputSection = ({
   preferNotToSay, 
   onSavingsChange, 
   onPreferNotToSayChange, 
-  profession 
+  profession,
+  mobile = false
 }) => {
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -117,18 +118,20 @@ const AssetInputSection = ({
               <Icon name="DollarSign" size={20} className="text-text-secondary" />
             </div>
             <input
-              type="text"
+              type="tel"
+              inputMode="numeric"
               value={savings ? formatCurrency(savings) : ''}
               onChange={handleSavingsChange}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
               disabled={preferNotToSay}
               placeholder="Enter amount (e.g., $250,000)"
-              className={`input-field pl-10 pr-4 py-3 text-lg font-semibold w-full transition-all duration-200 ${
+              className={`${mobile ? 'mobile-input-field' : 'input-field'} pl-10 pr-4 py-3 text-lg font-semibold w-full transition-all duration-200 ${
                 inputFocused ? 'ring-2 ring-primary-200 border-primary' : ''
               } ${
                 preferNotToSay ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''
               }`}
+              style={{ fontSize: '16px' }}
             />
           </div>
         </div>
@@ -137,14 +140,15 @@ const AssetInputSection = ({
         {!preferNotToSay && (
           <div>
             <p className="text-sm font-medium text-text-secondary mb-3">Quick select:</p>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-6'}`}>
               {quickAmounts.map((item) => (
                 <button
                   key={item.amount}
                   onClick={() => onSavingsChange(item.amount.toString())}
-                  className={`p-2 rounded-lg border transition-all duration-150 text-sm font-medium ${
+                  className={`p-2 rounded-lg transition-all duration-150 text-sm font-medium ${
                     parseInt(savings) === item.amount
-                      ? 'border-primary bg-primary-50 text-primary' :'border-border hover:border-primary-200 hover:bg-primary-50 text-text-secondary'
+                      ? 'bg-primary text-white'
+                      : 'border border-border hover:border-primary-200 hover:bg-primary-50 text-text-secondary'
                   }`}
                 >
                   {item.label}

@@ -34,6 +34,20 @@ const RiskAssessmentQuestionnaire = () => {
 
   const { addToast } = useToast();
 
+  // Helper function to scroll to top smoothly
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Enhanced section navigation with scroll to top
+  const handleSectionChange = (newSection) => {
+    setCurrentSection(newSection);
+    scrollToTop();
+  };
+
   // Load data from navigation state
   useEffect(() => {
     if (location.state) {
@@ -343,7 +357,7 @@ const RiskAssessmentQuestionnaire = () => {
                 {sections.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentSection(index)}
+                    onClick={() => handleSectionChange(index)}
                     className="p-2 transition-all duration-200"
                     aria-label={`Go to ${sections[index]?.title}`}
                   >
@@ -369,6 +383,7 @@ const RiskAssessmentQuestionnaire = () => {
                     value={formData.inflationProtection}
                     onChange={(value) => updateFormData('inflationProtection', value)}
                     profession={profession}
+                    mobile={true}
                   />
                 </div>
               )}
@@ -381,6 +396,7 @@ const RiskAssessmentQuestionnaire = () => {
                     onChange={(value) => updateFormData('survivorPlanning', value)}
                     onDetailsChange={(value) => updateFormData('survivorPlanningDetails', value)}
                     profession={profession}
+                    mobile={true}
                   />
                 </div>
               )}
@@ -393,28 +409,31 @@ const RiskAssessmentQuestionnaire = () => {
                     onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
                     onChange={(value) => updateFormData('retirementAge', value)}
                     profession={profession}
+                    mobile={true}
                   />
                 </div>
               )}
               
               {currentSection === 3 && (
                 <div className="swipe-enter">
-                  <AssetInputSection
-                    currentSavings={formData.currentSavings}
-                    otherIncome={formData.otherIncome}
-                    onCurrentSavingsChange={(value) => updateFormData('currentSavings', value)}
-                    onOtherIncomeChange={(value) => updateFormData('otherIncome', value)}
+                  <FinancialFearsSection
+                    value={formData.financialFears}
+                    onChange={(value) => updateFormData('financialFears', value)}
                     profession={profession}
+                    mobile={true}
                   />
                 </div>
               )}
               
               {currentSection === 4 && (
                 <div className="swipe-enter">
-                  <FinancialFearsSection
-                    value={formData.financialFears}
-                    onChange={(value) => updateFormData('financialFears', value)}
+                  <AssetInputSection
+                    savings={formData.currentSavings}
+                    preferNotToSay={formData.preferNotToSay}
+                    onSavingsChange={(value) => updateFormData('currentSavings', value)}
+                    onPreferNotToSayChange={(value) => updateFormData('preferNotToSay', value)}
                     profession={profession}
+                    mobile={true}
                   />
                 </div>
               )}
@@ -423,7 +442,7 @@ const RiskAssessmentQuestionnaire = () => {
             {/* Enhanced Mobile Navigation */}
             <div className="flex justify-between items-center mt-6 px-1">
               <button
-                onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+                onClick={() => handleSectionChange(Math.max(0, currentSection - 1))}
                 disabled={currentSection === 0}
                 className={`mobile-nav-button ${
                   currentSection === 0
@@ -446,7 +465,7 @@ const RiskAssessmentQuestionnaire = () => {
               </div>
 
               <button
-                onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
+                onClick={() => handleSectionChange(Math.min(sections.length - 1, currentSection + 1))}
                 disabled={currentSection === sections.length - 1}
                 className={`mobile-nav-button ${
                   currentSection === sections.length - 1

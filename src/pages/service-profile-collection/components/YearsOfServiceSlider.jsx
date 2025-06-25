@@ -130,7 +130,8 @@ const YearsOfServiceSlider = ({
               onClick={() => onChange(years)}
               className={`py-2 px-4 rounded-lg font-medium transition-colors duration-150 ${
                 value === years
-                  ? 'bg-primary text-white' :'bg-primary-50 text-primary hover:bg-primary-100'
+                  ? 'bg-primary text-white' 
+                  : 'bg-white border border-border hover:border-primary-200 hover:bg-primary-50 text-text-secondary'
               }`}
             >
               {years} Years
