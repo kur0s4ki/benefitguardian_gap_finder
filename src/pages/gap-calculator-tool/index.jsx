@@ -281,22 +281,21 @@ const GapCalculatorTool = () => {
         {/* Header Section */}
         <div className="bg-surface border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center mb-4">
               <button
                 onClick={() => navigate('/dynamic-results-dashboard')}
-                className="flex items-center gap-2 px-4 py-2 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150"
+                className="flex items-center gap-2 px-4 py-3 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150 text-sm sm:text-base font-medium min-h-[44px]"
               >
                 <Icon name="ChevronLeft" size={18} />
-                <span className="font-medium">Back to Results</span>
+                <span className="font-medium">Back to Results Dashboard</span>
               </button>
-              <ResultsNavigation variant="link" />
             </div>
             
             <div className="text-center mb-6">
-              <h1 className="text-2xl lg:text-3xl font-bold text-text-primary mb-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-2">
                 Gap Calculator Tool
               </h1>
-              <p className="text-text-secondary max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto px-2">
                 Explore personalized scenarios to close your retirement gaps. 
                 Adjust contributions and see real-time projections for your financial future.
               </p>
@@ -304,19 +303,20 @@ const GapCalculatorTool = () => {
 
             {/* Simple Tab Navigation */}
             <div className="flex justify-center">
-              <div className="flex bg-primary-50 rounded-lg p-1">
+              <div className="flex bg-primary-50 rounded-lg p-1 w-full max-w-md sm:w-auto">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-md font-medium transition-colors duration-200 ${
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors duration-200 flex-1 sm:flex-none text-sm sm:text-base min-h-[44px] ${
                       activeTab === tab.id
                         ? 'bg-primary text-white shadow-sm'
                         : 'text-primary hover:bg-primary-100'
                     }`}
                   >
-                    <Icon name={tab.icon} size={18} />
-                    <span>{tab.label}</span>
+                    <Icon name={tab.icon} size={16} className="sm:hidden" />
+                    <Icon name={tab.icon} size={18} className="hidden sm:block" />
+                    <span className="truncate">{tab.label}</span>
                   </button>
                 ))}
               </div>
@@ -327,14 +327,14 @@ const GapCalculatorTool = () => {
         {/* Content Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Scenario Info */}
-          <div className="mb-6 p-4 bg-accent-50 rounded-lg border border-accent-200">
+          <div className="mb-6 p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
             <div className="flex items-start gap-3">
-              <Icon name="Info" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium text-accent-800 mb-1">
+              <Icon name="Info" size={18} className="text-accent-600 flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">
                   Scenario Comparison ({savedScenarios.length}/3 saved)
                 </div>
-                <div className="text-sm text-accent-700">
+                <div className="text-xs sm:text-sm text-accent-700 break-words">
                   Save up to 3 scenarios from the Calculator tab to compare them side-by-side in the Compare tab. Scenarios are stored locally and persist between sessions.
                 </div>
               </div>
