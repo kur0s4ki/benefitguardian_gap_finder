@@ -60,7 +60,7 @@ const PrivacyPolicy = () => {
         {/* CTA */}
         <div className="mt-10 text-center card p-8 bg-primary-50">
           <h2 className="text-2xl font-semibold text-text-primary mb-4">Need More Information?</h2>
-          <p className="text-text-secondary mb-6">Email us at <a href="mailto:privacy@publicservwealth.com" className="text-primary font-medium underline">privacy@publicservwealth.com</a> and we'll respond within one business day.</p>
+          <p className="text-text-secondary mb-6">Email us at <a href="mailto:Support@publicservwealth.com" className="text-primary font-medium underline">Support@publicservwealth.com</a> and we'll respond within one business day.</p>
           <a href="/contact" className="btn-primary px-6 py-3 rounded-lg text-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200">
             <Icon name="Mail" size={20} />
             Contact Support

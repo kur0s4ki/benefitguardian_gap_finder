@@ -294,11 +294,11 @@ const ReportDeliveryConfirmation = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Icon name="Phone" size={16} className="text-text-secondary" />
-                  <span className="text-sm text-text-secondary">(555) 123-4567</span>
+                  <span className="text-sm text-text-secondary">844.4WEALTH</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Icon name="Mail" size={16} className="text-text-secondary" />
-                  <span className="text-sm text-text-secondary">support@publicservwealth.com</span>
+                  <span className="text-sm text-text-secondary">Support@publicservwealth.com</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Icon name="MessageCircle" size={16} className="text-text-secondary" />

@@ -27,9 +27,9 @@ const Contact = () => {
             <Icon name="Calendar" size={32} className="text-primary" />
             <h2 className="text-xl font-semibold text-text-primary">Schedule Benefit Audit</h2>
             <p className="text-text-secondary flex-1">For verified public servants only.</p>
-            <a href="tel:+1-800-123-4567" className="btn-primary w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-primary-700 transition-colors duration-200">
+            <a href="tel:+1-844-4932584" className="btn-primary w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-primary-700 transition-colors duration-200">
               <Icon name="Phone" size={20} />
-              <span>(800) 123-4567</span>
+              <span>844.4WEALTH</span>
             </a>
           </div>
 
@@ -38,9 +38,9 @@ const Contact = () => {
             <Icon name="Mail" size={32} className="text-accent" />
             <h2 className="text-xl font-semibold text-text-primary">Media & Partnerships</h2>
             <p className="text-text-secondary flex-1">Get in touch with our team.</p>
-            <a href="mailto:info@publicservwealth.com" className="btn-secondary w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-secondary-100 transition-colors duration-200">
+            <a href="mailto:Support@publicservwealth.com" className="btn-secondary w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-secondary-100 transition-colors duration-200">
               <Icon name="Mail" size={20} />
-              <span>info@publicservwealth.com</span>
+              <span>Support@publicservwealth.com</span>
             </a>
           </div>
         </div>

@@ -98,18 +98,18 @@ const FAQSection = ({ profession = 'teacher' }) => {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
-            href="mailto:support@publicservwealth.com"
+            href="mailto:Support@publicservwealth.com"
             className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
           >
             <Icon name="Mail" size={16} />
             <span className="text-sm font-medium">Email Support</span>
           </a>
           <a
-            href="tel:+15551234567"
+            href="tel:+18444932584"
             className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
           >
             <Icon name="Phone" size={16} />
-            <span className="text-sm font-medium">Call (555) 123-4567</span>
+            <span className="text-sm font-medium">Call 844.4WEALTH</span>
           </a>
         </div>
       </div>

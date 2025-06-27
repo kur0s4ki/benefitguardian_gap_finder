@@ -205,9 +205,13 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
       {/* Disclaimer */}
       <div className="text-center text-xs text-text-muted max-w-3xl mx-auto leading-relaxed">
         <Icon name="Info" size={12} className="inline mr-1" />
-        This analysis is based on the information you provided and general assumptions about retirement planning. 
-        Individual results may vary. This is not personalized investment advice. 
-        Consult with a qualified financial advisor for recommendations specific to your situation.
+        Insights provided by PublicSery Wealth Group are for general informational purposes 
+        only. This material is not intended as personalized advice. Outcomes may vary 
+        based on individual circumstances. To explore strategies tailored to your goals, 
+        consult a PublicSery Wealth Group professional.
+        <div className="mt-2 font-medium">
+          CA-License #6016374
+        </div>
       </div>
     </div>
   );

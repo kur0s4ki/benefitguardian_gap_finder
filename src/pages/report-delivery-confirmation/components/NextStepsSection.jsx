@@ -132,20 +132,20 @@ const NextStepsSection = ({
             Our retirement planning specialists are here to help explain your personalized analysis
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="tel:+15551234567"
-              className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
-            >
-              <Icon name="Phone" size={16} />
-              <span className="text-sm font-medium">(555) 123-4567</span>
-            </a>
-            <a
-              href="mailto:support@publicservwealth.com"
-              className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
-            >
-              <Icon name="Mail" size={16} />
-              <span className="text-sm font-medium">Email Support</span>
-            </a>
+                      <a
+            href="tel:+18444932584"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
+          >
+            <Icon name="Phone" size={16} />
+            <span className="text-sm font-medium">844.4WEALTH</span>
+          </a>
+                      <a
+            href="mailto:Support@publicservwealth.com"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-700 transition-colors duration-150"
+          >
+            <Icon name="Mail" size={16} />
+            <span className="text-sm font-medium">Email Support</span>
+          </a>
           </div>
         </div>
       </div>

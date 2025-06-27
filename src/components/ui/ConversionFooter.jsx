@@ -66,9 +66,13 @@ const ConversionFooter = ({ className = "" }) => {
         {/* Disclaimer */}
         <div className="text-center space-y-2">
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            Investment advisory services offered through PublicServ Wealth Group, a registered investment advisor.
-            This analysis is for educational purposes and does not constitute personalized investment advice.
-            Past performance does not guarantee future results. All investments involve risk of loss.
+            Insights provided by PublicSery Wealth Group are for general informational purposes 
+            only. This material is not intended as personalized advice. Outcomes may vary 
+            based on individual circumstances. To explore strategies tailored to your goals, 
+            consult a PublicSery Wealth Group professional.
+          </p>
+          <p className="text-xs text-text-muted font-medium">
+            CA-License #6016374
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-xs text-text-muted">
