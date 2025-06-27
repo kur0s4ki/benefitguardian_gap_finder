@@ -211,21 +211,21 @@ const InteractiveCalculator = ({
             Risk Tolerance
           </label>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {['conservative', 'moderate', 'aggressive'].map((risk) => (
               <button
                 key={risk}
                 onClick={() => handleSliderChange('riskTolerance', risk)}
-                className={`p-4 rounded-lg border-2 text-center transition-all duration-200 ${
+                className={`p-3 sm:p-4 rounded-lg border-2 text-center transition-all duration-200 ${
                   scenario.riskTolerance === risk
                     ? 'border-primary bg-primary-50' :'border-border hover:border-primary-200'
                 }`}
               >
                 <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${getRiskColor(risk)}`} />
-                <div className="font-medium text-text-primary capitalize mb-1">
+                <div className="font-medium text-text-primary capitalize mb-1 text-sm sm:text-base">
                   {risk}
                 </div>
-                <div className="text-xs text-text-secondary">
+                <div className="text-xs text-text-secondary break-words">
                   {risk === 'conservative' && 'Target: 5% annually'}
                   {risk === 'moderate' && 'Target: 7% annually'}
                   {risk === 'aggressive' && 'Target: 9% annually'}
@@ -238,33 +238,33 @@ const InteractiveCalculator = ({
 
       {/* Real-time Feedback */}
       {projections.error ? (
-        <div className="mt-8 p-4 bg-error-50 rounded-lg border border-error-200">
+        <div className="mt-8 p-3 sm:p-4 bg-error-50 rounded-lg border border-error-200">
           <div className="flex items-start gap-3">
             <Icon name="AlertTriangle" size={20} className="text-error-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="font-medium text-error-800 mb-1">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-error-800 mb-1 text-sm sm:text-base">
                 Invalid Scenario
               </div>
-              <div className="text-sm text-error-700">
+              <div className="text-xs sm:text-sm text-error-700 break-words">
                 {projections.error}
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="mt-8 p-4 bg-accent-50 rounded-lg border border-accent-200">
+        <div className="mt-8 p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
           <div className="flex items-start gap-3">
             <Icon name="TrendingUp" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="font-medium text-accent-800 mb-1">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">
                 Scenario Impact
               </div>
-              <div className="text-sm text-accent-700">
+              <div className="text-xs sm:text-sm text-accent-700 break-words">
                 This scenario could close <strong>{projections.gapClosure.toFixed(1)}%</strong> of your
-                retirement gap, building <strong>${projections.projectedValue.toLocaleString()}</strong> by
+                retirement gap, building <strong className="break-words">${projections.projectedValue.toLocaleString()}</strong> by
                 age {scenario.targetRetirementAge}.
                 {projections.gapClosure > 100 && (
-                  <span className="block mt-1 text-success-700 font-medium">
+                  <span className="block mt-1 text-success-700 font-medium break-words">
                     🎉 This scenario exceeds your gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}!
                   </span>
                 )}

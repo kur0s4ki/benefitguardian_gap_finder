@@ -515,29 +515,29 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           />
         </div>
         {projections.gapClosure > 100 && (
-          <div className="mt-2 text-sm text-success font-medium">
+          <div className="mt-2 text-xs sm:text-sm text-success font-medium break-words">
             🎉 Exceeds gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}
           </div>
         )}
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="text-center p-4 bg-primary-50 rounded-lg">
-          <div className="text-2xl font-bold text-primary mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="text-center p-3 sm:p-4 bg-primary-50 rounded-lg">
+          <div className="text-lg sm:text-2xl font-bold text-primary mb-1 break-words">
             ${projections.projectedValue.toLocaleString()}
           </div>
-          <div className="text-sm text-text-secondary">Projected Value (Nominal)</div>
-          <div className="text-xs text-text-muted mt-1">
+          <div className="text-xs sm:text-sm text-text-secondary">Projected Value (Nominal)</div>
+          <div className="text-xs text-text-muted mt-1 break-words">
             ${projections.inflationAdjustedValue.toLocaleString()} in today's dollars
           </div>
         </div>
 
-        <div className="text-center p-4 bg-secondary-50 rounded-lg">
-          <div className="text-2xl font-bold text-secondary mb-1">
+        <div className="text-center p-3 sm:p-4 bg-secondary-50 rounded-lg">
+          <div className="text-lg sm:text-2xl font-bold text-secondary mb-1">
             {projections.yearsToRetirement}
           </div>
-          <div className="text-sm text-text-secondary">Years to Retirement</div>
+          <div className="text-xs sm:text-sm text-text-secondary">Years to Retirement</div>
           <div className="text-xs text-text-muted mt-1">
             {projections.annualRate}% growth rate
           </div>
@@ -546,17 +546,17 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
 
       {/* Monthly Breakdown */}
       <div className="space-y-3">
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Monthly Contribution</span>
-          <span className="font-semibold">${scenario.monthlyContribution.toLocaleString()}</span>
+        <div className="flex justify-between items-start gap-2">
+          <span className="text-text-secondary text-sm sm:text-base">Monthly Contribution</span>
+          <span className="font-semibold text-sm sm:text-base break-words text-right">${scenario.monthlyContribution.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Total Contributions</span>
-          <span className="font-semibold">${projections.totalContributions.toLocaleString()}</span>
+        <div className="flex justify-between items-start gap-2">
+          <span className="text-text-secondary text-sm sm:text-base">Total Contributions</span>
+          <span className="font-semibold text-sm sm:text-base break-words text-right">${projections.totalContributions.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Growth Potential</span>
-          <span className="font-semibold text-success">
+        <div className="flex justify-between items-start gap-2">
+          <span className="text-text-secondary text-sm sm:text-base">Growth Potential</span>
+          <span className="font-semibold text-success text-sm sm:text-base break-words text-right">
             ${(projections.projectedValue - projections.totalContributions).toLocaleString()}
           </span>
         </div>
@@ -564,14 +564,14 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
 
       {/* Recommendation */}
       {projections.gapClosure < 100 && (
-        <div className="p-4 bg-accent-50 rounded-lg border border-accent-200">
+        <div className="p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
           <div className="flex items-start gap-3">
             <Icon name="Lightbulb" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="font-medium text-accent-800 mb-1">Recommendation</div>
-              <div className="text-sm text-accent-700">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">Recommendation</div>
+              <div className="text-xs sm:text-sm text-accent-700 break-words">
                 To fully close your gap, consider increasing your monthly contribution to
-                <strong> ${projections.monthlyNeeded.toLocaleString()}</strong> or extending your retirement timeline.
+                <strong className="break-words"> ${projections.monthlyNeeded.toLocaleString()}</strong> or extending your retirement timeline.
                 <div className="mt-2 text-xs text-accent-600">
                   Based on {projections.annualRate}% annual growth rate
                 </div>
@@ -583,15 +583,15 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
 
       {/* Success message for over-funding */}
       {projections.gapClosure >= 100 && (
-        <div className="p-4 bg-success-50 rounded-lg border border-success-200">
+        <div className="p-3 sm:p-4 bg-success-50 rounded-lg border border-success-200">
           <div className="flex items-start gap-3">
             <Icon name="CheckCircle" size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="font-medium text-success-800 mb-1">Excellent Progress!</div>
-              <div className="text-sm text-success-700">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-success-800 mb-1 text-sm sm:text-base">Excellent Progress!</div>
+              <div className="text-xs sm:text-sm text-success-700 break-words">
                 This scenario {projections.gapClosure > 100 ? 'exceeds' : 'meets'} your retirement gap target.
                 {projections.gapClosure > 100 && (
-                  <span> You could reduce contributions to ${Math.ceil(scenario.monthlyContribution * (userData.totalGap / projections.projectedValue)).toLocaleString()}/month and still meet your goal.</span>
+                  <span className="break-words"> You could reduce contributions to ${Math.ceil(scenario.monthlyContribution * (userData.totalGap / projections.projectedValue)).toLocaleString()}/month and still meet your goal.</span>
                 )}
               </div>
             </div>
