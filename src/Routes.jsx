@@ -1,7 +1,8 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
+import NotFound from "pages/NotFound";
 
 // Page imports
 import ProfessionSelectionLanding from "pages/profession-selection-landing";
@@ -32,6 +33,9 @@ const Routes = () => {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/disclosures" element={<Disclosures />} />
           <Route path="/contact" element={<Contact />} />
+          {/* Catch-all route for 404 pages */}
+          <Route path="/404" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </RouterRoutes>
       </ErrorBoundary>
     </BrowserRouter>
