@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ProgressHeader from 'components/ui/ProgressHeader';
-import ConversionFooter from 'components/ui/ConversionFooter';
-import Icon from 'components/AppIcon';
-import SuccessAnimation from './components/SuccessAnimation';
-import ReportPreview from './components/ReportPreview';
-import NextStepsSection from './components/NextStepsSection';
-import FAQSection from './components/FAQSection';
-import TestimonialsSection from './components/TestimonialsSection';
-import DeliveryInfoModal from './components/DeliveryInfoModal';
-import CalculationLog from './components/CalculationLog';
-import { downloadFullReport } from 'utils/reportGenerator';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import ProgressHeader from "components/ui/ProgressHeader";
+import ConversionFooter from "components/ui/ConversionFooter";
+import PublicAccessBanner from "components/ui/PublicAccessBanner";
+import Icon from "components/AppIcon";
+import SuccessAnimation from "./components/SuccessAnimation";
+import ReportPreview from "./components/ReportPreview";
+import NextStepsSection from "./components/NextStepsSection";
+import FAQSection from "./components/FAQSection";
+import TestimonialsSection from "./components/TestimonialsSection";
+import DeliveryInfoModal from "./components/DeliveryInfoModal";
+import CalculationLog from "./components/CalculationLog";
+import { downloadFullReport } from "utils/reportGenerator";
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [userEmail, setUserEmail] = useState('');
-  const [profession, setProfession] = useState('teacher');
+  const { isAuthenticated, isPublic } = useAuth();
+  const [userEmail, setUserEmail] = useState("");
+  const [profession, setProfession] = useState("teacher");
   const [reportData, setReportData] = useState(null);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -37,75 +40,109 @@ const ReportDeliveryConfirmation = () => {
         // Don't set default email - user will enter it in modal
 
         // Create report highlights from navigation data
+        // Filter gaps based on access level
+        const allGaps = [
+          {
+            type: "Pension Gap",
+            amount: userData.gaps?.pension?.amount || 0,
+            icon: "TrendingDown",
+            description:
+              userData.gaps?.pension?.description || "Pension shortfall",
+            authRequired: true,
+          },
+          {
+            type: "Tax Torpedo Risk",
+            amount: userData.gaps?.tax?.amount || 0,
+            icon: "Zap",
+            description: userData.gaps?.tax?.description || "Tax impact",
+            authRequired: false,
+          },
+          {
+            type: isPublic ? "Estimated Benefits" : "Survivor Protection Gap",
+            amount: isPublic
+              ? userData.monthlyPension || 2500
+              : userData.gaps?.survivor?.amount || 0,
+            icon: isPublic ? "DollarSign" : "Heart",
+            description: isPublic
+              ? `Estimated monthly pension: $${
+                  userData.monthlyPension || 2500
+                }/month`
+              : userData.gaps?.survivor?.description || "Survivor benefit gap",
+            authRequired: false,
+          },
+        ];
+
+        // Filter gaps based on authentication status
+        const visibleGaps = isAuthenticated
+          ? allGaps.filter((gap) => !gap.authRequired || gap.authRequired)
+          : allGaps.filter((gap) => !gap.authRequired);
+
         const reportHighlights = {
           riskScore: userData.riskScore || 72,
-          riskLevel: userData.riskColor === 'red' ? "High Risk" :
-                    userData.riskColor === 'gold' ? "Moderate Risk" : "Low Risk",
-          topGaps: [
-            {
-              type: "Pension Gap",
-              amount: userData.gaps?.pension?.amount || 0,
-              icon: "TrendingDown",
-              description: userData.gaps?.pension?.description || "Pension shortfall"
-            },
-            {
-              type: "Tax Torpedo Risk",
-              amount: userData.gaps?.tax?.amount || 0,
-              icon: "Zap",
-              description: userData.gaps?.tax?.description || "Tax impact"
-            },
-            {
-              type: "Survivor Protection Gap",
-              amount: userData.gaps?.survivor?.amount || 0,
-              icon: "Heart",
-              description: userData.gaps?.survivor?.description || "Survivor benefit gap"
-            }
-          ],
-          keyRecommendations: [
-            `Monthly contribution: $${userData.monthlyContribution || projections.monthlyNeeded || 500}`,
-            "Maximize 403(b) contributions to reduce tax torpedo impact",
-            "Consider Roth IRA conversions during lower-income years",
-            `Explore ${userData.profession}-specific retirement benefits`
-          ]
+          riskLevel:
+            userData.riskColor === "red"
+              ? "High Risk"
+              : userData.riskColor === "gold"
+              ? "Moderate Risk"
+              : "Low Risk",
+          topGaps: visibleGaps,
+          keyRecommendations: isAuthenticated
+            ? [
+                `Monthly contribution: $${
+                  userData.monthlyContribution ||
+                  projections.monthlyNeeded ||
+                  500
+                }`,
+                "Maximize 403(b) contributions to reduce tax torpedo impact",
+                "Consider Roth IRA conversions during lower-income years",
+                `Explore ${userData.profession}-specific retirement benefits`,
+              ]
+            : [
+                "Review your current retirement savings strategy",
+                "Consider maximizing employer-matched contributions",
+                "Explore tax-advantaged retirement accounts",
+                "Sign in for personalized contribution recommendations",
+              ],
         };
 
         setReportData(reportHighlights);
-
       } else {
         // If no navigation state, redirect to start
-        navigate('/profession-selection-landing');
+        navigate("/profession-selection-landing");
       }
-
     } catch (error) {
-      console.error('Error loading report data:', error);
-      navigate('/profession-selection-landing');
+      console.error("Error loading report data:", error);
+      navigate("/profession-selection-landing");
     }
   }, [location.state, navigate]);
 
   const handleBookAudit = () => {
     // In real app, this would integrate with Calendly
-    window.open('https://calendly.com/publicserv-wealth/benefit-audit', '_blank');
+    window.open(
+      "https://calendly.com/publicserv-wealth/benefit-audit",
+      "_blank"
+    );
   };
 
   const handleShareResults = () => {
     const shareText = `I just discovered significant gaps in my retirement planning! Check out this free analysis tool for ${profession}s.`;
     const shareUrl = window.location.origin;
-    
+
     if (navigator.share) {
       navigator.share({
-        title: 'Retirement Gap Analysis Results',
+        title: "Retirement Gap Analysis Results",
         text: shareText,
-        url: shareUrl
+        url: shareUrl,
       });
     } else {
       // Fallback to copying to clipboard
       navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      alert('Share link copied to clipboard!');
+      alert("Share link copied to clipboard!");
     }
   };
 
   const handleCalculateScenarios = () => {
-    navigate('/gap-calculator-tool');
+    navigate("/gap-calculator-tool");
   };
 
   const handleReferColleague = () => {
@@ -113,12 +150,12 @@ const ReportDeliveryConfirmation = () => {
 
     if (navigator.share) {
       navigator.share({
-        title: 'Free Retirement Analysis for Public Service Professionals',
-        text: referralText
+        title: "Free Retirement Analysis for Public Service Professionals",
+        text: referralText,
       });
     } else {
       navigator.clipboard.writeText(referralText);
-      alert('Referral message copied to clipboard!');
+      alert("Referral message copied to clipboard!");
     }
   };
 
@@ -138,10 +175,22 @@ const ReportDeliveryConfirmation = () => {
 
   const getProfessionTheme = () => {
     const themes = {
-      teacher: { emoji: '🍎', bg: 'bg-gradient-to-br from-primary-50 to-accent-50' },
-      nurse: { emoji: '⚕️', bg: 'bg-gradient-to-br from-primary-50 to-success-50' },
-      'first-responder': { emoji: '🚒', bg: 'bg-gradient-to-br from-primary-50 to-error-50' },
-      'government-employee': { emoji: '💼', bg: 'bg-gradient-to-br from-primary-50 to-secondary-50' }
+      teacher: {
+        emoji: "🍎",
+        bg: "bg-gradient-to-br from-primary-50 to-accent-50",
+      },
+      nurse: {
+        emoji: "⚕️",
+        bg: "bg-gradient-to-br from-primary-50 to-success-50",
+      },
+      "first-responder": {
+        emoji: "🚒",
+        bg: "bg-gradient-to-br from-primary-50 to-error-50",
+      },
+      "government-employee": {
+        emoji: "💼",
+        bg: "bg-gradient-to-br from-primary-50 to-secondary-50",
+      },
     };
     return themes[profession] || themes.teacher;
   };
@@ -151,19 +200,25 @@ const ReportDeliveryConfirmation = () => {
   const handleDownloadPdf = () => {
     // Get the original calculation engine results from localStorage
     try {
-      const originalResults = localStorage.getItem('calculatedResults');
+      const originalResults = localStorage.getItem("calculatedResults");
       if (originalResults) {
         const parsedResults = JSON.parse(originalResults);
         downloadFullReport(parsedResults, location.state?.projections || {});
       } else if (calculatedResults) {
         // Fallback to transformed data if original not available
-        downloadFullReport(calculatedResults, location.state?.projections || {});
+        downloadFullReport(
+          calculatedResults,
+          location.state?.projections || {}
+        );
       }
     } catch (error) {
-      console.error('Error accessing calculation results:', error);
+      console.error("Error accessing calculation results:", error);
       // Fallback to transformed data
       if (calculatedResults) {
-        downloadFullReport(calculatedResults, location.state?.projections || {});
+        downloadFullReport(
+          calculatedResults,
+          location.state?.projections || {}
+        );
       }
     }
   };
@@ -183,7 +238,9 @@ const ReportDeliveryConfirmation = () => {
               </h1>
               <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
                 <Icon name="Mail" size={20} className="text-primary" />
-                <span>Sent to: <strong className="text-primary">{userEmail}</strong></span>
+                <span>
+                  Sent to: <strong className="text-primary">{userEmail}</strong>
+                </span>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
@@ -211,11 +268,29 @@ const ReportDeliveryConfirmation = () => {
           )}
         </div>
 
+        {/* Public Access Banner */}
+        <div className="mb-8">
+          <PublicAccessBanner
+            variant="prominent"
+            className="max-w-4xl mx-auto"
+            customMessage={
+              isPublic
+                ? "You're viewing a limited report preview. Sign in to access your complete retirement gap analysis with detailed recommendations and personalized action plans."
+                : null
+            }
+          />
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Report Preview */}
-            <ReportPreview reportData={reportData} profession={profession} />
+            <ReportPreview
+              reportData={reportData}
+              profession={profession}
+              isPublic={isPublic}
+              isAuthenticated={isAuthenticated}
+            />
 
             {/* What's Included */}
             <div className="card p-6">
@@ -225,19 +300,49 @@ const ReportDeliveryConfirmation = () => {
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { icon: 'BarChart3', title: 'Detailed Risk Analysis', desc: 'Complete breakdown of your GrowthGuard Risk Score' },
-                  { icon: 'Calculator', title: 'Gap Calculations', desc: 'Precise dollar amounts for each identified gap' },
-                  { icon: 'Target', title: 'Action Plan', desc: 'Step-by-step recommendations tailored to your situation' },
-                  { icon: 'TrendingUp', title: 'Projection Scenarios', desc: 'Multiple retirement timeline and contribution scenarios' },
-                  { icon: 'Shield', title: 'Benefit Optimization', desc: 'Strategies to maximize your existing benefits' },
-                  { icon: 'Clock', title: 'Timeline Guidance', desc: 'When to implement each recommendation' }
+                  {
+                    icon: "BarChart3",
+                    title: "Detailed Risk Analysis",
+                    desc: "Complete breakdown of your GrowthGuard Risk Score",
+                  },
+                  {
+                    icon: "Calculator",
+                    title: "Gap Calculations",
+                    desc: "Precise dollar amounts for each identified gap",
+                  },
+                  {
+                    icon: "Target",
+                    title: "Action Plan",
+                    desc: "Step-by-step recommendations tailored to your situation",
+                  },
+                  {
+                    icon: "TrendingUp",
+                    title: "Projection Scenarios",
+                    desc: "Multiple retirement timeline and contribution scenarios",
+                  },
+                  {
+                    icon: "Shield",
+                    title: "Benefit Optimization",
+                    desc: "Strategies to maximize your existing benefits",
+                  },
+                  {
+                    icon: "Clock",
+                    title: "Timeline Guidance",
+                    desc: "When to implement each recommendation",
+                  },
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                      <Icon name={item.icon} size={16} className="text-primary" />
+                      <Icon
+                        name={item.icon}
+                        size={16}
+                        className="text-primary"
+                      />
                     </div>
                     <div>
-                      <h3 className="font-medium text-text-primary">{item.title}</h3>
+                      <h3 className="font-medium text-text-primary">
+                        {item.title}
+                      </h3>
                       <p className="text-sm text-text-secondary">{item.desc}</p>
                     </div>
                   </div>
@@ -246,7 +351,7 @@ const ReportDeliveryConfirmation = () => {
             </div>
 
             {/* Next Steps */}
-            <NextStepsSection 
+            <NextStepsSection
               onBookAudit={handleBookAudit}
               onShareResults={handleShareResults}
               onCalculateScenarios={handleCalculateScenarios}
@@ -270,9 +375,12 @@ const ReportDeliveryConfirmation = () => {
                   <Icon name="Clock" size={20} className="text-accent-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-primary">Time-Sensitive Opportunity</h3>
+                  <h3 className="font-semibold text-primary">
+                    Time-Sensitive Opportunity
+                  </h3>
                   <p className="text-sm text-text-secondary mt-1">
-                    Book your priority benefit audit within 48 hours to secure your spot
+                    Book your priority benefit audit within 48 hours to secure
+                    your spot
                   </p>
                 </div>
               </div>
@@ -293,16 +401,30 @@ const ReportDeliveryConfirmation = () => {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Icon name="Phone" size={16} className="text-text-secondary" />
-                  <span className="text-sm text-text-secondary">844.4WEALTH</span>
+                  <Icon
+                    name="Phone"
+                    size={16}
+                    className="text-text-secondary"
+                  />
+                  <span className="text-sm text-text-secondary">
+                    844.4WEALTH
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Icon name="Mail" size={16} className="text-text-secondary" />
-                  <span className="text-sm text-text-secondary">Support@publicservwealth.com</span>
+                  <span className="text-sm text-text-secondary">
+                    Support@publicservwealth.com
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Icon name="MessageCircle" size={16} className="text-text-secondary" />
-                  <span className="text-sm text-text-secondary">Live chat available 9-5 EST</span>
+                  <Icon
+                    name="MessageCircle"
+                    size={16}
+                    className="text-text-secondary"
+                  />
+                  <span className="text-sm text-text-secondary">
+                    Live chat available 9-5 EST
+                  </span>
                 </div>
               </div>
             </div>
@@ -319,14 +441,17 @@ const ReportDeliveryConfirmation = () => {
           </div>
 
           {/* Bottom CTA - Spans all 3 columns */}
-          <div className={`lg:col-span-3 mt-12 rounded-2xl p-8 text-center ${theme.bg}`}>
+          <div
+            className={`lg:col-span-3 mt-12 rounded-2xl p-8 text-center ${theme.bg}`}
+          >
             <div className="max-w-2xl mx-auto">
               <div className="text-4xl mb-4">{theme.emoji}</div>
               <h2 className="text-2xl font-bold text-primary mb-4">
                 Ready to Secure Your Retirement?
               </h2>
               <p className="text-text-secondary mb-6">
-                Don't let retirement gaps catch you off guard. Take action now to protect your financial future.
+                Don't let retirement gaps catch you off guard. Take action now
+                to protect your financial future.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button

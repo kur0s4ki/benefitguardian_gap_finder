@@ -1,33 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ProgressHeader from 'components/ui/ProgressHeader';
-import ConversionFooter from 'components/ui/ConversionFooter';
-import Icon from 'components/AppIcon';
-import InflationProtectionSection from './components/InflationProtectionSection';
-import SurvivorPlanningSection from './components/SurvivorPlanningSection';
-import RetirementAgeSection from './components/RetirementAgeSection';
-import FinancialFearsSection from './components/FinancialFearsSection';
-import AssetInputSection from './components/AssetInputSection';
-import { calculateBenefitGaps, validateUserData } from 'utils/calculationEngine';
-import { useToast } from 'components/ui/ToastProvider';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import ProgressHeader from "components/ui/ProgressHeader";
+import ConversionFooter from "components/ui/ConversionFooter";
+import PublicAccessBanner from "components/ui/PublicAccessBanner";
+import Icon from "components/AppIcon";
+import InflationProtectionSection from "./components/InflationProtectionSection";
+import SurvivorPlanningSection from "./components/SurvivorPlanningSection";
+import RetirementAgeSection from "./components/RetirementAgeSection";
+import FinancialFearsSection from "./components/FinancialFearsSection";
+import AssetInputSection from "./components/AssetInputSection";
+import {
+  calculateBenefitGaps,
+  validateUserData,
+} from "utils/calculationEngine";
+import { useToast } from "components/ui/ToastProvider";
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Get profession from previous step or default
-  const [profession, setProfession] = useState('teacher');
+  const [profession, setProfession] = useState("teacher");
   const [formData, setFormData] = useState({
     inflationProtection: undefined, // This maps to 'cola' in client spec - undefined means not selected, null means "not sure"
     survivorPlanning: null,
-    survivorPlanningDetails: '',
-    currentAge: '',
+    survivorPlanningDetails: "",
+    currentAge: "",
     retirementAge: 65,
     financialFears: [],
-    currentSavings: '',
-    preferNotToSay: false
+    currentSavings: "",
+    preferNotToSay: false,
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
   const [submissionErrors, setSubmissionErrors] = useState([]);
@@ -44,22 +48,22 @@ const RiskAssessmentQuestionnaire = () => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
-    
+
     // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
       if (mobileSectionRef.current) {
-        // For sections with dynamic content (like retirement timeline), 
+        // For sections with dynamic content (like retirement timeline),
         // wait a bit longer to ensure all content has rendered
         const isRetirementSection = currentSection === 2;
-        
+
         const performScroll = () => {
           mobileSectionRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'nearest'
+            behavior: "smooth",
+            block: "start",
+            inline: "nearest",
           });
         };
-        
+
         if (isRetirementSection) {
           // Extra delay for retirement section to account for dynamic validation messages
           scrollTimeoutRef.current = setTimeout(performScroll, 50);
@@ -74,10 +78,10 @@ const RiskAssessmentQuestionnaire = () => {
   const handleSectionChange = (newSection) => {
     // Prevent rapid section changes
     if (newSection === currentSection) return;
-    
+
     // Update section first
     setCurrentSection(newSection);
-    
+
     // Delay scroll to allow React state update and animation to start
     setTimeout(() => {
       scrollToSection();
@@ -101,14 +105,14 @@ const RiskAssessmentQuestionnaire = () => {
       }
     } else {
       // If no navigation state, redirect to start
-      navigate('/profession-selection-landing');
+      navigate("/profession-selection-landing");
     }
   }, [location.state, navigate]);
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -117,7 +121,10 @@ const RiskAssessmentQuestionnaire = () => {
     if (!isFormValid()) {
       const validationErrors = getValidationErrors();
       setSubmissionErrors(validationErrors);
-      addToast(`Please complete all required fields:\n${validationErrors.join('\n')}`, 'error');
+      addToast(
+        `Please complete all required fields:\n${validationErrors.join("\n")}`,
+        "error"
+      );
       return;
     }
 
@@ -136,7 +143,7 @@ const RiskAssessmentQuestionnaire = () => {
       preferNotToSay: formData.preferNotToSay,
       inflationProtection: formData.inflationProtection,
       survivorPlanning: formData.survivorPlanning,
-      financialFears: formData.financialFears
+      financialFears: formData.financialFears,
     };
 
     const { isValid, errors, warnings } = validateUserData(preliminaryData);
@@ -144,24 +151,29 @@ const RiskAssessmentQuestionnaire = () => {
     if (!isValid) {
       setIsSubmitting(false);
       setSubmissionErrors(errors);
-      addToast(`Please fix the highlighted errors before continuing:\n${errors.join('\n')}`, 'error');
+      addToast(
+        `Please fix the highlighted errors before continuing:\n${errors.join(
+          "\n"
+        )}`,
+        "error"
+      );
       return;
     } else {
       setSubmissionErrors([]);
     }
 
     if (warnings.length > 0) {
-      addToast(warnings.join('\n'), 'warning');
+      addToast(warnings.join("\n"), "warning");
     }
 
     // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Combine all collected data
     const allData = {
       profession,
       serviceProfile: location.state?.serviceProfile || {},
-      riskAssessment: formData
+      riskAssessment: formData,
     };
 
     // Calculate results and navigate with data
@@ -178,37 +190,44 @@ const RiskAssessmentQuestionnaire = () => {
         inflationProtection: allData.riskAssessment.inflationProtection,
         survivorPlanning: allData.riskAssessment.survivorPlanning,
         currentSavings: parseFloat(allData.riskAssessment.currentSavings) || 0,
-        financialFears: allData.riskAssessment.financialFears
+        financialFears: allData.riskAssessment.financialFears,
       });
 
       // Check if calculation returned an error
       if (results.error) {
         setIsSubmitting(false);
-        addToast(`Calculation error: ${results.error}`, 'error');
-        console.error('Calculation engine error:', results.error, results.calculationLog);
+        addToast(`Calculation error: ${results.error}`, "error");
+        console.error(
+          "Calculation engine error:",
+          results.error,
+          results.calculationLog
+        );
         return;
       }
     } catch (error) {
       setIsSubmitting(false);
-      addToast(`Unexpected error during calculation: ${error.message}`, 'error');
-      console.error('Calculation error:', error);
+      addToast(
+        `Unexpected error during calculation: ${error.message}`,
+        "error"
+      );
+      console.error("Calculation error:", error);
       return;
     }
 
     // Store results in localStorage for persistence
     try {
-      localStorage.setItem('calculatedResults', JSON.stringify(results));
-      localStorage.setItem('userData', JSON.stringify(allData));
+      localStorage.setItem("calculatedResults", JSON.stringify(results));
+      localStorage.setItem("userData", JSON.stringify(allData));
     } catch (error) {
-      console.error('Error storing results:', error);
+      console.error("Error storing results:", error);
     }
 
     // Navigate to results with calculated data
-    navigate('/dynamic-results-dashboard', {
+    navigate("/dynamic-results-dashboard", {
       state: {
         calculatedResults: results,
-        userData: allData
-      }
+        userData: allData,
+      },
     });
   };
 
@@ -216,22 +235,28 @@ const RiskAssessmentQuestionnaire = () => {
     // Age validation
     const currentAge = parseInt(formData.currentAge);
     const retirementAge = parseInt(formData.retirementAge);
-    
-    const hasValidCurrentAge = currentAge && currentAge >= 21 && currentAge <= 80;
-    const hasValidRetirementAge = retirementAge && retirementAge >= 50 && retirementAge <= 80;
-    const hasValidAgeRelationship = hasValidCurrentAge && hasValidRetirementAge && retirementAge > currentAge;
-    
+
+    const hasValidCurrentAge =
+      currentAge && currentAge >= 21 && currentAge <= 80;
+    const hasValidRetirementAge =
+      retirementAge && retirementAge >= 50 && retirementAge <= 80;
+    const hasValidAgeRelationship =
+      hasValidCurrentAge && hasValidRetirementAge && retirementAge > currentAge;
+
     // Required field validation
     const hasInflationProtection = formData.inflationProtection !== undefined;
     const hasSurvivorPlanning = formData.survivorPlanning !== null;
-    const hasFinancialFears = Array.isArray(formData.financialFears) && formData.financialFears.length > 0;
-    
+    const hasFinancialFears =
+      Array.isArray(formData.financialFears) &&
+      formData.financialFears.length > 0;
+
     // Savings validation - either has savings value or prefers not to say
-    const hasSavingsInfo = formData.preferNotToSay || 
-                          (formData.currentSavings !== '' && 
-                           !isNaN(parseFloat(formData.currentSavings)) && 
-                           parseFloat(formData.currentSavings) >= 0);
-    
+    const hasSavingsInfo =
+      formData.preferNotToSay ||
+      (formData.currentSavings !== "" &&
+        !isNaN(parseFloat(formData.currentSavings)) &&
+        parseFloat(formData.currentSavings) >= 0);
+
     return (
       hasInflationProtection &&
       hasSurvivorPlanning &&
@@ -244,76 +269,99 @@ const RiskAssessmentQuestionnaire = () => {
   // Helper function to get validation errors for display
   const getValidationErrors = () => {
     const errors = [];
-    
+
     const currentAge = parseInt(formData.currentAge);
     const retirementAge = parseInt(formData.retirementAge);
-    
+
     if (!currentAge || currentAge < 21 || currentAge > 80) {
-      errors.push('Current age must be between 21 and 80');
+      errors.push("Current age must be between 21 and 80");
     }
-    
+
     if (!retirementAge || retirementAge < 50 || retirementAge > 80) {
-      errors.push('Retirement age must be between 50 and 80');
+      errors.push("Retirement age must be between 50 and 80");
     }
-    
+
     if (currentAge && retirementAge && retirementAge <= currentAge) {
-      errors.push('Retirement age must be greater than current age');
+      errors.push("Retirement age must be greater than current age");
     }
-    
+
     if (formData.inflationProtection === undefined) {
-      errors.push('Please select your inflation protection preference');
+      errors.push("Please select your inflation protection preference");
     }
-    
+
     if (formData.survivorPlanning === null) {
-      errors.push('Please select your survivor planning preference');
+      errors.push("Please select your survivor planning preference");
     }
-    
-    if (!Array.isArray(formData.financialFears) || formData.financialFears.length === 0) {
-      errors.push('Please select at least one financial concern');
+
+    if (
+      !Array.isArray(formData.financialFears) ||
+      formData.financialFears.length === 0
+    ) {
+      errors.push("Please select at least one financial concern");
     }
-    
-    if (!formData.preferNotToSay && 
-        (formData.currentSavings === '' || 
-         isNaN(parseFloat(formData.currentSavings)) || 
-         parseFloat(formData.currentSavings) < 0)) {
-      errors.push('Please enter a valid savings amount or select "Prefer not to say"');
+
+    if (
+      !formData.preferNotToSay &&
+      (formData.currentSavings === "" ||
+        isNaN(parseFloat(formData.currentSavings)) ||
+        parseFloat(formData.currentSavings) < 0)
+    ) {
+      errors.push(
+        'Please enter a valid savings amount or select "Prefer not to say"'
+      );
     }
-    
+
     return errors;
   };
 
   const getProfessionTheme = () => {
     const themes = {
       teacher: {
-        bg: 'bg-gradient-to-br from-blue-50 to-indigo-50',
-        accent: 'text-blue-600',
-        icon: 'GraduationCap'
+        bg: "bg-gradient-to-br from-blue-50 to-indigo-50",
+        accent: "text-blue-600",
+        icon: "GraduationCap",
       },
       nurse: {
-        bg: 'bg-gradient-to-br from-teal-50 to-cyan-50',
-        accent: 'text-teal-600',
-        icon: 'Heart'
+        bg: "bg-gradient-to-br from-teal-50 to-cyan-50",
+        accent: "text-teal-600",
+        icon: "Heart",
       },
-      'first-responder': {
-        bg: 'bg-gradient-to-br from-red-50 to-orange-50',
-        accent: 'text-red-600',
-        icon: 'Shield'
+      "first-responder": {
+        bg: "bg-gradient-to-br from-red-50 to-orange-50",
+        accent: "text-red-600",
+        icon: "Shield",
       },
-      'government-employee': {
-        bg: 'bg-gradient-to-br from-purple-50 to-violet-50',
-        accent: 'text-purple-600',
-        icon: 'Building2'
-      }
+      "government-employee": {
+        bg: "bg-gradient-to-br from-purple-50 to-violet-50",
+        accent: "text-purple-600",
+        icon: "Building2",
+      },
     };
     return themes[profession] || themes.teacher;
   };
 
   const sections = [
-    { id: 'inflation', title: 'Inflation Protection', component: InflationProtectionSection },
-    { id: 'survivor', title: 'Survivor Planning', component: SurvivorPlanningSection },
-    { id: 'retirement', title: 'Retirement Timeline', component: RetirementAgeSection },
-    { id: 'fears', title: 'Financial Concerns', component: FinancialFearsSection },
-    { id: 'assets', title: 'Current Assets', component: AssetInputSection }
+    {
+      id: "inflation",
+      title: "Inflation Protection",
+      component: InflationProtectionSection,
+    },
+    {
+      id: "survivor",
+      title: "Survivor Planning",
+      component: SurvivorPlanningSection,
+    },
+    {
+      id: "retirement",
+      title: "Retirement Timeline",
+      component: RetirementAgeSection,
+    },
+    {
+      id: "fears",
+      title: "Financial Concerns",
+      component: FinancialFearsSection,
+    },
+    { id: "assets", title: "Current Assets", component: AssetInputSection },
   ];
 
   const theme = getProfessionTheme();
@@ -321,7 +369,7 @@ const RiskAssessmentQuestionnaire = () => {
   return (
     <div className={`min-h-screen ${theme.bg}`}>
       <ProgressHeader currentStep={3} totalSteps={6} profession={profession} />
-      
+
       <main className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -330,23 +378,33 @@ const RiskAssessmentQuestionnaire = () => {
               <Icon name={theme.icon} size={32} className="text-white" />
             </div>
           </div>
-          
+
           <h1 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4">
             Risk Assessment Questionnaire
           </h1>
-          
+
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            Help us understand your retirement vulnerabilities to provide personalized recommendations
+            Help us understand your retirement vulnerabilities to provide
+            personalized recommendations
           </p>
-          
+        </div>
+
+        {/* Public Access Banner */}
+        <div className="mb-8">
+          <PublicAccessBanner variant="default" className="max-w-3xl mx-auto" />
+        </div>
+
+        <div className="text-center">
           {/* Progress Indicator */}
           <div className="mt-6 flex justify-center">
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-text-secondary">Step 3 of 3</span>
+              <span className="text-sm font-medium text-text-secondary">
+                Step 3 of 3
+              </span>
               <div className="w-32 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-primary transition-all duration-500 ease-out"
-                  style={{ width: '100%' }}
+                  style={{ width: "100%" }}
                 />
               </div>
               <span className="text-sm font-medium text-primary">Complete</span>
@@ -360,37 +418,45 @@ const RiskAssessmentQuestionnaire = () => {
           <div className="hidden lg:block space-y-8">
             <InflationProtectionSection
               value={formData.inflationProtection}
-              onChange={(value) => updateFormData('inflationProtection', value)}
+              onChange={(value) => updateFormData("inflationProtection", value)}
               profession={profession}
             />
-            
+
             <SurvivorPlanningSection
               value={formData.survivorPlanning}
               details={formData.survivorPlanningDetails}
-              onChange={(value) => updateFormData('survivorPlanning', value)}
-              onDetailsChange={(value) => updateFormData('survivorPlanningDetails', value)}
+              onChange={(value) => updateFormData("survivorPlanning", value)}
+              onDetailsChange={(value) =>
+                updateFormData("survivorPlanningDetails", value)
+              }
               profession={profession}
             />
-            
+
             <RetirementAgeSection
               currentAge={formData.currentAge}
               value={formData.retirementAge}
-              onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
-              onChange={(value) => updateFormData('retirementAge', value)}
+              onCurrentAgeChange={(value) =>
+                updateFormData("currentAge", value)
+              }
+              onChange={(value) => updateFormData("retirementAge", value)}
               profession={profession}
             />
-            
+
             <FinancialFearsSection
               value={formData.financialFears}
-              onChange={(value) => updateFormData('financialFears', value)}
+              onChange={(value) => updateFormData("financialFears", value)}
               profession={profession}
             />
-            
+
             <AssetInputSection
               savings={formData.currentSavings}
               preferNotToSay={formData.preferNotToSay}
-              onSavingsChange={(value) => updateFormData('currentSavings', value)}
-              onPreferNotToSayChange={(value) => updateFormData('preferNotToSay', value)}
+              onSavingsChange={(value) =>
+                updateFormData("currentSavings", value)
+              }
+              onPreferNotToSayChange={(value) =>
+                updateFormData("preferNotToSay", value)
+              }
               profession={profession}
             />
           </div>
@@ -406,11 +472,13 @@ const RiskAssessmentQuestionnaire = () => {
                     className="p-2 transition-all duration-200"
                     aria-label={`Go to ${sections[index]?.title}`}
                   >
-                    <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                      index === currentSection 
-                        ? 'bg-primary scale-150' 
-                        : 'bg-gray-300'
-                    }`} />
+                    <div
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        index === currentSection
+                          ? "bg-primary scale-150"
+                          : "bg-gray-300"
+                      }`}
+                    />
                   </button>
                 ))}
               </div>
@@ -426,57 +494,71 @@ const RiskAssessmentQuestionnaire = () => {
                 <div className="swipe-enter">
                   <InflationProtectionSection
                     value={formData.inflationProtection}
-                    onChange={(value) => updateFormData('inflationProtection', value)}
+                    onChange={(value) =>
+                      updateFormData("inflationProtection", value)
+                    }
                     profession={profession}
                     mobile={true}
                   />
                 </div>
               )}
-              
+
               {currentSection === 1 && (
                 <div className="swipe-enter">
                   <SurvivorPlanningSection
                     value={formData.survivorPlanning}
                     details={formData.survivorPlanningDetails}
-                    onChange={(value) => updateFormData('survivorPlanning', value)}
-                    onDetailsChange={(value) => updateFormData('survivorPlanningDetails', value)}
+                    onChange={(value) =>
+                      updateFormData("survivorPlanning", value)
+                    }
+                    onDetailsChange={(value) =>
+                      updateFormData("survivorPlanningDetails", value)
+                    }
                     profession={profession}
                     mobile={true}
                   />
                 </div>
               )}
-              
+
               {currentSection === 2 && (
                 <div className="swipe-enter">
                   <RetirementAgeSection
                     currentAge={formData.currentAge}
                     value={formData.retirementAge}
-                    onCurrentAgeChange={(value) => updateFormData('currentAge', value)}
-                    onChange={(value) => updateFormData('retirementAge', value)}
+                    onCurrentAgeChange={(value) =>
+                      updateFormData("currentAge", value)
+                    }
+                    onChange={(value) => updateFormData("retirementAge", value)}
                     profession={profession}
                     mobile={true}
                   />
                 </div>
               )}
-              
+
               {currentSection === 3 && (
                 <div className="swipe-enter">
                   <FinancialFearsSection
                     value={formData.financialFears}
-                    onChange={(value) => updateFormData('financialFears', value)}
+                    onChange={(value) =>
+                      updateFormData("financialFears", value)
+                    }
                     profession={profession}
                     mobile={true}
                   />
                 </div>
               )}
-              
+
               {currentSection === 4 && (
                 <div className="swipe-enter">
                   <AssetInputSection
                     savings={formData.currentSavings}
                     preferNotToSay={formData.preferNotToSay}
-                    onSavingsChange={(value) => updateFormData('currentSavings', value)}
-                    onPreferNotToSayChange={(value) => updateFormData('preferNotToSay', value)}
+                    onSavingsChange={(value) =>
+                      updateFormData("currentSavings", value)
+                    }
+                    onPreferNotToSayChange={(value) =>
+                      updateFormData("preferNotToSay", value)
+                    }
                     profession={profession}
                     mobile={true}
                   />
@@ -487,12 +569,14 @@ const RiskAssessmentQuestionnaire = () => {
             {/* Enhanced Mobile Navigation */}
             <div className="flex justify-between items-center mt-6 px-1">
               <button
-                onClick={() => handleSectionChange(Math.max(0, currentSection - 1))}
+                onClick={() =>
+                  handleSectionChange(Math.max(0, currentSection - 1))
+                }
                 disabled={currentSection === 0}
                 className={`mobile-nav-button ${
                   currentSection === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
-                    : 'bg-white text-primary hover:bg-primary-50 hover:shadow-xl mobile-touch-feedback'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm"
+                    : "bg-white text-primary hover:bg-primary-50 hover:shadow-xl mobile-touch-feedback"
                 }`}
                 aria-label="Previous section"
               >
@@ -505,17 +589,22 @@ const RiskAssessmentQuestionnaire = () => {
                   {currentSection + 1} of {sections.length}
                 </div>
                 <div className="text-xs text-primary font-medium">
-                  {Math.round(((currentSection + 1) / sections.length) * 100)}% Complete
+                  {Math.round(((currentSection + 1) / sections.length) * 100)}%
+                  Complete
                 </div>
               </div>
 
               <button
-                onClick={() => handleSectionChange(Math.min(sections.length - 1, currentSection + 1))}
+                onClick={() =>
+                  handleSectionChange(
+                    Math.min(sections.length - 1, currentSection + 1)
+                  )
+                }
                 disabled={currentSection === sections.length - 1}
                 className={`mobile-nav-button ${
                   currentSection === sections.length - 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm' 
-                    : 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl mobile-touch-feedback'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-sm"
+                    : "bg-primary text-white hover:bg-primary-700 hover:shadow-xl mobile-touch-feedback"
                 }`}
                 aria-label="Next section"
               >
@@ -530,8 +619,8 @@ const RiskAssessmentQuestionnaire = () => {
                 disabled={!isFormValid() || isSubmitting}
                 className={`w-full mobile-touch-feedback h-14 rounded-xl font-bold text-lg transition-all duration-200 ${
                   isFormValid() && !isSubmitting
-                    ? 'bg-accent text-secondary hover:bg-accent-500 shadow-lg hover:shadow-xl'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-sm'
+                    ? "bg-accent text-secondary hover:bg-accent-500 shadow-lg hover:shadow-xl"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-sm"
                 }`}
               >
                 {isSubmitting ? (
@@ -547,9 +636,10 @@ const RiskAssessmentQuestionnaire = () => {
                   </div>
                 )}
               </button>
-              
+
               <p className="text-sm text-text-secondary mt-4 text-center max-w-md mx-auto mobile-text-readable">
-                Get your personalized GrowthGuard Risk Score and discover hidden benefit opportunities
+                Get your personalized GrowthGuard Risk Score and discover hidden
+                benefit opportunities
               </p>
             </div>
           </div>
@@ -562,8 +652,8 @@ const RiskAssessmentQuestionnaire = () => {
             disabled={!isFormValid() || isSubmitting}
             className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-200 ${
               isFormValid() && !isSubmitting
-                ? 'bg-accent text-secondary hover:bg-accent-500 hover:shadow-xl transform hover:-translate-y-1 hover:scale-105'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? "bg-accent text-secondary hover:bg-accent-500 hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
             {isSubmitting ? (
@@ -579,9 +669,10 @@ const RiskAssessmentQuestionnaire = () => {
               </>
             )}
           </button>
-          
+
           <p className="text-sm text-text-secondary mt-4 max-w-md mx-auto">
-            Get your personalized GrowthGuard Risk Score and discover hidden benefit opportunities
+            Get your personalized GrowthGuard Risk Score and discover hidden
+            benefit opportunities
           </p>
         </div>
 
@@ -589,9 +680,15 @@ const RiskAssessmentQuestionnaire = () => {
         {(!isFormValid() || submissionErrors.length > 0) && (
           <div className="mt-8 p-4 bg-warning-50 border border-warning-200 rounded-lg">
             <div className="flex items-start gap-3">
-              <Icon name="AlertTriangle" size={20} className="text-warning flex-shrink-0 mt-0.5" />
+              <Icon
+                name="AlertTriangle"
+                size={20}
+                className="text-warning flex-shrink-0 mt-0.5"
+              />
               <div>
-                <h3 className="font-semibold text-warning-600 mb-2">Please complete all sections:</h3>
+                <h3 className="font-semibold text-warning-600 mb-2">
+                  Please complete all sections:
+                </h3>
                 <ul className="text-sm text-warning-700 space-y-1">
                   {formData.inflationProtection === undefined && (
                     <li>• Inflation protection status</li>
@@ -602,9 +699,11 @@ const RiskAssessmentQuestionnaire = () => {
                   {(!formData.currentAge || !formData.retirementAge) && (
                     <li>• Current and retirement age</li>
                   )}
-                  {formData.currentAge && formData.retirementAge && formData.retirementAge <= formData.currentAge && (
-                    <li>• Retirement age must be greater than current age</li>
-                  )}
+                  {formData.currentAge &&
+                    formData.retirementAge &&
+                    formData.retirementAge <= formData.currentAge && (
+                      <li>• Retirement age must be greater than current age</li>
+                    )}
                   {formData.financialFears.length === 0 && (
                     <li>• Financial concerns selection</li>
                   )}
