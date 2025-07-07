@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
-import PublicAccessBanner from "components/ui/PublicAccessBanner";
 import Icon from "components/AppIcon";
 import InflationProtectionSection from "./components/InflationProtectionSection";
 import SurvivorPlanningSection from "./components/SurvivorPlanningSection";
@@ -387,14 +386,7 @@ const RiskAssessmentQuestionnaire = () => {
             Help us understand your retirement vulnerabilities to provide
             personalized recommendations
           </p>
-        </div>
 
-        {/* Public Access Banner */}
-        <div className="mb-8">
-          <PublicAccessBanner variant="default" className="max-w-3xl mx-auto" />
-        </div>
-
-        <div className="text-center">
           {/* Progress Indicator */}
           <div className="mt-6 flex justify-center">
             <div className="flex items-center space-x-2">

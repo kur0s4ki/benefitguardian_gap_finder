@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
-import { useRole } from "../../hooks/useRole";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
-import UpgradePrompt from "../../components/auth/UpgradePrompt";
 import { getRiskLevel } from "utils/riskUtils";
-import { ROLES } from "../../utils/roles";
 
 import RiskGauge from "./components/RiskGauge";
 import GapAnalysisCard from "./components/GapAnalysisCard";
@@ -16,8 +12,6 @@ import CallToActionSection from "./components/CallToActionSection";
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isPublic } = useAuth();
-  const { isPremium, isBasicUser } = useRole();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
@@ -108,17 +102,6 @@ const DynamicResultsDashboard = () => {
   );
 
   const handleNavigateToCalculator = useCallback(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      navigate("/login", {
-        state: {
-          from: { pathname: "/gap-calculator-tool" },
-          message: "Please sign in to access the advanced gap calculator tool",
-        },
-      });
-      return;
-    }
-
     // Validate calculatedResults before transformation
     if (!calculatedResults) {
       console.error("No calculated results available for navigation");
@@ -184,7 +167,7 @@ const DynamicResultsDashboard = () => {
         userData: transformedData,
       },
     });
-  }, [calculatedResults, navigate, isAuthenticated]);
+  }, [calculatedResults, navigate]);
 
   const handleEmailReport = useCallback(async () => {
     // Validate calculatedResults before processing
@@ -387,47 +370,23 @@ const DynamicResultsDashboard = () => {
         <div className="px-4 sm:px-6 lg:px-8 pb-8">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
-              {isPublic
-                ? "Basic Retirement Analysis"
-                : "Critical Retirement Gaps Identified"}
+              Critical Retirement Gaps Identified
             </h2>
 
-            {isPublic && (
-              <div className="text-center mb-6 p-4 bg-warning-50 border border-warning-200 rounded-lg max-w-2xl mx-auto">
-                <p className="text-warning-700 text-sm">
-                  <strong>Limited Analysis:</strong> You're viewing a basic
-                  version.
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="text-primary hover:text-primary-700 underline ml-1"
-                  >
-                    Sign in for complete gap analysis
-                  </button>
-                </p>
-              </div>
-            )}
-
-            <div
-              className={`grid grid-cols-1 ${
-                isPublic ? "md:grid-cols-2" : "md:grid-cols-3"
-              } gap-6`}
-            >
-              {/* Pension Gap - Hidden for public users */}
-              {isAuthenticated && (
-                <GapAnalysisCard
-                  title="Pension Gap"
-                  amount={calculatedResults.pensionGap}
-                  icon="TrendingDown"
-                  emoji="📉"
-                  description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
-                  riskLevel={
-                    calculatedResults.riskComponents.pensionRisk > 60
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={0}
-                />
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <GapAnalysisCard
+                title="Pension Gap"
+                amount={calculatedResults.pensionGap}
+                icon="TrendingDown"
+                emoji="📉"
+                description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
+                riskLevel={
+                  calculatedResults.riskComponents.pensionRisk > 60
+                    ? "high"
+                    : "moderate"
+                }
+                delay={0}
+              />
 
               <GapAnalysisCard
                 title="Tax Torpedo Risk"
@@ -440,105 +399,35 @@ const DynamicResultsDashboard = () => {
                     ? "high"
                     : "moderate"
                 }
-                delay={isPublic ? 0 : 200}
+                delay={200}
               />
 
               <GapAnalysisCard
-                title={
-                  isPublic ? "Estimated Benefits" : "Survivor Protection Gap"
-                }
-                amount={
-                  isPublic
-                    ? calculatedResults.currentPension || 2500
-                    : calculatedResults.survivorGap
-                }
-                icon={isPublic ? "DollarSign" : "Heart"}
-                emoji={isPublic ? "💰" : "❤️‍🩹"}
-                description={
-                  isPublic
-                    ? `Estimated monthly pension: $${
-                        calculatedResults.currentPension || 2500
-                      }/month`
-                    : `Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`
-                }
+                title="Survivor Protection Gap"
+                amount={calculatedResults.survivorGap}
+                icon="Heart"
+                emoji="❤️‍🩹"
+                description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
                 riskLevel={
-                  isPublic
-                    ? "low"
-                    : calculatedResults.riskComponents.survivorRisk > 60
+                  calculatedResults.riskComponents.survivorRisk > 60
                     ? "high"
                     : "moderate"
                 }
-                delay={isPublic ? 200 : 400}
+                delay={400}
               />
             </div>
           </div>
         </div>
 
-        {/* Detailed Breakdown - Only for authenticated users */}
-        {isAuthenticated && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <DetailedBreakdown
-                userData={calculatedResults}
-                onNavigateToCalculator={handleNavigateToCalculator}
-              />
-            </div>
+        {/* Detailed Breakdown */}
+        <div className="px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="max-w-4xl mx-auto">
+            <DetailedBreakdown
+              userData={calculatedResults}
+              onNavigateToCalculator={handleNavigateToCalculator}
+            />
           </div>
-        )}
-
-        {/* Public User Upgrade Prompt */}
-        {isPublic && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="card p-8 text-center bg-gradient-to-br from-primary-50 to-accent-50 border-2 border-primary-200">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-2xl">🔓</span>
-                </div>
-                <h3 className="text-2xl font-bold text-text-primary mb-4">
-                  Unlock Your Complete Analysis
-                </h3>
-                <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
-                  Get access to detailed gap analysis, personalized
-                  recommendations, and advanced planning tools to secure your
-                  retirement future.
-                </p>
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center justify-center gap-2 text-sm text-text-secondary">
-                    <span className="w-2 h-2 bg-success rounded-full"></span>
-                    <span>Complete pension gap analysis</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-sm text-text-secondary">
-                    <span className="w-2 h-2 bg-success rounded-full"></span>
-                    <span>Personalized contribution recommendations</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-sm text-text-secondary">
-                    <span className="w-2 h-2 bg-success rounded-full"></span>
-                    <span>Advanced gap calculator tool</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-                >
-                  <span>Sign In for Full Analysis</span>
-                  <span>→</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Basic User Upgrade Prompt */}
-        {isAuthenticated && isBasicUser() && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <UpgradePrompt
-                requiredRole={ROLES.PREMIUM}
-                featureName="advanced gap analysis and calculator tools"
-              />
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Call to Action Section */}
         <div className="px-4 sm:px-6 lg:px-8 pb-12">

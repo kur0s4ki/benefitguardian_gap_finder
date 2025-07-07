@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
-import PublicAccessBanner from "components/ui/PublicAccessBanner";
 import Icon from "components/AppIcon";
 import SuccessAnimation from "./components/SuccessAnimation";
 import ReportPreview from "./components/ReportPreview";
@@ -17,7 +15,6 @@ import { downloadFullReport } from "utils/reportGenerator";
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isPublic } = useAuth();
   const [userEmail, setUserEmail] = useState("");
   const [profession, setProfession] = useState("teacher");
   const [reportData, setReportData] = useState(null);
@@ -40,43 +37,6 @@ const ReportDeliveryConfirmation = () => {
         // Don't set default email - user will enter it in modal
 
         // Create report highlights from navigation data
-        // Filter gaps based on access level
-        const allGaps = [
-          {
-            type: "Pension Gap",
-            amount: userData.gaps?.pension?.amount || 0,
-            icon: "TrendingDown",
-            description:
-              userData.gaps?.pension?.description || "Pension shortfall",
-            authRequired: true,
-          },
-          {
-            type: "Tax Torpedo Risk",
-            amount: userData.gaps?.tax?.amount || 0,
-            icon: "Zap",
-            description: userData.gaps?.tax?.description || "Tax impact",
-            authRequired: false,
-          },
-          {
-            type: isPublic ? "Estimated Benefits" : "Survivor Protection Gap",
-            amount: isPublic
-              ? userData.monthlyPension || 2500
-              : userData.gaps?.survivor?.amount || 0,
-            icon: isPublic ? "DollarSign" : "Heart",
-            description: isPublic
-              ? `Estimated monthly pension: $${
-                  userData.monthlyPension || 2500
-                }/month`
-              : userData.gaps?.survivor?.description || "Survivor benefit gap",
-            authRequired: false,
-          },
-        ];
-
-        // Filter gaps based on authentication status
-        const visibleGaps = isAuthenticated
-          ? allGaps.filter((gap) => !gap.authRequired || gap.authRequired)
-          : allGaps.filter((gap) => !gap.authRequired);
-
         const reportHighlights = {
           riskScore: userData.riskScore || 72,
           riskLevel:
@@ -85,24 +45,36 @@ const ReportDeliveryConfirmation = () => {
               : userData.riskColor === "gold"
               ? "Moderate Risk"
               : "Low Risk",
-          topGaps: visibleGaps,
-          keyRecommendations: isAuthenticated
-            ? [
-                `Monthly contribution: $${
-                  userData.monthlyContribution ||
-                  projections.monthlyNeeded ||
-                  500
-                }`,
-                "Maximize 403(b) contributions to reduce tax torpedo impact",
-                "Consider Roth IRA conversions during lower-income years",
-                `Explore ${userData.profession}-specific retirement benefits`,
-              ]
-            : [
-                "Review your current retirement savings strategy",
-                "Consider maximizing employer-matched contributions",
-                "Explore tax-advantaged retirement accounts",
-                "Sign in for personalized contribution recommendations",
-              ],
+          topGaps: [
+            {
+              type: "Pension Gap",
+              amount: userData.gaps?.pension?.amount || 0,
+              icon: "TrendingDown",
+              description:
+                userData.gaps?.pension?.description || "Pension shortfall",
+            },
+            {
+              type: "Tax Torpedo Risk",
+              amount: userData.gaps?.tax?.amount || 0,
+              icon: "Zap",
+              description: userData.gaps?.tax?.description || "Tax impact",
+            },
+            {
+              type: "Survivor Protection Gap",
+              amount: userData.gaps?.survivor?.amount || 0,
+              icon: "Heart",
+              description:
+                userData.gaps?.survivor?.description || "Survivor benefit gap",
+            },
+          ],
+          keyRecommendations: [
+            `Monthly contribution: $${
+              userData.monthlyContribution || projections.monthlyNeeded || 500
+            }`,
+            "Maximize 403(b) contributions to reduce tax torpedo impact",
+            "Consider Roth IRA conversions during lower-income years",
+            `Explore ${userData.profession}-specific retirement benefits`,
+          ],
         };
 
         setReportData(reportHighlights);
@@ -268,29 +240,11 @@ const ReportDeliveryConfirmation = () => {
           )}
         </div>
 
-        {/* Public Access Banner */}
-        <div className="mb-8">
-          <PublicAccessBanner
-            variant="prominent"
-            className="max-w-4xl mx-auto"
-            customMessage={
-              isPublic
-                ? "You're viewing a limited report preview. Sign in to access your complete retirement gap analysis with detailed recommendations and personalized action plans."
-                : null
-            }
-          />
-        </div>
-
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Report Preview */}
-            <ReportPreview
-              reportData={reportData}
-              profession={profession}
-              isPublic={isPublic}
-              isAuthenticated={isAuthenticated}
-            />
+            <ReportPreview reportData={reportData} profession={profession} />
 
             {/* What's Included */}
             <div className="card p-6">

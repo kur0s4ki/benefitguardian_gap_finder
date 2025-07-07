@@ -3,144 +3,136 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../components/ui/ToastProvider";
 import Icon from "../../components/AppIcon";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const { signIn, user } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { signIn, user, loading } = useAuth();
+  const { addToast } = useToast();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       const from =
         location.state?.from?.pathname || "/profession-selection-landing";
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, loading, navigate, location.state]);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!formData.email || !formData.password) {
+      addToast("Please fill in all fields", "error");
       return;
     }
 
-    setIsLoading(true);
-    setErrors({});
+    setIsSubmitting(true);
 
     try {
-      const { data, error } = await signIn(email, password);
+      const { data, error } = await signIn(formData.email, formData.password);
 
       if (error) {
+        // Handle specific error types
         if (error.message.includes("Invalid login credentials")) {
-          setErrors({
-            general: "Invalid email or password. Please try again.",
-          });
+          addToast("Invalid email or password. Please try again.", "error");
         } else if (error.message.includes("Email not confirmed")) {
-          setErrors({
-            general:
-              "Please check your email and confirm your account before signing in.",
-          });
+          addToast(
+            "Please check your email and confirm your account before signing in.",
+            "warning"
+          );
         } else {
-          setErrors({
-            general: error.message || "An error occurred during sign in.",
-          });
+          addToast(
+            error.message || "An error occurred during sign in",
+            "error"
+          );
         }
-        addToast("Sign in failed. Please check your credentials.", "error");
-      } else {
-        addToast("Successfully signed in!", "info");
-        const from =
-          location.state?.from?.pathname || "/profession-selection-landing";
-        const profession = location.state?.profession;
-        const formData = location.state?.formData;
+        return;
+      }
 
-        // If coming from service profile collection with saved form data
-        if (from === "/service-profile-collection" && (profession || formData)) {
-          navigate(from, {
-            state: { 
-              profession,
-              formData, // Restore form data
-              fromLogin: true // Flag to prevent showing modal again
-            },
-            replace: true,
-          });
+      if (data?.user) {
+        addToast("Successfully signed in!", "success");
+
+        // Handle different redirect scenarios
+        if (location.state?.returnAfterLogin && location.state?.profession) {
+          // User came from profession selection, redirect back with profession data
+          navigate(
+            `/profession-selection-landing?returnAfterLogin=true&profession=${location.state.profession}`,
+            {
+              replace: true,
+            }
+          );
         } else {
-          navigate(from, { replace: true });
+          // Default redirect to intended destination
+          const from =
+            location.state?.from?.pathname || "/profession-selection-landing";
+          navigate(from, {
+            replace: true,
+            state: location.state?.profession
+              ? {
+                  profession: location.state.profession,
+                }
+              : undefined,
+          });
         }
       }
     } catch (error) {
       console.error("Login error:", error);
-      setErrors({ general: "An unexpected error occurred. Please try again." });
       addToast("An unexpected error occurred. Please try again.", "error");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleForgotPassword = () => {
-    // TODO: Implement forgot password functionality
-    addToast("Forgot password feature coming soon!", "info");
+    addToast(
+      "Password reset functionality coming soon. Please contact support if needed.",
+      "info"
+    );
   };
 
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return <LoadingSpinner message="Checking authentication..." />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         {/* Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
               <Icon name="Shield" size={32} className="text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-text-primary">Welcome Back</h2>
-          <p className="mt-2 text-text-secondary">
-            Sign in to access your retirement gap analysis
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-text-secondary">
+            Sign in to access your complete retirement analysis
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="card p-8">
+        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* General Error */}
-            {errors.general && (
-              <div className="p-4 bg-error-50 border border-error-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Icon
-                    name="AlertCircle"
-                    size={20}
-                    className="text-error flex-shrink-0 mt-0.5"
-                  />
-                  <p className="text-sm text-error-700">{errors.general}</p>
-                </div>
-              </div>
-            )}
-
             {/* Email Field */}
             <div>
               <label
@@ -150,27 +142,23 @@ const Login = () => {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icon name="Mail" size={18} className="text-text-secondary" />
-                </div>
                 <input
-                  id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
-                  disabled={isLoading}
-                  className={`input-field w-full pl-10 pr-4 py-3 ${
-                    errors.email
-                      ? "border-error focus:border-error focus:ring-error-100"
-                      : ""
-                  } ${isLoading ? "bg-gray-50 cursor-not-allowed" : ""}`}
-                  autoComplete="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  placeholder="Enter your email"
+                  required
+                  disabled={isSubmitting}
+                />
+                <Icon
+                  name="Mail"
+                  size={20}
+                  className="absolute right-3 top-3.5 text-text-muted"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-error">{errors.email}</p>
-              )}
             </div>
 
             {/* Password Field */}
@@ -182,48 +170,35 @@ const Login = () => {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icon name="Lock" size={18} className="text-text-secondary" />
-                </div>
                 <input
-                  id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-12"
                   placeholder="Enter your password"
-                  disabled={isLoading}
-                  className={`input-field w-full pl-10 pr-12 py-3 ${
-                    errors.password
-                      ? "border-error focus:border-error focus:ring-error-100"
-                      : ""
-                  } ${isLoading ? "bg-gray-50 cursor-not-allowed" : ""}`}
-                  autoComplete="current-password"
+                  required
+                  disabled={isSubmitting}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-primary transition-colors duration-150"
+                  className="absolute right-3 top-3.5 text-text-muted hover:text-text-secondary transition-colors"
+                  disabled={isSubmitting}
                 >
-                  <Icon
-                    name={showPassword ? "EyeOff" : "Eye"}
-                    size={18}
-                    className="text-text-secondary hover:text-primary"
-                  />
+                  <Icon name={showPassword ? "EyeOff" : "Eye"} size={20} />
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-error">{errors.password}</p>
-              )}
             </div>
 
             {/* Forgot Password Link */}
-            <div className="flex justify-end">
+            <div className="text-right">
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                disabled={isLoading}
-                className="text-sm text-primary hover:text-primary-700 transition-colors duration-150"
+                className="text-sm text-primary hover:text-primary-700 transition-colors"
+                disabled={isSubmitting}
               >
                 Forgot your password?
               </button>
@@ -232,53 +207,30 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className={`btn-primary w-full py-3 px-4 rounded-md font-medium flex items-center justify-center gap-2 transition-all duration-200 ${
-                isLoading
-                  ? "opacity-75 cursor-not-allowed"
-                  : "hover:bg-primary-700"
-              }`}
+              disabled={isSubmitting}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Signing In...
                 </>
               ) : (
                 <>
-                  <Icon name="LogIn" size={18} />
+                  <Icon name="LogIn" size={20} />
                   Sign In
                 </>
               )}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-text-secondary">
-              Don't have an account?{" "}
-              <button
-                onClick={() =>
-                  addToast("Account registration coming soon!", "info")
-                }
-                className="text-primary hover:text-primary-700 font-medium transition-colors duration-150"
-              >
-                Contact us for access
-              </button>
-            </p>
-          </div>
-        </div>
-
-        {/* Test Credentials */}
-        <div className="card p-4 bg-primary-50 border-primary-200">
-          <div className="text-center">
-            <h3 className="text-sm font-medium text-primary-800 mb-2">
-              Test Access
+          {/* Test Credentials */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+              <Icon name="TestTube" size={16} />
+              Test Credentials
             </h3>
-            <p className="text-xs text-primary-700 mb-2">
-              Use these credentials to access the application:
-            </p>
-            <div className="text-xs text-primary-600 space-y-1">
+            <div className="text-sm text-text-secondary space-y-1">
               <p>
                 <strong>Email:</strong> admin@publicserv.com
               </p>
@@ -286,6 +238,17 @@ const Login = () => {
                 <strong>Password:</strong> admin@96
               </p>
             </div>
+          </div>
+
+          {/* Back to Calculator Link */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => navigate("/profession-selection-landing")}
+              className="text-sm text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1 mx-auto"
+            >
+              <Icon name="ArrowLeft" size={16} />
+              Back to Calculator
+            </button>
           </div>
         </div>
       </div>

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "../../contexts/AuthContext";
 import Icon from "components/AppIcon";
 import ProfessionCard from "./components/ProfessionCard";
 import ProgressIndicator from "./components/ProgressIndicator";
+import AccessSelectionModal from "components/auth/AccessSelectionModal";
+import { useAuth } from "contexts/AuthContext";
 
 const ProfessionSelectionLanding = () => {
   const navigate = useNavigate();
-  const { setPublicAccess, isAuthenticated } = useAuth();
+  const { setPublicAccess } = useAuth();
   const [selectedProfession, setSelectedProfession] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showAccessOptions, setShowAccessOptions] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
 
   const professions = [
     {
@@ -62,8 +63,11 @@ const ProfessionSelectionLanding = () => {
 
     setSelectedProfession(profession);
 
-    // If user is already authenticated, proceed directly
-    if (isAuthenticated) {
+    // Check if user has already chosen access level
+    const hasChosenAccess = sessionStorage.getItem("accessLevelChosen");
+
+    if (hasChosenAccess) {
+      // User has already chosen, proceed directly
       setIsTransitioning(true);
       setTimeout(() => {
         navigate("/service-profile-collection", {
@@ -73,35 +77,60 @@ const ProfessionSelectionLanding = () => {
         });
       }, 800);
     } else {
-      // Show access options for non-authenticated users
-      setShowAccessOptions(true);
+      // Show access selection modal
+      setShowAccessModal(true);
     }
   };
 
+  // Modal handlers
   const handlePublicAccess = () => {
-    if (!selectedProfession) return;
-
     setPublicAccess();
-    setIsTransitioning(true);
+    sessionStorage.setItem("accessLevelChosen", "public");
+    setShowAccessModal(false);
 
+    // Continue with navigation
+    setIsTransitioning(true);
     setTimeout(() => {
       navigate("/service-profile-collection", {
         state: {
           profession: selectedProfession.id,
-          accessLevel: "public",
         },
       });
     }, 800);
   };
 
   const handleAuthenticatedAccess = () => {
+    sessionStorage.setItem("accessLevelChosen", "authenticated");
+    setShowAccessModal(false);
+
+    // Navigate to login with profession data
     navigate("/login", {
       state: {
         from: { pathname: "/service-profile-collection" },
-        profession: selectedProfession?.id,
+        returnAfterLogin: true,
+        profession: selectedProfession.id,
       },
     });
   };
+
+  // Check if user is returning from login and should proceed
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnAfterLogin = urlParams.get("returnAfterLogin");
+    const profession = urlParams.get("profession");
+
+    if (returnAfterLogin === "true" && profession) {
+      // User returned from login, proceed directly
+      setIsTransitioning(true);
+      setTimeout(() => {
+        navigate("/service-profile-collection", {
+          state: {
+            profession: profession,
+          },
+        });
+      }, 800);
+    }
+  }, [navigate]);
 
   // Animation variants
   const containerVariants = {
@@ -216,100 +245,6 @@ const ProfessionSelectionLanding = () => {
         </div>
       </motion.main>
 
-      {/* Access Options Modal */}
-      {showAccessOptions && selectedProfession && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.div
-            className="bg-surface rounded-xl shadow-modal max-w-md w-full p-6"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon
-                  name={selectedProfession.icon}
-                  size={32}
-                  className="text-primary"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">
-                Choose Your Access Level
-              </h3>
-              <p className="text-text-secondary">
-                How would you like to proceed with your{" "}
-                {selectedProfession.name.toLowerCase()} retirement analysis?
-              </p>
-            </div>
-
-            {/* Access Options */}
-            <div className="space-y-4 mb-6">
-              {/* Full Analysis Option */}
-              <button
-                onClick={handleAuthenticatedAccess}
-                className="w-full p-4 border-2 border-primary bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors duration-200 text-left"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Icon name="Shield" size={16} className="text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary mb-1">
-                      Sign In for Full Analysis
-                    </h4>
-                    <p className="text-sm text-primary-700">
-                      Complete retirement gap analysis, personalized
-                      recommendations, and access to all tools
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Public Calculator Option */}
-              <button
-                onClick={handlePublicAccess}
-                className="w-full p-4 border-2 border-border bg-surface rounded-lg hover:bg-gray-50 transition-colors duration-200 text-left"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Icon
-                      name="Calculator"
-                      size={16}
-                      className="text-gray-600"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-text-primary mb-1">
-                      Try Public Calculator
-                    </h4>
-                    <p className="text-sm text-text-secondary">
-                      Basic analysis with limited results - no account required
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            {/* Cancel Button */}
-            <button
-              onClick={() => {
-                setShowAccessOptions(false);
-                setSelectedProfession(null);
-              }}
-              className="w-full py-2 text-text-secondary hover:text-text-primary transition-colors duration-200"
-            >
-              Cancel
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
-
       {/* Transition Overlay */}
       {isTransitioning && (
         <motion.div
@@ -328,6 +263,14 @@ const ProfessionSelectionLanding = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Access Selection Modal */}
+      <AccessSelectionModal
+        isOpen={showAccessModal}
+        onSelectPublic={handlePublicAccess}
+        onSelectAuthenticated={handleAuthenticatedAccess}
+        showCloseButton={false}
+      />
     </div>
   );
 };
