@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ProgressHeader from 'components/ui/ProgressHeader';
-import BackNavigation from 'components/ui/BackNavigation';
-import ResultsNavigation from 'components/ui/ResultsNavigation';
-import ConversionFooter from 'components/ui/ConversionFooter';
-import Icon from 'components/AppIcon';
-import GapSummaryCard from './components/GapSummaryCard';
-import InteractiveCalculator from './components/InteractiveCalculator';
-import ScenarioComparison from './components/ScenarioComparison';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import ProgressHeader from "components/ui/ProgressHeader";
+import BackNavigation from "components/ui/BackNavigation";
+import ResultsNavigation from "components/ui/ResultsNavigation";
+import ConversionFooter from "components/ui/ConversionFooter";
+import { useAuth } from "contexts/AuthContext";
+import Icon from "components/AppIcon";
+import GapSummaryCard from "./components/GapSummaryCard";
+import InteractiveCalculator from "./components/InteractiveCalculator";
+import ScenarioComparison from "./components/ScenarioComparison";
 
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('calculator');
+  const { isPublic } = useAuth();
+
+  // Block access for public users
+  useEffect(() => {
+    if (isPublic) {
+      navigate("/login");
+    }
+  }, [isPublic, navigate]);
+  const [activeTab, setActiveTab] = useState("calculator");
   const [savedScenarios, setSavedScenarios] = useState([]);
   const [currentScenario, setCurrentScenario] = useState({
     monthlyContribution: 500,
     targetRetirementAge: 65,
-    riskTolerance: 'moderate',
-    name: 'Current Scenario'
+    riskTolerance: "moderate",
+    name: "Current Scenario",
   });
   const [isCalculating, setIsCalculating] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [saveMessage, setSaveMessage] = useState("");
 
   // Load calculated user data from navigation state
   const [userData, setUserData] = useState(null);
@@ -32,7 +41,7 @@ const GapCalculatorTool = () => {
       setUserData(location.state.userData);
     } else {
       // If no navigation state, redirect to assessment
-      navigate('/dynamic-results-dashboard');
+      navigate("/dynamic-results-dashboard");
       return;
     }
   }, [location.state, navigate]);
@@ -40,22 +49,25 @@ const GapCalculatorTool = () => {
   // Load saved scenarios from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('gapCalculatorScenarios');
+      const saved = localStorage.getItem("gapCalculatorScenarios");
       if (saved) {
         const parsedScenarios = JSON.parse(saved);
         setSavedScenarios(parsedScenarios);
       }
     } catch (error) {
-      console.warn('Error loading saved scenarios:', error);
+      console.warn("Error loading saved scenarios:", error);
     }
   }, []);
 
   // Save scenarios to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem('gapCalculatorScenarios', JSON.stringify(savedScenarios));
+      localStorage.setItem(
+        "gapCalculatorScenarios",
+        JSON.stringify(savedScenarios)
+      );
     } catch (error) {
-      console.warn('Error saving scenarios:', error);
+      console.warn("Error saving scenarios:", error);
     }
   }, [savedScenarios]);
 
@@ -77,29 +89,29 @@ const GapCalculatorTool = () => {
 
   const presetScenarios = [
     {
-      id: 'conservative',
-      name: 'Conservative',
+      id: "conservative",
+      name: "Conservative",
       monthlyContribution: 650,
       targetRetirementAge: 67,
-      riskTolerance: 'conservative',
-      description: 'Lower risk, steady growth approach'
+      riskTolerance: "conservative",
+      description: "Lower risk, steady growth approach",
     },
     {
-      id: 'moderate',
-      name: 'Moderate',
+      id: "moderate",
+      name: "Moderate",
       monthlyContribution: 600,
       targetRetirementAge: 65,
-      riskTolerance: 'moderate',
-      description: 'Balanced risk and growth strategy'
+      riskTolerance: "moderate",
+      description: "Balanced risk and growth strategy",
     },
     {
-      id: 'aggressive',
-      name: 'Aggressive',
+      id: "aggressive",
+      name: "Aggressive",
       monthlyContribution: 650,
       targetRetirementAge: 62,
-      riskTolerance: 'aggressive',
-      description: 'Higher risk, accelerated growth plan'
-    }
+      riskTolerance: "aggressive",
+      description: "Higher risk, accelerated growth plan",
+    },
   ];
 
   const calculateProjections = (scenario) => {
@@ -111,7 +123,7 @@ const GapCalculatorTool = () => {
         projectedValue: 0,
         gapClosure: 0,
         yearsToRetirement: 0,
-        monthlyNeeded: 0
+        monthlyNeeded: 0,
       };
     }
 
@@ -122,11 +134,12 @@ const GapCalculatorTool = () => {
         projectedValue: 0,
         gapClosure: 0,
         yearsToRetirement: 0,
-        monthlyNeeded: 0
+        monthlyNeeded: 0,
       };
     }
 
-    const yearsToRetirement = scenario.targetRetirementAge - userData.currentAge;
+    const yearsToRetirement =
+      scenario.targetRetirementAge - userData.currentAge;
 
     // Input validation
     if (yearsToRetirement <= 0) {
@@ -136,9 +149,10 @@ const GapCalculatorTool = () => {
         gapClosure: 0,
         yearsToRetirement: yearsToRetirement,
         monthlyNeeded: 0,
-        error: yearsToRetirement === 0
-          ? "You are already at retirement age"
-          : "Retirement age must be greater than current age"
+        error:
+          yearsToRetirement === 0
+            ? "You are already at retirement age"
+            : "Retirement age must be greater than current age",
       };
     }
 
@@ -149,15 +163,15 @@ const GapCalculatorTool = () => {
         gapClosure: 0,
         yearsToRetirement: yearsToRetirement,
         monthlyNeeded: 0,
-        error: "Monthly contribution cannot be negative"
+        error: "Monthly contribution cannot be negative",
       };
     }
 
     // Corrected annual growth rates (more realistic)
     const annualGrowthRates = {
       conservative: 0.05, // 5% annual
-      moderate: 0.07,     // 7% annual
-      aggressive: 0.09    // 9% annual
+      moderate: 0.07, // 7% annual
+      aggressive: 0.09, // 9% annual
     };
 
     const annualRate = annualGrowthRates[scenario.riskTolerance];
@@ -173,18 +187,25 @@ const GapCalculatorTool = () => {
       // Handle edge case where rate is 0
       projectedValue = totalContributions;
     } else {
-      projectedValue = monthlyContribution * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
+      projectedValue =
+        (monthlyContribution * (Math.pow(1 + monthlyRate, months) - 1)) /
+        monthlyRate;
     }
 
     // Safe gap closure calculation with bounds checking
-    const gapClosure = Math.min(100, Math.max(0, (projectedValue / userData.totalGap) * 100));
+    const gapClosure = Math.min(
+      100,
+      Math.max(0, (projectedValue / userData.totalGap) * 100)
+    );
 
     // Correct calculation for monthly needed using Present Value of Annuity formula
     let monthlyNeeded;
     if (monthlyRate === 0) {
       monthlyNeeded = userData.totalGap / months;
     } else {
-      monthlyNeeded = userData.totalGap * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1);
+      monthlyNeeded =
+        (userData.totalGap * monthlyRate) /
+        (Math.pow(1 + monthlyRate, months) - 1);
     }
 
     // Calculate inflation-adjusted values (optional)
@@ -196,7 +217,9 @@ const GapCalculatorTool = () => {
     if (realMonthlyRate === 0) {
       inflationAdjustedValue = totalContributions;
     } else {
-      inflationAdjustedValue = monthlyContribution * (Math.pow(1 + realMonthlyRate, months) - 1) / realMonthlyRate;
+      inflationAdjustedValue =
+        (monthlyContribution * (Math.pow(1 + realMonthlyRate, months) - 1)) /
+        realMonthlyRate;
     }
 
     return {
@@ -208,31 +231,34 @@ const GapCalculatorTool = () => {
       monthlyNeeded: Math.ceil(monthlyNeeded),
       annualRate: Math.round(annualRate * 100), // Return as clean percentage
       realAnnualRate: Math.round(realRate * 100 * 10) / 10, // Round to 1 decimal place
-      inflationRate: Math.round(inflationRate * 100) // Return as clean percentage
+      inflationRate: Math.round(inflationRate * 100), // Return as clean percentage
     };
   };
 
   const handleSaveScenario = async () => {
     setIsCalculating(true);
-    setSaveMessage('');
+    setSaveMessage("");
 
     try {
       // Validate scenario before saving
       const projections = calculateProjections(currentScenario);
       if (projections.error) {
-        setSaveMessage('Cannot save scenario: ' + projections.error);
+        setSaveMessage("Cannot save scenario: " + projections.error);
         return;
       }
 
       // Check for duplicate scenarios
-      const isDuplicate = savedScenarios.some(scenario =>
-        scenario.monthlyContribution === currentScenario.monthlyContribution &&
-        scenario.targetRetirementAge === currentScenario.targetRetirementAge &&
-        scenario.riskTolerance === currentScenario.riskTolerance
+      const isDuplicate = savedScenarios.some(
+        (scenario) =>
+          scenario.monthlyContribution ===
+            currentScenario.monthlyContribution &&
+          scenario.targetRetirementAge ===
+            currentScenario.targetRetirementAge &&
+          scenario.riskTolerance === currentScenario.riskTolerance
       );
 
       if (isDuplicate) {
-        setSaveMessage('This scenario is already saved');
+        setSaveMessage("This scenario is already saved");
         return;
       }
 
@@ -240,18 +266,17 @@ const GapCalculatorTool = () => {
         ...currentScenario,
         id: Date.now(),
         savedAt: new Date(),
-        projections
+        projections,
       };
 
-      setSavedScenarios(prev => [...prev, newScenario]);
-      setSaveMessage('Scenario saved successfully!');
+      setSavedScenarios((prev) => [...prev, newScenario]);
+      setSaveMessage("Scenario saved successfully!");
 
       // Clear success message after 3 seconds
-      setTimeout(() => setSaveMessage(''), 3000);
-
+      setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      console.error('Error saving scenario:', error);
-      setSaveMessage('Failed to save scenario');
+      console.error("Error saving scenario:", error);
+      setSaveMessage("Failed to save scenario");
     } finally {
       setIsCalculating(false);
     }
@@ -259,45 +284,50 @@ const GapCalculatorTool = () => {
 
   const handleScheduleConsultation = () => {
     // Navigate with scenario data
-    navigate('/report-delivery-confirmation', {
+    navigate("/report-delivery-confirmation", {
       state: {
         userData,
         currentScenario,
-        projections: calculateProjections(currentScenario)
-      }
+        projections: calculateProjections(currentScenario),
+      },
     });
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Calculator', icon: 'Calculator' },
-    { id: 'comparison', label: 'Compare', icon: 'BarChart3' }
+    { id: "calculator", label: "Calculator", icon: "Calculator" },
+    { id: "comparison", label: "Compare", icon: "BarChart3" },
   ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <ProgressHeader currentStep={5} totalSteps={6} profession={userData.profession} />
-      
+      <ProgressHeader
+        currentStep={5}
+        totalSteps={6}
+        profession={userData.profession}
+      />
+
       <main className="flex-1">
         {/* Header Section */}
         <div className="bg-surface border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center mb-4">
               <button
-                onClick={() => navigate('/dynamic-results-dashboard')}
+                onClick={() => navigate("/dynamic-results-dashboard")}
                 className="flex items-center gap-2 px-4 py-3 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150 text-sm sm:text-base font-medium min-h-[44px]"
               >
                 <Icon name="ChevronLeft" size={18} />
                 <span className="font-medium">Back to Results Dashboard</span>
               </button>
             </div>
-            
+
             <div className="text-center mb-6">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-2">
                 Gap Calculator Tool
               </h1>
               <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto px-2">
-                Explore personalized scenarios to close your retirement gaps. 
-                Adjust contributions and see real-time projections for your financial future.
+                Explore personalized scenarios to close your retirement gaps.
+                Adjust contributions and see real-time projections for your
+                financial future.
               </p>
             </div>
 
@@ -310,12 +340,16 @@ const GapCalculatorTool = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors duration-200 flex-1 sm:flex-none text-sm sm:text-base min-h-[44px] ${
                       activeTab === tab.id
-                        ? 'bg-primary text-white shadow-sm'
-                        : 'text-primary hover:bg-primary-100'
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-primary hover:bg-primary-100"
                     }`}
                   >
                     <Icon name={tab.icon} size={16} className="sm:hidden" />
-                    <Icon name={tab.icon} size={18} className="hidden sm:block" />
+                    <Icon
+                      name={tab.icon}
+                      size={18}
+                      className="hidden sm:block"
+                    />
                     <span className="truncate">{tab.label}</span>
                   </button>
                 ))}
@@ -329,13 +363,19 @@ const GapCalculatorTool = () => {
           {/* Scenario Info */}
           <div className="mb-6 p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
             <div className="flex items-start gap-3">
-              <Icon name="Info" size={18} className="text-accent-600 flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+              <Icon
+                name="Info"
+                size={18}
+                className="text-accent-600 flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
+              />
               <div className="min-w-0 flex-1">
                 <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">
                   Scenario Comparison ({savedScenarios.length}/3 saved)
                 </div>
                 <div className="text-xs sm:text-sm text-accent-700 break-words">
-                  Save up to 3 scenarios from the Calculator tab to compare them side-by-side in the Compare tab. Scenarios are stored locally and persist between sessions.
+                  Save up to 3 scenarios from the Calculator tab to compare them
+                  side-by-side in the Compare tab. Scenarios are stored locally
+                  and persist between sessions.
                 </div>
               </div>
             </div>
@@ -348,7 +388,7 @@ const GapCalculatorTool = () => {
 
           {/* Tab Content */}
           <div className="space-y-8">
-            {activeTab === 'calculator' && (
+            {activeTab === "calculator" && (
               <div className="grid lg:grid-cols-2 gap-8">
                 <div>
                   <InteractiveCalculator
@@ -364,7 +404,7 @@ const GapCalculatorTool = () => {
                     <h3 className="text-lg font-semibold text-text-primary mb-4">
                       Projection Results
                     </h3>
-                    <ProjectionResults 
+                    <ProjectionResults
                       scenario={currentScenario}
                       projections={calculateProjections(currentScenario)}
                       userData={userData}
@@ -374,10 +414,12 @@ const GapCalculatorTool = () => {
               </div>
             )}
 
-            {activeTab === 'comparison' && (
+            {activeTab === "comparison" && (
               <ScenarioComparison
                 savedScenarios={savedScenarios}
-                onDeleteScenario={(id) => setSavedScenarios(prev => prev.filter(s => s.id !== id))}
+                onDeleteScenario={(id) =>
+                  setSavedScenarios((prev) => prev.filter((s) => s.id !== id))
+                }
               />
             )}
           </div>
@@ -386,16 +428,26 @@ const GapCalculatorTool = () => {
           <div className="mt-12 space-y-4">
             {/* Save Message */}
             {saveMessage && (
-              <div className={`p-3 rounded-lg text-center ${
-                saveMessage.includes('successfully') ? 'bg-success-50 text-success-700 border border-success-200' :
-                saveMessage.includes('already saved') ? 'bg-warning-50 text-warning-700 border border-warning-200' :
-                'bg-error-50 text-error-700 border border-error-200'
-              }`}>
+              <div
+                className={`p-3 rounded-lg text-center ${
+                  saveMessage.includes("successfully")
+                    ? "bg-success-50 text-success-700 border border-success-200"
+                    : saveMessage.includes("already saved")
+                    ? "bg-warning-50 text-warning-700 border border-warning-200"
+                    : "bg-error-50 text-error-700 border border-error-200"
+                }`}
+              >
                 <div className="flex items-center justify-center gap-2">
-                  <Icon name={
-                    saveMessage.includes('successfully') ? 'CheckCircle' :
-                    saveMessage.includes('already saved') ? 'AlertCircle' : 'XCircle'
-                  } size={16} />
+                  <Icon
+                    name={
+                      saveMessage.includes("successfully")
+                        ? "CheckCircle"
+                        : saveMessage.includes("already saved")
+                        ? "AlertCircle"
+                        : "XCircle"
+                    }
+                    size={16}
+                  />
                   <span className="text-sm font-medium">{saveMessage}</span>
                 </div>
               </div>
@@ -446,8 +498,9 @@ const GapCalculatorTool = () => {
                   Need Help Understanding Your Options?
                 </h3>
                 <p className="text-text-secondary mb-4">
-                  Our retirement planning experts can walk you through these scenarios and help you 
-                  choose the best strategy for your unique situation.
+                  Our retirement planning experts can walk you through these
+                  scenarios and help you choose the best strategy for your
+                  unique situation.
                 </p>
                 <button
                   onClick={handleScheduleConsultation}
@@ -475,14 +528,16 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
       <div className="space-y-6">
         <div className="p-4 bg-error-50 rounded-lg border border-error-200">
           <div className="flex items-start gap-3">
-            <Icon name="AlertTriangle" size={20} className="text-error-600 flex-shrink-0 mt-0.5" />
+            <Icon
+              name="AlertTriangle"
+              size={20}
+              className="text-error-600 flex-shrink-0 mt-0.5"
+            />
             <div>
               <div className="font-medium text-error-800 mb-1">
                 Cannot Calculate Projections
               </div>
-              <div className="text-sm text-error-700">
-                {projections.error}
-              </div>
+              <div className="text-sm text-error-700">{projections.error}</div>
             </div>
           </div>
         </div>
@@ -490,16 +545,23 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
     );
   }
 
-  const gapClosureColor = projections.gapClosure >= 100 ? 'text-success' :
-                         projections.gapClosure >= 80 ? 'text-success' :
-                         projections.gapClosure >= 50 ? 'text-warning' : 'text-error';
+  const gapClosureColor =
+    projections.gapClosure >= 100
+      ? "text-success"
+      : projections.gapClosure >= 80
+      ? "text-success"
+      : projections.gapClosure >= 50
+      ? "text-warning"
+      : "text-error";
 
   return (
     <div className="space-y-6">
       {/* Gap Closure Progress */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-text-secondary">Gap Closure</span>
+          <span className="text-sm font-medium text-text-secondary">
+            Gap Closure
+          </span>
           <span className={`text-lg font-bold ${gapClosureColor}`}>
             {projections.gapClosure.toFixed(1)}%
           </span>
@@ -507,16 +569,21 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
         <div className="w-full bg-primary-100 rounded-full h-3">
           <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              projections.gapClosure >= 100 ? 'bg-success' :
-              projections.gapClosure >= 80 ? 'bg-success' :
-              projections.gapClosure >= 50 ? 'bg-warning' : 'bg-error'
+              projections.gapClosure >= 100
+                ? "bg-success"
+                : projections.gapClosure >= 80
+                ? "bg-success"
+                : projections.gapClosure >= 50
+                ? "bg-warning"
+                : "bg-error"
             }`}
             style={{ width: `${Math.min(projections.gapClosure, 100)}%` }}
           />
         </div>
         {projections.gapClosure > 100 && (
           <div className="mt-2 text-xs sm:text-sm text-success font-medium break-words">
-            🎉 Exceeds gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}
+            🎉 Exceeds gap by $
+            {(projections.projectedValue - userData.totalGap).toLocaleString()}
           </div>
         )}
       </div>
@@ -527,9 +594,12 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           <div className="text-lg sm:text-2xl font-bold text-primary mb-1 break-words">
             ${projections.projectedValue.toLocaleString()}
           </div>
-          <div className="text-xs sm:text-sm text-text-secondary">Projected Value (Nominal)</div>
+          <div className="text-xs sm:text-sm text-text-secondary">
+            Projected Value (Nominal)
+          </div>
           <div className="text-xs text-text-muted mt-1 break-words">
-            ${projections.inflationAdjustedValue.toLocaleString()} in today's dollars
+            ${projections.inflationAdjustedValue.toLocaleString()} in today's
+            dollars
           </div>
         </div>
 
@@ -537,7 +607,9 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           <div className="text-lg sm:text-2xl font-bold text-secondary mb-1">
             {projections.yearsToRetirement}
           </div>
-          <div className="text-xs sm:text-sm text-text-secondary">Years to Retirement</div>
+          <div className="text-xs sm:text-sm text-text-secondary">
+            Years to Retirement
+          </div>
           <div className="text-xs text-text-muted mt-1">
             {projections.annualRate}% growth rate
           </div>
@@ -547,17 +619,30 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
       {/* Monthly Breakdown */}
       <div className="space-y-3">
         <div className="flex justify-between items-start gap-2">
-          <span className="text-text-secondary text-sm sm:text-base">Monthly Contribution</span>
-          <span className="font-semibold text-sm sm:text-base break-words text-right">${scenario.monthlyContribution.toLocaleString()}</span>
+          <span className="text-text-secondary text-sm sm:text-base">
+            Monthly Contribution
+          </span>
+          <span className="font-semibold text-sm sm:text-base break-words text-right">
+            ${scenario.monthlyContribution.toLocaleString()}
+          </span>
         </div>
         <div className="flex justify-between items-start gap-2">
-          <span className="text-text-secondary text-sm sm:text-base">Total Contributions</span>
-          <span className="font-semibold text-sm sm:text-base break-words text-right">${projections.totalContributions.toLocaleString()}</span>
+          <span className="text-text-secondary text-sm sm:text-base">
+            Total Contributions
+          </span>
+          <span className="font-semibold text-sm sm:text-base break-words text-right">
+            ${projections.totalContributions.toLocaleString()}
+          </span>
         </div>
         <div className="flex justify-between items-start gap-2">
-          <span className="text-text-secondary text-sm sm:text-base">Growth Potential</span>
+          <span className="text-text-secondary text-sm sm:text-base">
+            Growth Potential
+          </span>
           <span className="font-semibold text-success text-sm sm:text-base break-words text-right">
-            ${(projections.projectedValue - projections.totalContributions).toLocaleString()}
+            $
+            {(
+              projections.projectedValue - projections.totalContributions
+            ).toLocaleString()}
           </span>
         </div>
       </div>
@@ -566,12 +651,23 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
       {projections.gapClosure < 100 && (
         <div className="p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
           <div className="flex items-start gap-3">
-            <Icon name="Lightbulb" size={20} className="text-accent-600 flex-shrink-0 mt-0.5" />
+            <Icon
+              name="Lightbulb"
+              size={20}
+              className="text-accent-600 flex-shrink-0 mt-0.5"
+            />
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">Recommendation</div>
+              <div className="font-medium text-accent-800 mb-1 text-sm sm:text-base">
+                Recommendation
+              </div>
               <div className="text-xs sm:text-sm text-accent-700 break-words">
-                To fully close your gap, consider increasing your monthly contribution to
-                <strong className="break-words"> ${projections.monthlyNeeded.toLocaleString()}</strong> or extending your retirement timeline.
+                To fully close your gap, consider increasing your monthly
+                contribution to
+                <strong className="break-words">
+                  {" "}
+                  ${projections.monthlyNeeded.toLocaleString()}
+                </strong>{" "}
+                or extending your retirement timeline.
                 <div className="mt-2 text-xs text-accent-600">
                   Based on {projections.annualRate}% annual growth rate
                 </div>
@@ -585,13 +681,29 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
       {projections.gapClosure >= 100 && (
         <div className="p-3 sm:p-4 bg-success-50 rounded-lg border border-success-200">
           <div className="flex items-start gap-3">
-            <Icon name="CheckCircle" size={20} className="text-success-600 flex-shrink-0 mt-0.5" />
+            <Icon
+              name="CheckCircle"
+              size={20}
+              className="text-success-600 flex-shrink-0 mt-0.5"
+            />
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-success-800 mb-1 text-sm sm:text-base">Excellent Progress!</div>
+              <div className="font-medium text-success-800 mb-1 text-sm sm:text-base">
+                Excellent Progress!
+              </div>
               <div className="text-xs sm:text-sm text-success-700 break-words">
-                This scenario {projections.gapClosure > 100 ? 'exceeds' : 'meets'} your retirement gap target.
+                This scenario{" "}
+                {projections.gapClosure > 100 ? "exceeds" : "meets"} your
+                retirement gap target.
                 {projections.gapClosure > 100 && (
-                  <span className="break-words"> You could reduce contributions to ${Math.ceil(scenario.monthlyContribution * (userData.totalGap / projections.projectedValue)).toLocaleString()}/month and still meet your goal.</span>
+                  <span className="break-words">
+                    {" "}
+                    You could reduce contributions to $
+                    {Math.ceil(
+                      scenario.monthlyContribution *
+                        (userData.totalGap / projections.projectedValue)
+                    ).toLocaleString()}
+                    /month and still meet your goal.
+                  </span>
                 )}
               </div>
             </div>

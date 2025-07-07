@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
+import PublicVersionBanner from "components/ui/PublicVersionBanner";
+import PublicResultsMessage from "components/ui/PublicResultsMessage";
+import { useAuth } from "contexts/AuthContext";
 import { getRiskLevel } from "utils/riskUtils";
 
 import RiskGauge from "./components/RiskGauge";
@@ -12,6 +15,7 @@ import CallToActionSection from "./components/CallToActionSection";
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isPublic } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
@@ -102,6 +106,12 @@ const DynamicResultsDashboard = () => {
   );
 
   const handleNavigateToCalculator = useCallback(() => {
+    // Block access for public users
+    if (isPublic) {
+      navigate("/login");
+      return;
+    }
+
     // Validate calculatedResults before transformation
     if (!calculatedResults) {
       console.error("No calculated results available for navigation");
@@ -308,140 +318,152 @@ const DynamicResultsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <ProgressHeader
-        currentStep={4}
-        profession={calculatedResults.profession}
-      />
+      {/* Public Version Banner */}
+      <PublicVersionBanner />
 
-      <main
-        className={`bg-gradient-to-br ${currentTheme.bgGradient} min-h-screen`}
-      >
-        {/* Hero Section */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${riskLevel.bgColorLight} mb-4`}
-            >
-              <span className="text-2xl">{currentTheme.emoji}</span>
-              <span className={`font-semibold ${riskLevel.color}`}>
-                {currentTheme.title} Risk Analysis
-              </span>
-            </div>
+      <div className={isPublic ? "pt-16" : ""}>
+        <ProgressHeader
+          currentStep={4}
+          profession={calculatedResults.profession}
+        />
 
-            <h1 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4">
-              Your Personalized Retirement Gap Analysis
-            </h1>
-
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Based on your {calculatedResults.yearsOfService} years of service
-              and retirement planning profile, we've identified critical gaps
-              that could impact your financial security.
-            </p>
-
-            {/* Hidden Benefit Opportunity Highlight */}
-            <div className="mt-6 p-4 bg-accent-50 rounded-lg border border-accent-200 max-w-md mx-auto">
-              <div className="text-sm font-medium text-accent-800 mb-1">
-                💡 Hidden Benefit Opportunity
+        <main
+          className={`bg-gradient-to-br ${currentTheme.bgGradient} min-h-screen`}
+        >
+          {/* Hero Section */}
+          <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${riskLevel.bgColorLight} mb-4`}
+              >
+                <span className="text-2xl">{currentTheme.emoji}</span>
+                <span className={`font-semibold ${riskLevel.color}`}>
+                  {currentTheme.title} Risk Analysis
+                </span>
               </div>
-              <div className="text-2xl font-bold text-accent-900">
-                ${calculatedResults.hiddenBenefitOpportunity.toLocaleString()}
-                /month
-              </div>
-              <div className="text-xs text-accent-700">
-                Potential additional monthly benefit based on your profile
+
+              <h1 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4">
+                Your Personalized Retirement Gap Analysis
+              </h1>
+
+              <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+                Based on your {calculatedResults.yearsOfService} years of
+                service and retirement planning profile, we've identified
+                critical gaps that could impact your financial security.
+              </p>
+
+              {/* Hidden Benefit Opportunity Highlight */}
+              <div className="mt-6 p-4 bg-accent-50 rounded-lg border border-accent-200 max-w-md mx-auto">
+                <div className="text-sm font-medium text-accent-800 mb-1">
+                  💡 Hidden Benefit Opportunity
+                </div>
+                <div className="text-2xl font-bold text-accent-900">
+                  ${calculatedResults.hiddenBenefitOpportunity.toLocaleString()}
+                  /month
+                </div>
+                <div className="text-xs text-accent-700">
+                  Potential additional monthly benefit based on your profile
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Risk Gauge Section */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="max-w-4xl mx-auto">
-            <RiskGauge
-              score={calculatedResults.riskScore}
-              profession={calculatedResults.profession}
-              riskComponents={calculatedResults.riskComponents}
-              showResults={showResults}
-            />
-          </div>
-        </div>
-
-        {/* Gap Analysis Cards */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
-              Critical Retirement Gaps Identified
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <GapAnalysisCard
-                title="Pension Gap"
-                amount={calculatedResults.pensionGap}
-                icon="TrendingDown"
-                emoji="📉"
-                description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
-                riskLevel={
-                  calculatedResults.riskComponents.pensionRisk > 60
-                    ? "high"
-                    : "moderate"
-                }
-                delay={0}
-              />
-
-              <GapAnalysisCard
-                title="Tax Torpedo Risk"
-                amount={calculatedResults.taxTorpedo}
-                icon="Zap"
-                emoji="💥"
-                description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
-                riskLevel={
-                  calculatedResults.riskComponents.taxRisk > 50
-                    ? "high"
-                    : "moderate"
-                }
-                delay={200}
-              />
-
-              <GapAnalysisCard
-                title="Survivor Protection Gap"
-                amount={calculatedResults.survivorGap}
-                icon="Heart"
-                emoji="❤️‍🩹"
-                description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
-                riskLevel={
-                  calculatedResults.riskComponents.survivorRisk > 60
-                    ? "high"
-                    : "moderate"
-                }
-                delay={400}
+          {/* Risk Gauge Section */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="max-w-4xl mx-auto">
+              <RiskGauge
+                score={calculatedResults.riskScore}
+                profession={calculatedResults.profession}
+                riskComponents={calculatedResults.riskComponents}
+                showResults={showResults}
               />
             </div>
           </div>
-        </div>
 
-        {/* Detailed Breakdown */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="max-w-4xl mx-auto">
-            <DetailedBreakdown
-              userData={calculatedResults}
-              onNavigateToCalculator={handleNavigateToCalculator}
-            />
+          {/* Gap Analysis Cards */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
+                Critical Retirement Gaps Identified
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <GapAnalysisCard
+                  title="Pension Gap"
+                  amount={calculatedResults.pensionGap}
+                  icon="TrendingDown"
+                  emoji="📉"
+                  description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
+                  riskLevel={
+                    calculatedResults.riskComponents.pensionRisk > 60
+                      ? "high"
+                      : "moderate"
+                  }
+                  delay={0}
+                />
+
+                <GapAnalysisCard
+                  title="Tax Torpedo Risk"
+                  amount={calculatedResults.taxTorpedo}
+                  icon="Zap"
+                  emoji="💥"
+                  description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                  riskLevel={
+                    calculatedResults.riskComponents.taxRisk > 50
+                      ? "high"
+                      : "moderate"
+                  }
+                  delay={200}
+                />
+
+                <GapAnalysisCard
+                  title="Survivor Protection Gap"
+                  amount={calculatedResults.survivorGap}
+                  icon="Heart"
+                  emoji="❤️‍🩹"
+                  description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
+                  riskLevel={
+                    calculatedResults.riskComponents.survivorRisk > 60
+                      ? "high"
+                      : "moderate"
+                  }
+                  delay={400}
+                />
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Call to Action Section */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="max-w-4xl mx-auto">
-            <CallToActionSection
-              onEmailReport={handleEmailReport}
-              onBookAudit={handleBookAudit}
-              profession={calculatedResults.profession}
-            />
+          {/* Detailed Breakdown */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="max-w-4xl mx-auto">
+              <DetailedBreakdown
+                userData={calculatedResults}
+                onNavigateToCalculator={handleNavigateToCalculator}
+              />
+            </div>
           </div>
-        </div>
-      </main>
 
-      <ConversionFooter />
+          {/* Call to Action Section */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-12">
+            <div className="max-w-4xl mx-auto">
+              <CallToActionSection
+                onEmailReport={handleEmailReport}
+                onBookAudit={handleBookAudit}
+                profession={calculatedResults.profession}
+              />
+            </div>
+          </div>
+
+          {/* Public Results Message */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-12">
+            <div className="max-w-4xl mx-auto">
+              <PublicResultsMessage />
+            </div>
+          </div>
+        </main>
+
+        <ConversionFooter />
+      </div>
     </div>
   );
 };
