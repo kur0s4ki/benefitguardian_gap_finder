@@ -63,29 +63,13 @@ const ProfessionSelectionLanding = () => {
 
     setSelectedProfession(profession);
 
-    // Check if user has already chosen access level
-    const hasChosenAccess = sessionStorage.getItem("accessLevelChosen");
-
-    if (hasChosenAccess) {
-      // User has already chosen, proceed directly
-      setIsTransitioning(true);
-      setTimeout(() => {
-        navigate("/service-profile-collection", {
-          state: {
-            profession: profession.id,
-          },
-        });
-      }, 800);
-    } else {
-      // Show access selection modal
-      setShowAccessModal(true);
-    }
+    // Always show access selection modal
+    setShowAccessModal(true);
   };
 
   // Modal handlers
   const handlePublicAccess = () => {
     setPublicAccess();
-    sessionStorage.setItem("accessLevelChosen", "public");
     setShowAccessModal(false);
 
     // Continue with navigation
@@ -100,7 +84,6 @@ const ProfessionSelectionLanding = () => {
   };
 
   const handleAuthenticatedAccess = () => {
-    sessionStorage.setItem("accessLevelChosen", "authenticated");
     setShowAccessModal(false);
 
     // Navigate to login with profession data
