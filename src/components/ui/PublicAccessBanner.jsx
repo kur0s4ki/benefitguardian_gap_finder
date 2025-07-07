@@ -5,7 +5,7 @@ import Icon from '../AppIcon';
 
 const PublicAccessBanner = ({ 
   className = "",
-  variant = "default", // "default", "minimal", "prominent"
+  variant = "default", // "default", "minimal", "prominent", "sticky"
   showUpgradeButton = true,
   customMessage
 }) => {
@@ -23,6 +23,8 @@ const PublicAccessBanner = ({
         return 'p-3 bg-warning-50 border border-warning-200 rounded-md';
       case 'prominent':
         return 'p-6 bg-gradient-to-r from-warning-50 to-accent-50 border-2 border-warning-300 rounded-lg shadow-sm';
+      case 'sticky':
+        return 'p-3 bg-warning-600 text-white shadow-lg';
       default:
         return 'p-4 bg-warning-50 border border-warning-200 rounded-lg';
     }
@@ -36,6 +38,8 @@ const PublicAccessBanner = ({
         return 'Limited public analysis';
       case 'prominent':
         return 'You\'re using the public calculator with limited features. Sign in to unlock complete retirement gap analysis and personalized recommendations.';
+      case 'sticky':
+        return 'You are using the limited public version. Log in for full experience and complete results.';
       default:
         return 'You\'re viewing a limited public analysis. Sign in for complete gap analysis and personalized recommendations.';
     }
@@ -51,10 +55,43 @@ const PublicAccessBanner = ({
         return 'text-xs';
       case 'prominent':
         return 'text-sm';
+      case 'sticky':
+        return 'text-sm';
       default:
         return 'text-sm';
     }
   };
+
+  // For sticky variant, render as a fixed banner
+  if (variant === 'sticky') {
+    return (
+      <div className="fixed top-0 left-0 right-0 z-40 bg-warning-600 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center gap-3">
+              <Icon 
+                name="AlertTriangle" 
+                size={16} 
+                className="text-warning-100 flex-shrink-0" 
+              />
+              <p className="text-sm text-white font-medium">
+                {getMessage()}
+              </p>
+            </div>
+            
+            {showUpgradeButton && (
+              <button
+                onClick={() => navigate('/login', { state: { from: { pathname: window.location.pathname } } })}
+                className="px-4 py-2 bg-white text-warning-600 rounded-md hover:bg-warning-50 transition-colors duration-150 text-sm font-semibold whitespace-nowrap"
+              >
+                Log In
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${getVariantClasses()} ${className}`}>
@@ -93,7 +130,7 @@ const PublicAccessBanner = ({
         {showUpgradeButton && (
           <div className="flex-shrink-0">
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login', { state: { from: { pathname: window.location.pathname } } })}
               className={`inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-md hover:bg-primary-700 transition-colors duration-150 ${
                 variant === 'minimal' ? 'text-xs' : 'text-sm'
               } font-medium`}

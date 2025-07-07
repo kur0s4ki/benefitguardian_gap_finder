@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import ProgressHeader from "components/ui/ProgressHeader";
 import BackNavigation from "components/ui/BackNavigation";
 import ConversionFooter from "components/ui/ConversionFooter";
 import PublicAccessBanner from "components/ui/PublicAccessBanner";
+import AccessSelectionModal from "components/auth/AccessSelectionModal";
 import Icon from "components/AppIcon";
 import YearsOfServiceSlider from "./components/YearsOfServiceSlider";
 import PensionEstimateInput from "./components/PensionEstimateInput";
@@ -12,6 +14,7 @@ import StateSelector from "./components/StateSelector";
 const ServiceProfileCollection = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, setPublicAccess } = useAuth();
 
   // Get profession from previous step, sessionStorage, or default
   const getProfession = () => {
@@ -37,20 +40,42 @@ const ServiceProfileCollection = () => {
 
   const profession = getProfession();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    yearsOfService: 15,
-    pensionEstimate: "",
-    pensionUnknown: false,
-    selectedState: "",
+  // Form state - restore from location state if coming back from login
+  const [formData, setFormData] = useState(() => {
+    const savedFormData = location.state?.formData;
+    if (savedFormData && location.state?.fromLogin) {
+      return savedFormData;
+    }
+    return {
+      yearsOfService: 15,
+      pensionEstimate: "",
+      pensionUnknown: false,
+      selectedState: "",
+    };
   });
 
   const [currentSection, setCurrentSection] = useState(0);
   const [errors, setErrors] = useState({});
   const [isValid, setIsValid] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [hasShownModal, setHasShownModal] = useState(false);
 
   // Ref for the mobile section container
   const mobileSectionRef = useRef(null);
+
+  // Check if we should show the access modal after first step
+  useEffect(() => {
+    // Show modal after Years of Service is completed and user is not authenticated
+    // Don't show if coming back from login
+    if (formData.yearsOfService && !hasShownModal && !isAuthenticated && !location.state?.fromLogin) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setShowAccessModal(true);
+        setHasShownModal(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.yearsOfService, hasShownModal, isAuthenticated, location.state?.fromLogin]);
 
   // Enhanced scroll function to scroll to section container
   const scrollToSection = () => {
@@ -415,6 +440,25 @@ const ServiceProfileCollection = () => {
       </main>
 
       <ConversionFooter />
+
+      {/* Access Selection Modal */}
+      <AccessSelectionModal
+        isOpen={showAccessModal}
+        onClose={() => setShowAccessModal(false)}
+        onSelectPublic={() => {
+          setPublicAccess();
+          setShowAccessModal(false);
+        }}
+        onSelectAuthenticated={() => {
+          navigate("/login", {
+            state: {
+              from: { pathname: "/service-profile-collection" },
+              profession: profession,
+              formData: formData, // Save form data to restore after login
+            },
+          });
+        }}
+      />
     </div>
   );
 };

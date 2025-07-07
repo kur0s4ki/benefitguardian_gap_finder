@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const { data, error } = await supabase
-        .from("user_profiles")
+        .from("profile_session")
         .select("*")
         .eq("user_id", userId)
         .single();
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         if (error.code === "PGRST116") {
           console.log("Creating default profile for user:", userId);
           const { data: newProfile, error: createError } = await supabase
-            .from("user_profiles")
+            .from("profile_session")
             .insert([{ user_id: userId, role: ROLES.USER }])
             .select()
             .single();
@@ -61,6 +61,8 @@ export const AuthProvider = ({ children }) => {
       setUserProfile({ role: ROLES.USER }); // Fallback
     }
   };
+
+
 
   useEffect(() => {
     // Get initial session
@@ -164,10 +166,21 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log("Starting sign out process...");
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
+        console.error("Supabase signOut error:", error);
         throw error;
       }
+      
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      setAccessLevel("public");
+      
+      console.log("Sign out successful, state cleared");
       return { error: null };
     } catch (error) {
       console.error("Sign out error:", error);
@@ -207,7 +220,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const { data, error } = await supabase
-        .from("user_profiles")
+        .from("profile_session")
         .update(updates)
         .eq("user_id", user.id)
         .select()

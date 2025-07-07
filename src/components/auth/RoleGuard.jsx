@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRole } from '../../hooks/useRole';
-import { useToast } from '../../contexts/ToastContext';
-import LoadingSpinner from '../LoadingSpinner';
+import { useToast } from '../ui/ToastProvider';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 /**
  * RoleGuard component for role-based access control

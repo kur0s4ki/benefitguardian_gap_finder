@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRole } from '../../hooks/useRole';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../ui/ToastProvider';
 import { getAvailableRoles, getRoleDisplayName } from '../../utils/roles';
-import LoadingSpinner from '../LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);

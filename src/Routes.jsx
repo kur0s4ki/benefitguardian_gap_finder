@@ -10,6 +10,7 @@ import ErrorBoundary from "components/ErrorBoundary";
 import NotFound from "pages/NotFound";
 import ProtectedRoute from "components/auth/ProtectedRoute";
 import RoleGuard from "components/auth/RoleGuard";
+import PublicAccessWrapper from "components/auth/PublicAccessWrapper";
 import { ROLES } from "utils/roles";
 
 // Page imports
@@ -31,7 +32,8 @@ const Routes = () => {
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
-        <RouterRoutes>
+        <PublicAccessWrapper>
+          <RouterRoutes>
           {/* Public routes */}
           <Route
             path="/login"
@@ -107,6 +109,7 @@ const Routes = () => {
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </RouterRoutes>
+        </PublicAccessWrapper>
       </ErrorBoundary>
     </BrowserRouter>
   );

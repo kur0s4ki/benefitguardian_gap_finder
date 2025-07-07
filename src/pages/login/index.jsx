@@ -78,10 +78,16 @@ const Login = () => {
         const from =
           location.state?.from?.pathname || "/profession-selection-landing";
         const profession = location.state?.profession;
+        const formData = location.state?.formData;
 
-        if (from === "/service-profile-collection" && profession) {
+        // If coming from service profile collection with saved form data
+        if (from === "/service-profile-collection" && (profession || formData)) {
           navigate(from, {
-            state: { profession },
+            state: { 
+              profession,
+              formData, // Restore form data
+              fromLogin: true // Flag to prevent showing modal again
+            },
             replace: true,
           });
         } else {
