@@ -4,6 +4,7 @@ import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
 import PublicVersionBanner from "components/ui/PublicVersionBanner";
 import PublicResultsMessage from "components/ui/PublicResultsMessage";
+import PublicAccessModal from "components/auth/PublicAccessModal";
 import { useAuth } from "contexts/AuthContext";
 import { getRiskLevel } from "utils/riskUtils";
 
@@ -20,6 +21,7 @@ const DynamicResultsDashboard = () => {
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   // Load data from navigation state or localStorage
   useEffect(() => {
@@ -180,6 +182,12 @@ const DynamicResultsDashboard = () => {
   }, [calculatedResults, navigate]);
 
   const handleEmailReport = useCallback(async () => {
+    // Check if user is public and show modal instead of navigating
+    if (isPublic) {
+      setShowEmailModal(true);
+      return;
+    }
+
     // Validate calculatedResults before processing
     if (!calculatedResults) {
       console.error("No calculated results available for email report");
@@ -236,13 +244,17 @@ const DynamicResultsDashboard = () => {
         projections: projections,
       },
     });
-  }, [calculatedResults, navigate]);
+  }, [calculatedResults, navigate, isPublic]);
 
   const handleBookAudit = useCallback(() => {
     // Calendly integration would go here
     console.log("Audit booking requested");
     window.open("https://calendly.com/publicserv-wealth", "_blank");
   }, []);
+
+  const handleCloseEmailModal = () => {
+    setShowEmailModal(false);
+  };
 
   if (isLoading) {
     return (
@@ -464,6 +476,17 @@ const DynamicResultsDashboard = () => {
 
         <ConversionFooter />
       </div>
+
+      {/* Email Report Access Modal for Public Users */}
+      {showEmailModal && (
+        <PublicAccessModal 
+          isOpen={showEmailModal}
+          onClose={handleCloseEmailModal}
+          feature="Email My Report"
+          title="Report Delivery Access Required"
+          description="Detailed report delivery with personalized recommendations is available to logged-in users only. Sign in to receive your comprehensive retirement gap analysis via email."
+        />
+      )}
     </div>
   );
 };

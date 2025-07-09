@@ -4,6 +4,7 @@ import ProgressHeader from "components/ui/ProgressHeader";
 import BackNavigation from "components/ui/BackNavigation";
 import ResultsNavigation from "components/ui/ResultsNavigation";
 import ConversionFooter from "components/ui/ConversionFooter";
+import PublicAccessModal from "components/auth/PublicAccessModal";
 import { useAuth } from "contexts/AuthContext";
 import Icon from "components/AppIcon";
 import GapSummaryCard from "./components/GapSummaryCard";
@@ -14,13 +15,21 @@ const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPublic } = useAuth();
+  const [showAccessModal, setShowAccessModal] = useState(false);
 
-  // Block access for public users
+  // Block access for public users with modal instead of redirect
   useEffect(() => {
     if (isPublic) {
-      navigate("/login");
+      setShowAccessModal(true);
     }
-  }, [isPublic, navigate]);
+  }, [isPublic]);
+
+  const handleCloseModal = () => {
+    setShowAccessModal(false);
+    // Navigate back to results dashboard
+    navigate("/dynamic-results-dashboard");
+  };
+
   const [activeTab, setActiveTab] = useState("calculator");
   const [savedScenarios, setSavedScenarios] = useState([]);
   const [currentScenario, setCurrentScenario] = useState({
@@ -516,6 +525,16 @@ const GapCalculatorTool = () => {
       </main>
 
       <ConversionFooter />
+
+             {showAccessModal && (
+         <PublicAccessModal 
+           isOpen={showAccessModal}
+           onClose={handleCloseModal}
+           feature="Gap Calculator Tool"
+           title="Gap Calculator Access Required"
+           description="The Gap Calculator Tool is available to logged-in users only. Sign in to explore personalized scenarios and close your retirement gaps."
+         />
+       )}
     </div>
   );
 };

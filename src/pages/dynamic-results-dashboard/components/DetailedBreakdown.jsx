@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "contexts/AuthContext";
+import PublicAccessModal from "components/auth/PublicAccessModal";
 import Icon from "components/AppIcon";
 
 const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
   const { isPublic } = useAuth();
   const [expandedSection, setExpandedSection] = useState(null);
+  const [showGapCalculatorModal, setShowGapCalculatorModal] = useState(false);
 
   const breakdownData = [
     {
@@ -84,6 +86,18 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
     setExpandedSection(expandedSection === sectionId ? null : sectionId);
   };
 
+  const handleGapCalculatorClick = () => {
+    if (isPublic) {
+      setShowGapCalculatorModal(true);
+    } else {
+      onNavigateToCalculator();
+    }
+  };
+
+  const handleCloseGapCalculatorModal = () => {
+    setShowGapCalculatorModal(false);
+  };
+
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-6">
@@ -92,7 +106,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
         </h3>
         {isPublic ? (
           <button
-            onClick={onNavigateToCalculator}
+            onClick={handleGapCalculatorClick}
             className="btn-secondary px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2 border border-warning-300 text-warning-700 hover:bg-warning-50"
           >
             <Icon name="Lock" size={16} />
@@ -100,7 +114,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
           </button>
         ) : (
           <button
-            onClick={onNavigateToCalculator}
+            onClick={handleGapCalculatorClick}
             className="btn-primary px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2"
           >
             <Icon name="Calculator" size={16} />
@@ -247,6 +261,16 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
           </div>
         ))}
       </div>
+
+             {showGapCalculatorModal && (
+         <PublicAccessModal 
+           isOpen={showGapCalculatorModal}
+           onClose={handleCloseGapCalculatorModal}
+           feature="Gap Calculator Tool"
+           title="Gap Calculator Access Required"
+           description="The Gap Calculator Tool is available to logged-in users only. Sign in to explore personalized scenarios and close your retirement gaps."
+         />
+       )}
     </div>
   );
 };
