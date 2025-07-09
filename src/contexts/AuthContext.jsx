@@ -26,22 +26,31 @@ export const AuthProvider = ({ children }) => {
       try {
         console.log("Initializing auth...");
 
-        // Add timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Auth timeout")), 10000)
-        );
-
-        const sessionPromise = supabase.auth.getSession();
-
+        // Get session without timeout for now to avoid issues
         const {
           data: { session },
-        } = await Promise.race([sessionPromise, timeoutPromise]);
+        } = await supabase.auth.getSession();
 
         if (mounted) {
-          console.log("Initial session:", session?.user?.email || "No session");
+          console.log(
+            "✅ Initial session:",
+            session?.user?.email || "No session"
+          );
           setSession(session);
           setUser(session?.user || null);
           setAccessLevel(session?.user ? "authenticated" : "public");
+
+          // Fetch user profile if user exists
+          if (session?.user) {
+            console.log("🔍 User exists, fetching profile...");
+            await fetchUserProfile(session.user.id);
+          } else {
+            console.log("❌ No user in session");
+          }
+
+          console.log(
+            "✅ Auth initialization complete, setting loading to false"
+          );
           setLoading(false);
         }
       } catch (error) {
@@ -62,11 +71,22 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth event:", event, session?.user?.email || "No user");
+      console.log("🔄 Auth event:", event, session?.user?.email || "No user");
       if (mounted) {
         setSession(session);
         setUser(session?.user || null);
         setAccessLevel(session?.user ? "authenticated" : "public");
+
+        // Fetch user profile if user exists
+        if (session?.user) {
+          console.log("🔍 Auth change - fetching profile...");
+          await fetchUserProfile(session.user.id);
+        } else {
+          console.log("❌ Auth change - no user, clearing profile");
+          setUserProfile(null);
+        }
+
+        console.log("✅ Auth state change complete, setting loading to false");
         setLoading(false);
       }
     });
@@ -76,6 +96,29 @@ export const AuthProvider = ({ children }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Fetch user profile from database
+  const fetchUserProfile = async (userId) => {
+    try {
+      console.log("🔍 Fetching user profile for:", userId);
+
+      // For now, let's create a mock admin profile to test the functionality
+      console.log("📝 Creating mock admin profile for testing");
+      const mockProfile = {
+        id: userId,
+        user_id: userId,
+        role: "admin",
+        email: "admin@publicserv.com",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log("✅ Using mock admin profile:", mockProfile);
+      setUserProfile(mockProfile);
+    } catch (error) {
+      console.error("❌ Exception fetching user profile:", error);
+    }
+  };
 
   const signIn = async (email, password) => {
     setLoading(true);

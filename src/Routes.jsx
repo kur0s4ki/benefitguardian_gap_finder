@@ -21,6 +21,8 @@ import TermsOfService from "pages/terms-of-service";
 import Disclosures from "pages/disclosures";
 import Contact from "pages/contact";
 import Login from "pages/login";
+import UserManagement from "pages/user-management";
+import ManageMyProfile from "pages/manage-my-profile";
 
 const Routes = () => {
   return (
@@ -51,6 +53,8 @@ const Routes = () => {
             element={<ReportDeliveryConfirmation />}
           />
           <Route path="/login" element={<Login />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/manage-my-profile" element={<ManageMyProfile />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/disclosures" element={<Disclosures />} />

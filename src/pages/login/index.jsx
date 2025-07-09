@@ -17,7 +17,6 @@ const Login = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -27,20 +26,6 @@ const Login = () => {
       navigate(from, { replace: true });
     }
   }, [user, loading, navigate, location.state]);
-
-  // Add timeout for loading state to prevent infinite spinner
-  useEffect(() => {
-    if (loading) {
-      const timeout = setTimeout(() => {
-        console.warn("Auth loading timeout - forcing show login form");
-        setLoadingTimeout(true);
-      }, 5000); // 5 second timeout
-
-      return () => clearTimeout(timeout);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -122,8 +107,8 @@ const Login = () => {
     );
   };
 
-  // Show loading spinner while checking authentication (with timeout fallback)
-  if (loading && !loadingTimeout) {
+  // Show loading spinner while checking authentication
+  if (loading) {
     return <LoadingSpinner message="Checking authentication..." />;
   }
 
