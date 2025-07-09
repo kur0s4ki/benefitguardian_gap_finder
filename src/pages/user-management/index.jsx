@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRole } from "../../hooks/useRole";
 import { useToast } from "../../components/ui/ToastProvider";
 import ProgressHeader from "../../components/ui/ProgressHeader";
 import Icon from "../../components/AppIcon";
-import { supabase } from "../../lib/supabase";
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -13,97 +12,57 @@ const UserManagement = () => {
   const { isAdmin } = useRole();
   const { addToast } = useToast();
 
-  // State management
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Mock data for template
+  const [users] = useState([
+    {
+      id: "1",
+      email: "admin@example.com",
+      role: "admin",
+      created_at: "2025-01-01T00:00:00Z",
+    },
+    {
+      id: "2",
+      email: "user1@example.com",
+      role: "user",
+      created_at: "2025-01-02T00:00:00Z",
+    },
+    {
+      id: "3",
+      email: "user2@example.com",
+      role: "user",
+      created_at: "2025-01-03T00:00:00Z",
+    },
+  ]);
+
+  const [loading] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newUser, setNewUser] = useState({
     email: "",
     role: "user",
-    profession: "",
   });
 
-  // Fetch all users
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching users:", error);
-        addToast("Failed to fetch users", "error");
-        return;
-      }
-
-      setUsers(data || []);
-    } catch (error) {
-      console.error("Exception fetching users:", error);
-      addToast("Failed to fetch users", "error");
-    } finally {
-      setLoading(false);
-    }
+  // Mock refresh function for template
+  const fetchUsers = () => {
+    addToast("Users refreshed (template mode)", "success");
   };
 
-  // Add new user
-  const handleAddUser = async (e) => {
+  // Mock add user function for template
+  const handleAddUser = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      // For now, we'll create a user profile entry directly
-      // In a production environment, you'd want to use Supabase's admin API
-      // or implement a proper user invitation system
-
-      // Generate a temporary user ID (in production, this would come from auth)
-      const tempUserId = crypto.randomUUID();
-
-      // Create the user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("user_profiles")
-        .insert([
-          {
-            id: tempUserId,
-            email: newUser.email,
-            role: newUser.role,
-            profession: newUser.profession || null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error("Error creating user profile:", profileError);
-        addToast(`Failed to create user: ${profileError.message}`, "error");
-        return;
-      }
-
+    // Simulate async operation
+    setTimeout(() => {
       addToast(
-        `User ${newUser.email} created successfully! (Note: This is a demo - in production, the user would receive an invitation email)`,
+        `User ${newUser.email} would be created (template mode)`,
         "success"
       );
       setShowAddUserModal(false);
-      setNewUser({ email: "", role: "user", profession: "" });
-      fetchUsers(); // Refresh the user list
-    } catch (error) {
-      console.error("Exception creating user:", error);
-      addToast("Failed to create user", "error");
-    } finally {
+      setNewUser({ email: "", role: "user" });
       setIsSubmitting(false);
-    }
+    }, 1000);
   };
-
-  // Load users on component mount
-  useEffect(() => {
-    if (user && isAdmin()) {
-      fetchUsers();
-    }
-  }, [user, isAdmin]);
 
   // Redirect if not admin
   if (!user || !isAdmin()) {
@@ -224,15 +183,6 @@ const UserManagement = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      Profession
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-border">
@@ -267,20 +217,6 @@ const UserManagement = () => {
                         >
                           {userItem.role}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {userItem.profession || "Not set"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {new Date(userItem.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-primary hover:text-primary-700 mr-3">
-                          Edit
-                        </button>
-                        <button className="text-error hover:text-error-700">
-                          Delete
-                        </button>
                       </td>
                     </tr>
                   ))}

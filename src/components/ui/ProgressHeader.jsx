@@ -101,9 +101,13 @@ const ProgressHeader = ({
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    await signOut();
-    navigate("/login");
-    setIsLoggingOut(false);
+    try {
+      await signOut();
+      window.location.href = "/login"; // Force full page reload
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/login"; // Force navigation even on error
+    }
   };
 
   const handleManagementClick = () => {

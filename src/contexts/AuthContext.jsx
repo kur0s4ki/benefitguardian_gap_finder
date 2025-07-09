@@ -43,7 +43,22 @@ export const AuthProvider = ({ children }) => {
           // Fetch user profile if user exists
           if (session?.user) {
             console.log("🔍 User exists, fetching profile...");
-            await fetchUserProfile(session.user.id);
+
+            // Try to restore from localStorage immediately for faster UI
+            try {
+              const cached = localStorage.getItem("userProfile");
+              if (cached) {
+                const cachedProfile = JSON.parse(cached);
+                if (cachedProfile.id === session.user.id) {
+                  console.log("📦 Restoring cached profile for immediate UI");
+                  setUserProfile(cachedProfile);
+                }
+              }
+            } catch (error) {
+              console.warn("Failed to restore cached profile:", error);
+            }
+
+            await fetchUserProfile(session.user.id, session.user.email);
           } else {
             console.log("❌ No user in session");
           }
@@ -80,10 +95,19 @@ export const AuthProvider = ({ children }) => {
         // Fetch user profile if user exists
         if (session?.user) {
           console.log("🔍 Auth change - fetching profile...");
-          await fetchUserProfile(session.user.id);
+          await fetchUserProfile(session.user.id, session.user.email);
         } else {
           console.log("❌ Auth change - no user, clearing profile");
           setUserProfile(null);
+          // Clear cached profile when no user
+          try {
+            localStorage.removeItem("userProfile");
+          } catch (error) {
+            console.warn(
+              "Failed to clear cached profile on auth change:",
+              error
+            );
+          }
         }
 
         console.log("✅ Auth state change complete, setting loading to false");
@@ -98,9 +122,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Fetch user profile from database
-  const fetchUserProfile = async (userId) => {
+  const fetchUserProfile = async (userId, userEmail = null) => {
     try {
       console.log("🔍 Fetching user profile for:", userId);
+
+      // Try to restore from localStorage first as fallback
+      let cachedProfile = null;
+      try {
+        const cached = localStorage.getItem("userProfile");
+        if (cached) {
+          cachedProfile = JSON.parse(cached);
+          if (cachedProfile.id === userId) {
+            console.log("📦 Found cached user profile");
+          } else {
+            cachedProfile = null; // Different user
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to parse cached user profile:", error);
+      }
 
       // Query the user_profiles table using the user ID
       const { data, error } = await supabase
@@ -121,7 +161,7 @@ export const AuthProvider = ({ children }) => {
               {
                 id: userId,
                 role: "user", // Default role
-                email: user?.email || "",
+                email: userEmail || "",
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               },
@@ -131,17 +171,35 @@ export const AuthProvider = ({ children }) => {
 
           if (createError) {
             console.error("❌ Error creating user profile:", createError);
+            // Use cached profile as fallback if available
+            if (cachedProfile) {
+              console.log("📦 Using cached profile as fallback");
+              setUserProfile(cachedProfile);
+            }
             return;
           }
 
           console.log("✅ Created user profile:", newProfile);
           setUserProfile(newProfile);
+        } else {
+          // For other errors, try to use cached profile
+          if (cachedProfile) {
+            console.log("📦 Using cached profile due to fetch error");
+            setUserProfile(cachedProfile);
+          }
         }
         return;
       }
 
       console.log("✅ Fetched user profile:", data);
       setUserProfile(data);
+
+      // Store user profile in localStorage as backup
+      try {
+        localStorage.setItem("userProfile", JSON.stringify(data));
+      } catch (error) {
+        console.warn("Failed to store user profile in localStorage:", error);
+      }
     } catch (error) {
       console.error("❌ Exception fetching user profile:", error);
     }
@@ -181,17 +239,20 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     console.log("Signing out...");
 
-    // Clear everything immediately
+    // Clear local state immediately
     setUser(null);
     setSession(null);
     setUserProfile(null);
     setAccessLevel("public");
+    setLoading(false);
+
+    // Clear localStorage
     localStorage.clear();
 
-    // Let Supabase clean up in background
-    supabase.auth
-      .signOut()
-      .catch((err) => console.log("Supabase signOut ignored:", err));
+    // Clear Supabase session (fire and forget)
+    supabase.auth.signOut().catch(() => {
+      // Ignore errors - we've already cleared local state
+    });
 
     return { error: null };
   };
