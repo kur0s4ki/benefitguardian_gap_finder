@@ -9,7 +9,7 @@ import { useAuth } from "contexts/AuthContext";
 
 const ProfessionSelectionLanding = () => {
   const navigate = useNavigate();
-  const { setPublicAccess } = useAuth();
+  const { setPublicAccess, isPublic } = useAuth();
   const [selectedProfession, setSelectedProfession] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
@@ -63,8 +63,21 @@ const ProfessionSelectionLanding = () => {
 
     setSelectedProfession(profession);
 
-    // Always show access selection modal
-    setShowAccessModal(true);
+    // Only show access selection modal for public users
+    // Authenticated users should proceed directly
+    if (isPublic) {
+      setShowAccessModal(true);
+    } else {
+      // User is authenticated, proceed directly to next step
+      setIsTransitioning(true);
+      setTimeout(() => {
+        navigate("/service-profile-collection", {
+          state: {
+            profession: profession.id,
+          },
+        });
+      }, 800);
+    }
   };
 
   // Modal handlers

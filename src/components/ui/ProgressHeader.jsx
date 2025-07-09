@@ -78,22 +78,10 @@ const ProgressHeader = ({
   };
 
   const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      const { error } = await signOut();
-
-      if (error) {
-        addToast("Error signing out. Please try again.", "error");
-      } else {
-        addToast("Successfully signed out!", "info");
-        navigate("/login");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-      addToast("An unexpected error occurred during logout.", "error");
-    } finally {
-      setIsLoggingOut(false);
-    }
+    setIsLoggingOut(true);
+    await signOut();
+    navigate("/login");
+    setIsLoggingOut(false);
   };
 
   const getProfessionTheme = () => {
