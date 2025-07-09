@@ -62,6 +62,12 @@ const ProgressHeader = ({
     steps.find((step) => step.path === location.pathname) || steps[0];
   const progressPercentage = (currentStepData.step / totalSteps) * 100;
 
+  // Check if we're on a management page (not part of the main flow)
+  const isManagementPage = ["/user-management", "/manage-my-profile"].includes(
+    location.pathname
+  );
+  const shouldShowProgress = !isManagementPage;
+
   const handleLogoClick = () => {
     navigate("/profession-selection-landing");
   };
@@ -161,7 +167,7 @@ const ProgressHeader = ({
           {/* Navigation Section */}
           <div className="flex items-center space-x-4 lg:space-x-6">
             {/* Back Navigation */}
-            {canNavigateBack && (
+            {canNavigateBack && shouldShowProgress && (
               <button
                 onClick={handleBackClick}
                 className="back-button px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
@@ -175,35 +181,39 @@ const ProgressHeader = ({
             )}
 
             {/* Progress Indicator - Mobile */}
-            <div className="flex items-center space-x-3 md:hidden">
-              <div className="text-sm font-medium text-text-secondary">
-                {currentStepData.step}/{totalSteps}
+            {shouldShowProgress && (
+              <div className="flex items-center space-x-3 md:hidden">
+                <div className="text-sm font-medium text-text-secondary">
+                  {currentStepData.step}/{totalSteps}
+                </div>
+                <div className="w-16 h-2 bg-primary-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-16 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Progress Indicator - Desktop */}
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-text-secondary">
-                  Step {currentStepData.step} of {totalSteps}:
-                </span>
-                <span className="text-sm font-semibold text-primary">
-                  {currentStepData.label}
-                </span>
+            {shouldShowProgress && (
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-text-secondary">
+                    Step {currentStepData.step} of {totalSteps}:
+                  </span>
+                  <span className="text-sm font-semibold text-primary">
+                    {currentStepData.label}
+                  </span>
+                </div>
+                <div className="w-24 lg:w-32 h-2 bg-primary-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-24 lg:w-32 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Authentication Section */}
             {user ? (
@@ -297,25 +307,27 @@ const ProgressHeader = ({
       </div>
 
       {/* Mobile Step Indicator */}
-      <div className="md:hidden px-4 pb-3">
-        <div className="text-center">
-          <div className="text-xs font-medium text-text-secondary mb-1">
-            {currentStepData.shortLabel}
-          </div>
-          <div className="flex justify-center space-x-1">
-            {steps.map((step) => (
-              <div
-                key={step.step}
-                className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                  step.step <= currentStepData.step
-                    ? "bg-primary"
-                    : "bg-primary-100"
-                }`}
-              />
-            ))}
+      {shouldShowProgress && (
+        <div className="md:hidden px-4 pb-3">
+          <div className="text-center">
+            <div className="text-xs font-medium text-text-secondary mb-1">
+              {currentStepData.shortLabel}
+            </div>
+            <div className="flex justify-center space-x-1">
+              {steps.map((step) => (
+                <div
+                  key={step.step}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                    step.step <= currentStepData.step
+                      ? "bg-primary"
+                      : "bg-primary-100"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };
