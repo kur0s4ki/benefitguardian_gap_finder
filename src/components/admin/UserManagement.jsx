@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
-import { useRole } from "../../hooks/useRole";
+import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../ui/ToastProvider";
 import { getAvailableRoles, getRoleDisplayName } from "../../utils/roles";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -9,37 +9,31 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
-  const { isAdmin } = useRole();
+  const { userProfile } = useAuth();
   const { addToast } = useToast();
 
   useEffect(() => {
-    if (isAdmin()) {
-      fetchUsers();
-    }
-  }, [isAdmin]);
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log("🔍 Fetching users...");
       const { data, error } = await supabase
         .from("user_profiles")
-        .select(
-          `
-          *,
-          user:user_id (
-            email,
-            created_at,
-            last_sign_in_at
-          )
-        `
-        )
+        .select("*")
         .order("created_at", { ascending: false });
+
+      console.log("📊 Users data:", data);
+      console.log("❌ Users error:", error);
 
       if (error) {
         throw error;
       }
 
       setUsers(data || []);
+      console.log("✅ Users set:", data?.length || 0);
     } catch (error) {
       console.error("Error fetching users:", error);
       addToast("Failed to load users", "error");
@@ -54,7 +48,7 @@ const UserManagement = () => {
       const { error } = await supabase
         .from("user_profiles")
         .update({ role: newRole })
-        .eq("user_id", userId);
+        .eq("id", userId);
 
       if (error) {
         throw error;
@@ -63,7 +57,7 @@ const UserManagement = () => {
       // Update local state
       setUsers(
         users.map((user) =>
-          user.user_id === userId ? { ...user, role: newRole } : user
+          user.id === userId ? { ...user, role: newRole } : user
         )
       );
 
@@ -76,7 +70,13 @@ const UserManagement = () => {
     }
   };
 
-  if (!isAdmin()) {
+  // Show loading while checking auth
+  if (!userProfile) {
+    return <LoadingSpinner message="Checking permissions..." />;
+  }
+
+  // Check admin access
+  if (userProfile.role !== "admin") {
     return (
       <div className="text-center py-8">
         <p className="text-text-secondary">
@@ -120,7 +120,7 @@ const UserManagement = () => {
                   Joined
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Sign In
+                  Last Updated
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -135,8 +135,7 @@ const UserManagement = () => {
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                           <span className="text-sm font-medium text-primary-600">
-                            {userProfile.user?.email?.charAt(0).toUpperCase() ||
-                              "U"}
+                            {userProfile.email?.charAt(0).toUpperCase() || "U"}
                           </span>
                         </div>
                       </div>
@@ -144,10 +143,10 @@ const UserManagement = () => {
                         <div className="text-sm font-medium text-gray-900">
                           {userProfile.first_name && userProfile.last_name
                             ? `${userProfile.first_name} ${userProfile.last_name}`
-                            : userProfile.user?.email || "Unknown User"}
+                            : userProfile.email || "Unknown User"}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {userProfile.user?.email}
+                          {userProfile.email}
                         </div>
                       </div>
                     </div>
@@ -166,26 +165,22 @@ const UserManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {userProfile.user?.created_at
-                      ? new Date(
-                          userProfile.user.created_at
-                        ).toLocaleDateString()
+                    {userProfile.created_at
+                      ? new Date(userProfile.created_at).toLocaleDateString()
                       : "Unknown"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {userProfile.user?.last_sign_in_at
-                      ? new Date(
-                          userProfile.user.last_sign_in_at
-                        ).toLocaleDateString()
+                    {userProfile.updated_at
+                      ? new Date(userProfile.updated_at).toLocaleDateString()
                       : "Never"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <select
                       value={userProfile.role}
                       onChange={(e) =>
-                        updateUserRole(userProfile.user_id, e.target.value)
+                        updateUserRole(userProfile.id, e.target.value)
                       }
-                      disabled={updating === userProfile.user_id}
+                      disabled={updating === userProfile.id}
                       className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       {getAvailableRoles().map((role) => (

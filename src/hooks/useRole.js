@@ -16,13 +16,6 @@ export const useRole = () => {
 
   const userRole = userProfile?.role || ROLES.USER;
 
-  // Debug logging
-  console.log("🔍 useRole Debug:");
-  console.log("  - user:", user?.email);
-  console.log("  - userProfile:", userProfile);
-  console.log("  - userRole:", userRole);
-  console.log("  - loading:", loading);
-
   return {
     // Current user role
     role: userRole,
@@ -32,16 +25,7 @@ export const useRole = () => {
 
     // Role checks
     hasRole: (requiredRole) => hasRole(userRole, requiredRole),
-    isAdmin: () => {
-      const result = isAdmin(userRole);
-      console.log(
-        "🔑 isAdmin() called - userRole:",
-        userRole,
-        "result:",
-        result
-      );
-      return result;
-    },
+    isAdmin: () => isAdmin(userRole),
     isPremium: () => isPremium(userRole),
     isBasicUser: () => isBasicUser(userRole),
 

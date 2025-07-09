@@ -102,19 +102,46 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log("🔍 Fetching user profile for:", userId);
 
-      // For now, let's create a mock admin profile to test the functionality
-      console.log("📝 Creating mock admin profile for testing");
-      const mockProfile = {
-        id: userId,
-        user_id: userId,
-        role: "admin",
-        email: "admin@publicserv.com",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      // Query the user_profiles table using the user ID
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-      console.log("✅ Using mock admin profile:", mockProfile);
-      setUserProfile(mockProfile);
+      if (error) {
+        console.error("❌ Error fetching user profile:", error);
+
+        // If no profile exists, create a default one
+        if (error.code === "PGRST116") {
+          console.log("📝 Creating default user profile");
+          const { data: newProfile, error: createError } = await supabase
+            .from("user_profiles")
+            .insert([
+              {
+                id: userId,
+                role: "user", // Default role
+                email: user?.email || "",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error("❌ Error creating user profile:", createError);
+            return;
+          }
+
+          console.log("✅ Created user profile:", newProfile);
+          setUserProfile(newProfile);
+        }
+        return;
+      }
+
+      console.log("✅ Fetched user profile:", data);
+      setUserProfile(data);
     } catch (error) {
       console.error("❌ Exception fetching user profile:", error);
     }
