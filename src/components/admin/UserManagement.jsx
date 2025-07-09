@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useRole } from "../../hooks/useRole";
 import { useToast } from "../ui/ToastProvider";
 import { getAvailableRoles, getRoleDisplayName } from "../../utils/roles";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -29,7 +29,7 @@ const UserManagement = () => {
 
   const [loading] = useState(false);
   const [updating, setUpdating] = useState(null);
-  const { userProfile } = useAuth();
+  const { isAdmin, loading: authLoading, isAuthenticated } = useRole();
   const { addToast } = useToast();
 
   const fetchUsers = () => {
@@ -50,12 +50,12 @@ const UserManagement = () => {
   };
 
   // Show loading while checking auth
-  if (!userProfile) {
+  if (authLoading) {
     return <LoadingSpinner message="Checking permissions..." />;
   }
 
   // Check admin access
-  if (userProfile.role !== "admin") {
+  if (!isAuthenticated || !isAdmin()) {
     return (
       <div className="text-center py-8">
         <p className="text-text-secondary">

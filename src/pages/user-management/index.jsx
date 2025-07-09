@@ -1,40 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { useRole } from "../../hooks/useRole";
 import { useToast } from "../../components/ui/ToastProvider";
 import ProgressHeader from "../../components/ui/ProgressHeader";
 import Icon from "../../components/AppIcon";
+import { supabase } from "../../lib/supabase";
 
 const UserManagement = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isAdmin } = useRole();
+  const { isAdmin, isAuthenticated, loading: authLoading, role } = useRole();
   const { addToast } = useToast();
 
-  // Mock data for template
-  const [users] = useState([
-    {
-      id: "1",
-      email: "admin@example.com",
-      role: "admin",
-      created_at: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "2",
-      email: "user1@example.com",
-      role: "user",
-      created_at: "2025-01-02T00:00:00Z",
-    },
-    {
-      id: "3",
-      email: "user2@example.com",
-      role: "user",
-      created_at: "2025-01-03T00:00:00Z",
-    },
-  ]);
-
-  const [loading] = useState(false);
+  // Real data from database
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -42,10 +21,38 @@ const UserManagement = () => {
     role: "user",
   });
 
-  // Mock refresh function for template
-  const fetchUsers = () => {
-    addToast("Users refreshed (template mode)", "success");
-  };
+  // Fetch users and populate table
+  const fetchUsers = useCallback(async () => {
+    try {
+      setUsersLoading(true);
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        addToast("Failed to fetch users", "error");
+        return;
+      }
+
+      console.log("List of users:", data);
+      setUsers(data || []);
+      addToast("Users refreshed", "success");
+    } catch (error) {
+      console.error("Exception fetching users:", error);
+      addToast("Failed to fetch users", "error");
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [addToast]);
+
+  // Load users on page load
+  useEffect(() => {
+    if (isAuthenticated && role === "admin") {
+      fetchUsers();
+    }
+  }, [isAuthenticated, role, fetchUsers]);
 
   // Mock add user function for template
   const handleAddUser = (e) => {
@@ -64,8 +71,34 @@ const UserManagement = () => {
     }, 1000);
   };
 
-  // Redirect if not admin
-  if (!user || !isAdmin()) {
+  // Show loading while checking authentication and role
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ProgressHeader currentStep={1} profession="teacher" />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Icon
+                name="Loader"
+                size={32}
+                className="text-primary-600 animate-spin"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
+              Checking Permissions
+            </h1>
+            <p className="text-text-secondary">
+              Please wait while we verify your access...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin()) {
     return (
       <div className="min-h-screen bg-background">
         <ProgressHeader currentStep={1} profession="teacher" />
@@ -82,10 +115,14 @@ const UserManagement = () => {
               are required.
             </p>
             <button
-              onClick={() => navigate("/profession-selection-landing")}
+              onClick={() =>
+                navigate(
+                  isAuthenticated ? "/profession-selection-landing" : "/login"
+                )
+              }
               className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-700 transition-colors duration-150"
             >
-              Return to Home
+              {isAuthenticated ? "Return to Home" : "Sign In"}
             </button>
           </div>
         </div>
@@ -131,13 +168,13 @@ const UserManagement = () => {
             </button>
             <button
               onClick={fetchUsers}
-              disabled={loading}
+              disabled={usersLoading}
               className="flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50"
             >
               <Icon
                 name="RefreshCw"
                 size={16}
-                className={loading ? "animate-spin" : ""}
+                className={usersLoading ? "animate-spin" : ""}
               />
               Refresh
             </button>
@@ -149,7 +186,7 @@ const UserManagement = () => {
 
         {/* Users Table */}
         <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
-          {loading ? (
+          {usersLoading ? (
             <div className="p-8 text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-text-secondary">Loading users...</p>

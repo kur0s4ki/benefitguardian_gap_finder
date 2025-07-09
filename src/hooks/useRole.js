@@ -12,34 +12,34 @@ import {
  * @returns {Object} Role utilities and checks
  */
 export const useRole = () => {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userRole, loading } = useAuth();
 
-  const userRole = userProfile?.role || ROLES.USER;
+  const currentRole = userRole || ROLES.USER;
 
   return {
     // Current user role
-    role: userRole,
+    role: currentRole,
 
     // Loading state
     loading,
 
     // Role checks
-    hasRole: (requiredRole) => hasRole(userRole, requiredRole),
-    isAdmin: () => isAdmin(userRole),
-    isPremium: () => isPremium(userRole),
-    isBasicUser: () => isBasicUser(userRole),
+    hasRole: (requiredRole) => hasRole(currentRole, requiredRole),
+    isAdmin: () => isAdmin(currentRole),
+    isPremium: () => isPremium(currentRole),
+    isBasicUser: () => isBasicUser(currentRole),
 
     // Specific permission checks
-    canAccessPremiumFeatures: () => isPremium(userRole),
-    canAccessAdminPanel: () => isAdmin(userRole),
-    canManageUsers: () => isAdmin(userRole),
-    canViewFullReports: () => isPremium(userRole),
-    canAccessGapCalculator: () => isPremium(userRole),
+    canAccessPremiumFeatures: () => isPremium(currentRole),
+    canAccessAdminPanel: () => isAdmin(currentRole),
+    canManageUsers: () => isAdmin(currentRole),
+    canViewFullReports: () => isPremium(currentRole),
+    canAccessGapCalculator: () => isPremium(currentRole),
 
     // User info
     isAuthenticated: !!user,
     userId: user?.id,
     userEmail: user?.email,
-    userProfile,
+    userProfile: { role: currentRole }, // Backward compatibility
   };
 };
