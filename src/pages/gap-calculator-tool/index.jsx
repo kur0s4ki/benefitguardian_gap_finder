@@ -4,8 +4,8 @@ import ProgressHeader from "components/ui/ProgressHeader";
 import BackNavigation from "components/ui/BackNavigation";
 import ResultsNavigation from "components/ui/ResultsNavigation";
 import ConversionFooter from "components/ui/ConversionFooter";
-import PublicAccessModal from "components/auth/PublicAccessModal";
-import { useAuth } from "contexts/AuthContext";
+import { useAssessment } from "contexts/AssessmentContext";
+
 import Icon from "components/AppIcon";
 import GapSummaryCard from "./components/GapSummaryCard";
 import InteractiveCalculator from "./components/InteractiveCalculator";
@@ -14,21 +14,9 @@ import ScenarioComparison from "./components/ScenarioComparison";
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPublic } = useAuth();
-  const [showAccessModal, setShowAccessModal] = useState(false);
+  const { userData: contextUserData, hasValidAssessment } = useAssessment();
 
-  // Block access for public users with modal instead of redirect
-  useEffect(() => {
-    if (isPublic) {
-      setShowAccessModal(true);
-    }
-  }, [isPublic]);
 
-  const handleCloseModal = () => {
-    setShowAccessModal(false);
-    // Navigate back to results dashboard
-    navigate("/dynamic-results-dashboard");
-  };
 
   const [activeTab, setActiveTab] = useState("calculator");
   const [savedScenarios, setSavedScenarios] = useState([]);
@@ -48,37 +36,18 @@ const GapCalculatorTool = () => {
     // Check if we have data from navigation state (from results dashboard)
     if (location.state?.userData) {
       setUserData(location.state.userData);
+    } else if (hasValidAssessment() && contextUserData) {
+      // Fallback to context data if available
+      setUserData(contextUserData);
     } else {
-      // If no navigation state, redirect to assessment
-      navigate("/dynamic-results-dashboard");
+      // If no data available, redirect to start assessment
+      navigate("/");
       return;
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, hasValidAssessment, contextUserData]);
 
-  // Load saved scenarios from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("gapCalculatorScenarios");
-      if (saved) {
-        const parsedScenarios = JSON.parse(saved);
-        setSavedScenarios(parsedScenarios);
-      }
-    } catch (error) {
-      console.warn("Error loading saved scenarios:", error);
-    }
-  }, []);
-
-  // Save scenarios to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "gapCalculatorScenarios",
-        JSON.stringify(savedScenarios)
-      );
-    } catch (error) {
-      console.warn("Error saving scenarios:", error);
-    }
-  }, [savedScenarios]);
+  // Note: Scenarios are now stored in memory only for this session
+  // Future enhancement: Save scenarios to user profile in database
 
   if (!userData) {
     return (
@@ -321,7 +290,12 @@ const GapCalculatorTool = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center mb-4">
               <button
-                onClick={() => navigate("/dynamic-results-dashboard")}
+                onClick={() => navigate("/dynamic-results-dashboard", {
+                  state: {
+                    calculatedResults: location.state?.calculatedResults,
+                    userData: userData
+                  }
+                })}
                 className="flex items-center gap-2 px-4 py-3 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150 text-sm sm:text-base font-medium min-h-[44px]"
               >
                 <Icon name="ChevronLeft" size={18} />
@@ -526,15 +500,7 @@ const GapCalculatorTool = () => {
 
       <ConversionFooter />
 
-             {showAccessModal && (
-         <PublicAccessModal 
-           isOpen={showAccessModal}
-           onClose={handleCloseModal}
-           feature="Gap Calculator Tool"
-           title="Gap Calculator Access Required"
-           description="The Gap Calculator Tool is available to logged-in users only. Sign in to explore personalized scenarios and close your retirement gaps."
-         />
-       )}
+
     </div>
   );
 };

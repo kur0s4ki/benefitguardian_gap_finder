@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Icon from "components/AppIcon";
 import ProfessionCard from "./components/ProfessionCard";
 import ProgressIndicator from "./components/ProgressIndicator";
-import AccessSelectionModal from "components/auth/AccessSelectionModal";
-import { useAuth } from "contexts/AuthContext";
 
 const ProfessionSelectionLanding = () => {
   const navigate = useNavigate();
-  const { setPublicAccess, isPublic } = useAuth();
   const [selectedProfession, setSelectedProfession] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showAccessModal, setShowAccessModal] = useState(false);
 
   const professions = [
     {
@@ -63,70 +59,16 @@ const ProfessionSelectionLanding = () => {
 
     setSelectedProfession(profession);
 
-    // Only show access selection modal for public users
-    // Authenticated users should proceed directly
-    if (isPublic) {
-      setShowAccessModal(true);
-    } else {
-      // User is authenticated, proceed directly to next step
-      setIsTransitioning(true);
-      setTimeout(() => {
-        navigate("/service-profile-collection", {
-          state: {
-            profession: profession.id,
-          },
-        });
-      }, 800);
-    }
-  };
-
-  // Modal handlers
-  const handlePublicAccess = () => {
-    setPublicAccess();
-    setShowAccessModal(false);
-
-    // Continue with navigation
+    // Proceed directly to next step
     setIsTransitioning(true);
     setTimeout(() => {
       navigate("/service-profile-collection", {
         state: {
-          profession: selectedProfession.id,
+          profession: profession.id,
         },
       });
     }, 800);
   };
-
-  const handleAuthenticatedAccess = () => {
-    setShowAccessModal(false);
-
-    // Navigate to login with profession data
-    navigate("/login", {
-      state: {
-        from: { pathname: "/service-profile-collection" },
-        returnAfterLogin: true,
-        profession: selectedProfession.id,
-      },
-    });
-  };
-
-  // Check if user is returning from login and should proceed
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const returnAfterLogin = urlParams.get("returnAfterLogin");
-    const profession = urlParams.get("profession");
-
-    if (returnAfterLogin === "true" && profession) {
-      // User returned from login, proceed directly
-      setIsTransitioning(true);
-      setTimeout(() => {
-        navigate("/service-profile-collection", {
-          state: {
-            profession: profession,
-          },
-        });
-      }, 800);
-    }
-  }, [navigate]);
 
   // Animation variants
   const containerVariants = {
@@ -260,13 +202,7 @@ const ProfessionSelectionLanding = () => {
         </motion.div>
       )}
 
-      {/* Access Selection Modal */}
-      <AccessSelectionModal
-        isOpen={showAccessModal}
-        onSelectPublic={handlePublicAccess}
-        onSelectAuthenticated={handleAuthenticatedAccess}
-        showCloseButton={false}
-      />
+
     </div>
   );
 };

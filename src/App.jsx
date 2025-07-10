@@ -1,14 +1,14 @@
 import React from "react";
 import Routes from "./Routes";
 import { ToastProvider } from "components/ui/ToastProvider";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AssessmentProvider } from "contexts/AssessmentContext";
 
 function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
+      <AssessmentProvider>
         <Routes />
-      </AuthProvider>
+      </AssessmentProvider>
     </ToastProvider>
   );
 }

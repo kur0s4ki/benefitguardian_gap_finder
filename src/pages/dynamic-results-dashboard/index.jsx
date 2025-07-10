@@ -2,11 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
-import PublicVersionBanner from "components/ui/PublicVersionBanner";
-import PublicResultsMessage from "components/ui/PublicResultsMessage";
-import PublicAccessModal from "components/auth/PublicAccessModal";
-import { useAuth } from "contexts/AuthContext";
+
 import { getRiskLevel } from "utils/riskUtils";
+import { useAssessment } from "contexts/AssessmentContext";
 
 import RiskGauge from "./components/RiskGauge";
 import GapAnalysisCard from "./components/GapAnalysisCard";
@@ -16,37 +14,33 @@ import CallToActionSection from "./components/CallToActionSection";
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPublic } = useAuth();
+  const { userData, calculatedResults: contextResults, hasValidAssessment, clearAssessmentData } = useAssessment();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
 
-  // Load data from navigation state or localStorage
+  // Load data from navigation state or context
   useEffect(() => {
     try {
       // Check if we have calculated results from navigation state
       if (location.state?.calculatedResults) {
         setCalculatedResults(location.state.calculatedResults);
+      } else if (hasValidAssessment()) {
+        // Fallback to context data if available
+        setCalculatedResults(contextResults);
       } else {
-        // Try to load from localStorage
-        const storedResults = localStorage.getItem("calculatedResults");
-        if (storedResults) {
-          setCalculatedResults(JSON.parse(storedResults));
-        } else {
-          // If no stored data, redirect to start
-          setCalculationError(
-            "No assessment data found. Please complete the assessment first."
-          );
-          return;
-        }
+        // If no data available, redirect to start
+        setCalculationError(
+          "No assessment data found. Please complete the assessment first."
+        );
+        return;
       }
     } catch (error) {
       console.error("Error loading results:", error);
       setCalculationError(error.message);
     }
-  }, [location.state]);
+  }, [location.state, contextResults, hasValidAssessment]);
 
   const professionThemes = {
     teacher: {
@@ -108,12 +102,6 @@ const DynamicResultsDashboard = () => {
   );
 
   const handleNavigateToCalculator = useCallback(() => {
-    // Block access for public users
-    if (isPublic) {
-      navigate("/login");
-      return;
-    }
-
     // Validate calculatedResults before transformation
     if (!calculatedResults) {
       console.error("No calculated results available for navigation");
@@ -182,12 +170,6 @@ const DynamicResultsDashboard = () => {
   }, [calculatedResults, navigate]);
 
   const handleEmailReport = useCallback(async () => {
-    // Check if user is public and show modal instead of navigating
-    if (isPublic) {
-      setShowEmailModal(true);
-      return;
-    }
-
     // Validate calculatedResults before processing
     if (!calculatedResults) {
       console.error("No calculated results available for email report");
@@ -244,7 +226,7 @@ const DynamicResultsDashboard = () => {
         projections: projections,
       },
     });
-  }, [calculatedResults, navigate, isPublic]);
+  }, [calculatedResults, navigate]);
 
   const handleBookAudit = useCallback(() => {
     // Calendly integration would go here
@@ -252,9 +234,12 @@ const DynamicResultsDashboard = () => {
     window.open("https://calendly.com/publicserv-wealth", "_blank");
   }, []);
 
-  const handleCloseEmailModal = () => {
-    setShowEmailModal(false);
-  };
+  const handleStartNewAssessment = useCallback(() => {
+    clearAssessmentData();
+    navigate("/");
+  }, [clearAssessmentData, navigate]);
+
+
 
   if (isLoading) {
     return (
@@ -292,12 +277,20 @@ const DynamicResultsDashboard = () => {
               Calculation Error
             </h2>
             <p className="text-text-secondary mb-4">{calculationError}</p>
-            <button
-              onClick={() => navigate("/service-profile-collection")}
-              className="btn-primary px-6 py-2 rounded-lg"
-            >
-              Return to Profile Setup
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleStartNewAssessment}
+                className="btn-primary px-6 py-2 rounded-lg w-full"
+              >
+                Start New Assessment
+              </button>
+              <button
+                onClick={() => navigate("/service-profile-collection")}
+                className="btn-secondary px-6 py-2 rounded-lg w-full"
+              >
+                Return to Profile Setup
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -330,10 +323,7 @@ const DynamicResultsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Public Version Banner */}
-      <PublicVersionBanner />
-
-      <div className={isPublic ? "pt-16" : ""}>
+      <div>
         <ProgressHeader
           currentStep={4}
           profession={calculatedResults.profession}
@@ -466,27 +456,13 @@ const DynamicResultsDashboard = () => {
             </div>
           </div>
 
-          {/* Public Results Message */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="max-w-4xl mx-auto">
-              <PublicResultsMessage />
-            </div>
-          </div>
+
         </main>
 
         <ConversionFooter />
       </div>
 
-      {/* Email Report Access Modal for Public Users */}
-      {showEmailModal && (
-        <PublicAccessModal 
-          isOpen={showEmailModal}
-          onClose={handleCloseEmailModal}
-          feature="Email My Report"
-          title="Report Delivery Access Required"
-          description="Detailed report delivery with personalized recommendations is available to logged-in users only. Sign in to receive your comprehensive retirement gap analysis via email."
-        />
-      )}
+
     </div>
   );
 };

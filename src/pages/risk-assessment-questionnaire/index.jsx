@@ -13,10 +13,12 @@ import {
   validateUserData,
 } from "utils/calculationEngine";
 import { useToast } from "components/ui/ToastProvider";
+import { useAssessment } from "contexts/AssessmentContext";
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { saveAssessmentResults } = useAssessment();
 
   // Get profession from previous step or default
   const [profession, setProfession] = useState("teacher");
@@ -213,13 +215,8 @@ const RiskAssessmentQuestionnaire = () => {
       return;
     }
 
-    // Store results in localStorage for persistence
-    try {
-      localStorage.setItem("calculatedResults", JSON.stringify(results));
-      localStorage.setItem("userData", JSON.stringify(allData));
-    } catch (error) {
-      console.error("Error storing results:", error);
-    }
+    // Save results to context for global access
+    saveAssessmentResults(allData, results);
 
     // Navigate to results with calculated data
     navigate("/dynamic-results-dashboard", {

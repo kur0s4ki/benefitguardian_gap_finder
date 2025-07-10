@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
 import Icon from 'components/AppIcon';
 
 const GapAnalysisCard = ({ 
@@ -9,10 +8,8 @@ const GapAnalysisCard = ({
   emoji, 
   description, 
   riskLevel = 'moderate',
-  delay = 0,
-  showPublicMessage = true
+  delay = 0
 }) => {
-  const { isPublic } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [showAmount, setShowAmount] = useState(false);
   const [animatedAmount, setAnimatedAmount] = useState(0);
@@ -137,31 +134,17 @@ const GapAnalysisCard = ({
       {/* Amount */}
       <div className="mb-4">
         {showAmount ? (
-          isPublic ? (
-            <div>
-              <div className={`text-2xl font-bold ${styles.textColor} transition-all duration-300`}>
-                Gap Identified
-              </div>
-              {showPublicMessage && (
-                <div className="text-sm text-text-secondary mt-2 flex items-center gap-1">
-                  <Icon name="Lock" size={14} className="text-warning" />
-                  <span>Sign in to see exact amount</span>
-                </div>
-              )}
-            </div>
-          ) : (
             <div className={`text-3xl font-bold ${styles.textColor} transition-all duration-300`}>
               {formatAmount(animatedAmount)}
             </div>
-          )
         ) : (
           <div className="text-3xl font-bold text-text-muted">
             Calculating...
           </div>
         )}
-        
+
         <div className="text-sm text-text-secondary mt-1">
-          {isPublic ? 'Analysis Result' : 'Projected Gap'}
+          Projected Gap
         </div>
       </div>
 

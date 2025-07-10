@@ -170,28 +170,12 @@ const ReportDeliveryConfirmation = () => {
   const theme = getProfessionTheme();
 
   const handleDownloadPdf = () => {
-    // Get the original calculation engine results from localStorage
-    try {
-      const originalResults = localStorage.getItem("calculatedResults");
-      if (originalResults) {
-        const parsedResults = JSON.parse(originalResults);
-        downloadFullReport(parsedResults, location.state?.projections || {});
-      } else if (calculatedResults) {
-        // Fallback to transformed data if original not available
-        downloadFullReport(
-          calculatedResults,
-          location.state?.projections || {}
-        );
-      }
-    } catch (error) {
-      console.error("Error accessing calculation results:", error);
-      // Fallback to transformed data
-      if (calculatedResults) {
-        downloadFullReport(
-          calculatedResults,
-          location.state?.projections || {}
-        );
-      }
+    // Use the calculation results from navigation state
+    if (calculatedResults) {
+      downloadFullReport(
+        calculatedResults,
+        location.state?.projections || {}
+      );
     }
   };
 
