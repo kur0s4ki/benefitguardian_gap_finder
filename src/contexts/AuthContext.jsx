@@ -13,96 +13,187 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [accessLevel, setAccessLevel] = useState("public");
   const [loading, setLoading] = useState(true);
+  const [isVerifyingRole, setIsVerifyingRole] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Simple auth state check
+  // Function to verify role from database (prevents duplicate calls)
+  const verifyUserRole = async (userId) => {
+    if (isVerifyingRole) {
+      console.log("🔄 Role verification already in progress, skipping...");
+      return;
+    }
+
+    setIsVerifyingRole(true);
+
+    try {
+      // Shorter timeout for better UX
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database query timeout")), 5000)
+      );
+
+      const queryPromise = supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      const { data: profile, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise,
+      ]);
+
+      if (error) {
+        console.error("❌ Error fetching role:", error);
+        setUserRole(null);
+      } else if (profile?.role) {
+        console.log("✅ Role verified:", profile.role);
+        setUserRole(profile.role);
+      } else {
+        console.log("❌ No role found in database");
+        setUserRole(null);
+      }
+    } catch (dbError) {
+      console.error("❌ Database query exception:", dbError);
+      setUserRole(null);
+    } finally {
+      setIsVerifyingRole(false);
+    }
+  };
+
+  // Secure auth initialization - ALWAYS verify role from database
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session:", session?.user?.email || "No session");
-      setSession(session);
-      setUser(session?.user || null);
-      setAccessLevel(session?.user ? "authenticated" : "public");
-      setLoading(false);
-    });
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        console.log("🔄 Initializing auth...");
+
+        // Get current session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (mounted) {
+          if (session?.user) {
+            console.log("✅ User found:", session.user.email);
+            setUser(session.user);
+            setAccessLevel("authenticated");
+
+            // ALWAYS verify role from database - NEVER trust localStorage
+            await verifyUserRole(session.user.id);
+          } else {
+            console.log("❌ No user session");
+            setUser(null);
+            setUserRole(null);
+            setAccessLevel("public");
+          }
+
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error("❌ Auth init error:", error);
+        if (mounted) {
+          setUser(null);
+          setUserRole(null);
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      }
+    };
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth event:", event, session?.user?.email || "No user");
-        setSession(session);
-        setUser(session?.user || null);
-        setAccessLevel(session?.user ? "authenticated" : "public");
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔄 Auth event:", event);
+
+      if (mounted && isInitialized) {
+        if (session?.user) {
+          setUser(session.user);
+          setAccessLevel("authenticated");
+
+          // ALWAYS verify role from database on auth changes
+          await verifyUserRole(session.user.id);
+        } else {
+          setUser(null);
+          setUserRole(null);
+          setAccessLevel("public");
+        }
+
         setLoading(false);
       }
-    );
+    });
 
-    return () => subscription.unsubscribe();
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signIn = async (email, password) => {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    return { data, error };
-  };
-
-  const signUp = async (email, password) => {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    setLoading(false);
-    return { data, error };
-  };
-
-  const signOut = async () => {
-    console.log("Signing out...");
-    
-    // Clear everything immediately
-    setUser(null);
-    setSession(null);
-    setUserProfile(null);
-    setAccessLevel("public");
-    localStorage.clear();
-    
-    // Let Supabase clean up in background
-    supabase.auth.signOut().catch(err => console.log("Supabase signOut ignored:", err));
-    
-    return { error: null };
-  };
+  // Helper functions
+  const isAuthenticated = () => !!user;
+  const isPublic = () => accessLevel === "public";
 
   const setPublicAccess = () => {
     setAccessLevel("public");
   };
 
-  const isPublic = accessLevel === "public";
-  const isAuthenticated = !!user;
+  const signIn = async (email, password) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      // Don't set loading to false here - let the auth state change handler do it
+      // This prevents race conditions
+      if (error) {
+        setLoading(false);
+      }
+
+      return { data, error };
+    } catch (error) {
+      setLoading(false);
+      return { data: null, error };
+    }
+  };
+
+  const signOut = async () => {
+    console.log("🚪 Signing out...");
+
+    // Clear everything immediately
+    setUser(null);
+    setUserRole(null);
+    setAccessLevel("public");
+    setLoading(false);
+
+    // Clear all localStorage (including Supabase tokens)
+    localStorage.clear();
+
+    // Clear Supabase session
+    await supabase.auth.signOut();
+
+    return { error: null };
+  };
 
   const value = {
     user,
-    session,
-    userProfile,
+    userRole,
     accessLevel,
     loading,
-    isPublic,
     isAuthenticated,
-    signIn,
-    signUp,
-    signOut,
+    isPublic,
     setPublicAccess,
+    signIn,
+    signOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

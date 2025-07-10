@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRole } from "../../hooks/useRole";
@@ -16,6 +16,8 @@ const ProgressHeader = ({
   const { isAdmin } = useRole();
   const { addToast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showManagementDropdown, setShowManagementDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const steps = [
     {
@@ -60,6 +62,12 @@ const ProgressHeader = ({
     steps.find((step) => step.path === location.pathname) || steps[0];
   const progressPercentage = (currentStepData.step / totalSteps) * 100;
 
+  // Check if we're on a management page (not part of the main flow)
+  const isManagementPage = ["/user-management", "/manage-my-profile"].includes(
+    location.pathname
+  );
+  const shouldShowProgress = !isManagementPage;
+
   const handleLogoClick = () => {
     navigate("/profession-selection-landing");
   };
@@ -77,11 +85,48 @@ const ProgressHeader = ({
     }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowManagementDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    await signOut();
-    navigate("/login");
-    setIsLoggingOut(false);
+    try {
+      await signOut();
+      window.location.href = "/login"; // Force full page reload
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/login"; // Force navigation even on error
+    }
+  };
+
+  const handleManagementClick = () => {
+    console.log("🔧 Management dropdown clicked");
+    console.log("👤 Current user:", user?.email);
+    console.log("🔑 isAdmin():", isAdmin());
+    setShowManagementDropdown(!showManagementDropdown);
+  };
+
+  const handleUserManagement = () => {
+    console.log("🏢 Navigating to User Management");
+    setShowManagementDropdown(false);
+    navigate("/user-management");
+  };
+
+  const handleMyProfile = () => {
+    console.log("👤 Navigating to My Profile");
+    setShowManagementDropdown(false);
+    navigate("/manage-my-profile");
   };
 
   const getProfessionTheme = () => {
@@ -126,7 +171,7 @@ const ProgressHeader = ({
           {/* Navigation Section */}
           <div className="flex items-center space-x-4 lg:space-x-6">
             {/* Back Navigation */}
-            {canNavigateBack && (
+            {canNavigateBack && shouldShowProgress && (
               <button
                 onClick={handleBackClick}
                 className="back-button px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
@@ -140,59 +185,88 @@ const ProgressHeader = ({
             )}
 
             {/* Progress Indicator - Mobile */}
-            <div className="flex items-center space-x-3 md:hidden">
-              <div className="text-sm font-medium text-text-secondary">
-                {currentStepData.step}/{totalSteps}
+            {shouldShowProgress && (
+              <div className="flex items-center space-x-3 md:hidden">
+                <div className="text-sm font-medium text-text-secondary">
+                  {currentStepData.step}/{totalSteps}
+                </div>
+                <div className="w-16 h-2 bg-primary-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-16 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Progress Indicator - Desktop */}
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-text-secondary">
-                  Step {currentStepData.step} of {totalSteps}:
-                </span>
-                <span className="text-sm font-semibold text-primary">
-                  {currentStepData.label}
-                </span>
+            {shouldShowProgress && (
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-text-secondary">
+                    Step {currentStepData.step} of {totalSteps}:
+                  </span>
+                  <span className="text-sm font-semibold text-primary">
+                    {currentStepData.label}
+                  </span>
+                </div>
+                <div className="w-24 lg:w-32 h-2 bg-primary-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-24 lg:w-32 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Authentication Section */}
             {user ? (
               <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border">
-                <div className="hidden lg:flex items-center gap-2">
-                  <Icon name="User" size={14} className="text-text-secondary" />
-                  <span className="text-xs text-text-secondary">
-                    {user.email}
-                  </span>
-                </div>
-
-                {/* Admin Dashboard Link */}
-                {isAdmin() && (
+                {/* Management Dropdown */}
+                <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => navigate("/admin")}
+                    onClick={handleManagementClick}
                     className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-primary-50 text-primary hover:text-primary-700 transition-colors duration-150"
-                    aria-label="Admin Dashboard"
+                    aria-label="Management Options"
                   >
                     <Icon name="Settings" size={14} />
-                    <span className="text-xs font-medium hidden xl:inline">
-                      Admin
+                    <span className="text-xs font-medium hidden lg:inline">
+                      Management
                     </span>
+                    <Icon
+                      name="ChevronDown"
+                      size={12}
+                      className={`transition-transform duration-200 ${
+                        showManagementDropdown ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
-                )}
+
+                  {/* Dropdown Menu */}
+                  {showManagementDropdown && (
+                    <div className="absolute right-0 mt-1 w-48 bg-white border border-border rounded-md shadow-lg z-50">
+                      <div className="py-1">
+                        {isAdmin() ? (
+                          <button
+                            onClick={handleUserManagement}
+                            className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-primary-50 transition-colors duration-150 flex items-center gap-2"
+                          >
+                            <Icon name="Users" size={14} />
+                            User Management
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleMyProfile}
+                            className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-primary-50 transition-colors duration-150 flex items-center gap-2"
+                          >
+                            <Icon name="User" size={14} />
+                            Manage My Profile
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <button
                   onClick={handleLogout}
@@ -237,25 +311,27 @@ const ProgressHeader = ({
       </div>
 
       {/* Mobile Step Indicator */}
-      <div className="md:hidden px-4 pb-3">
-        <div className="text-center">
-          <div className="text-xs font-medium text-text-secondary mb-1">
-            {currentStepData.shortLabel}
-          </div>
-          <div className="flex justify-center space-x-1">
-            {steps.map((step) => (
-              <div
-                key={step.step}
-                className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                  step.step <= currentStepData.step
-                    ? "bg-primary"
-                    : "bg-primary-100"
-                }`}
-              />
-            ))}
+      {shouldShowProgress && (
+        <div className="md:hidden px-4 pb-3">
+          <div className="text-center">
+            <div className="text-xs font-medium text-text-secondary mb-1">
+              {currentStepData.shortLabel}
+            </div>
+            <div className="flex justify-center space-x-1">
+              {steps.map((step) => (
+                <div
+                  key={step.step}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                    step.step <= currentStepData.step
+                      ? "bg-primary"
+                      : "bg-primary-100"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };
