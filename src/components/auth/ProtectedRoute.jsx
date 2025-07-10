@@ -3,18 +3,18 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import LoadingSpinner from '../ui/LoadingSpinner'
 
-const ProtectedRoute = ({ 
-  children, 
-  requireAuth = true, 
-  requireApproval = true, 
+const ProtectedRoute = ({
+  children,
+  requireAuth = true,
+  requireApproval = true,
   requireAdmin = false,
   redirectTo = '/login'
 }) => {
-  const { user, userProfile, loading, initialized, isAuthenticated, isApproved, isAdmin } = useAuth()
+  const { user, userProfile, loading, initialized, isAuthenticated, isApproved, isAdmin, isCreatingUser } = useAuth()
   const location = useLocation()
 
-  // Show loading while auth is initializing
-  if (!initialized || loading) {
+  // Show loading while auth is initializing or profile is loading
+  if (!initialized || loading || (isAuthenticated() && userProfile === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner />
@@ -28,7 +28,8 @@ const ProtectedRoute = ({
   }
 
   // If user is authenticated but not approved, redirect to pending approval
-  if (requireAuth && isAuthenticated() && requireApproval && !isApproved()) {
+  // Skip this check if admin is currently creating a user
+  if (requireAuth && isAuthenticated() && requireApproval && !isApproved() && !isCreatingUser) {
     return <Navigate to="/pending-approval" replace />
   }
 

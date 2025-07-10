@@ -4,8 +4,17 @@ import { useAuth } from '../../contexts/AuthContext'
 import Icon from '../../components/AppIcon'
 
 const Dashboard = () => {
-  const { user, userProfile, signOut, isAdmin } = useAuth()
+  const { user, userProfile, signOut, isAdmin, loading } = useAuth()
   const navigate = useNavigate()
+
+  // Show loading while profile is being fetched to prevent flash
+  if (userProfile === null && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   const handleSignOut = async () => {
     await signOut()

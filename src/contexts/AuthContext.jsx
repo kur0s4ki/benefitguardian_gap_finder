@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
 
   // Get user profile from database
   const getUserProfile = async (userId) => {
@@ -123,18 +124,17 @@ export const AuthProvider = ({ children }) => {
 
         console.log('Auth state changed:', event, session?.user?.id)
 
+        // Skip auth state changes when admin is creating a user
+        if (isCreatingUser) {
+          console.log('Skipping auth state change - admin creating user')
+          return
+        }
+
         if (session?.user) {
           setUser(session.user)
-          // Create default profile for immediate access
-          const defaultProfile = {
-            id: session.user.id,
-            full_name: 'Admin User',
-            email: session.user.email,
-            role: 'admin',
-            is_approved: true
-          }
-          setUserProfile(defaultProfile)
-          // Try to get real profile in background
+          // Don't set a default profile - wait for real profile to load
+          setUserProfile(null)
+          // Get real profile from database
           getUserProfile(session.user.id).then(profile => {
             if (profile && mounted) {
               setUserProfile(profile)
@@ -231,7 +231,9 @@ export const AuthProvider = ({ children }) => {
     isApproved,
     isAdmin,
     canAccessDashboard,
-    getUserProfile
+    getUserProfile,
+    setIsCreatingUser,
+    isCreatingUser
   }
 
   return (

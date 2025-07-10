@@ -6,9 +6,10 @@ import { supabase } from '../../../lib/supabase'
 import { UserRoles } from '../../../types/supabase'
 import Icon from '../../../components/AppIcon'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
+import AddUserModal from '../../../components/admin/AddUserModal'
 
 const UserManagement = () => {
-  const { user, userProfile, signOut, isAdmin } = useAuth()
+  const { user, userProfile, signOut, isAdmin, setIsCreatingUser } = useAuth()
   const navigate = useNavigate()
   const { addToast } = useToast()
   
@@ -16,6 +17,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all') // all, pending, approved
+  const [showAddUserModal, setShowAddUserModal] = useState(false)
 
   // Redirect if not admin
   useEffect(() => {
@@ -74,21 +76,83 @@ const UserManagement = () => {
   // Update user role
   const updateUserRole = async (userId, role) => {
     try {
+      const isAdmin = role === UserRoles.ADMIN
       const { error } = await supabase
         .from('user_profiles')
-        .update({ role })
+        .update({ is_admin: isAdmin })
         .eq('id', userId)
 
       if (error) throw error
 
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, role } : user
+      setUsers(users.map(user =>
+        user.id === userId ? { ...user, is_admin: isAdmin } : user
       ))
 
       addToast('User role updated successfully', 'success')
     } catch (error) {
       console.error('Error updating user role:', error)
       addToast('Failed to update user role', 'error')
+    }
+  }
+
+  // Add new user using admin.createUser()
+  const handleAddUser = async (userData) => {
+    try {
+      // Set flag to prevent auth state changes from affecting admin session
+      setIsCreatingUser(true)
+
+      // Create admin Supabase client with service role key
+      const { createClient } = await import('@supabase/supabase-js')
+      const adminSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+
+      // Create user using admin API - this won't auto-login the user
+      const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        email_confirm: true, // Auto-confirm email for admin-created users
+        user_metadata: {
+          full_name: userData.fullName
+        }
+      })
+
+      if (authError) throw authError
+
+      if (authData.user) {
+        // Create/update user profile using admin client
+        const { error: profileError } = await adminSupabase
+          .from('user_profiles')
+          .upsert({
+            id: authData.user.id,
+            full_name: userData.fullName,
+            email: userData.email,
+            role: userData.role,
+            is_approved: true // Admin-created users are auto-approved
+          })
+
+        if (profileError) throw profileError
+
+        // Refresh users list
+        await fetchUsers()
+
+        addToast('User created successfully', 'success')
+        setShowAddUserModal(false)
+      }
+    } catch (error) {
+      console.error('Error creating user:', error)
+      addToast(`Failed to create user: ${error.message}`, 'error')
+      throw error // Re-throw to let modal handle loading state
+    } finally {
+      // Always clear the flag, even if there was an error
+      setIsCreatingUser(false)
     }
   }
 
@@ -107,6 +171,15 @@ const UserManagement = () => {
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
+  }
+
+  // Show loading while profile is being fetched
+  if (userProfile === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingSpinner />
+      </div>
+    )
   }
 
   if (!isAdmin()) {
@@ -151,10 +224,21 @@ const UserManagement = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-text-primary mb-2">User Management</h2>
-          <p className="text-text-secondary">
-            Approve new users and manage user accounts and permissions.
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-3xl font-bold text-text-primary mb-2">User Management</h2>
+              <p className="text-text-secondary">
+                Approve new users and manage user accounts and permissions.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddUserModal(true)}
+              className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Icon name="UserPlus" size={18} />
+              Add User
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -276,6 +360,13 @@ const UserManagement = () => {
           </div>
         )}
       </main>
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={showAddUserModal}
+        onClose={() => setShowAddUserModal(false)}
+        onSubmit={handleAddUser}
+      />
     </div>
   )
 }
