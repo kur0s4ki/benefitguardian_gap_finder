@@ -83,44 +83,6 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* Gap Calculator Card */}
-          <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 bg-secondary-100 rounded-lg flex items-center justify-center">
-                <Icon name="TrendingUp" size={24} className="text-secondary-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-text-primary">Gap Calculator</h3>
-            </div>
-            <p className="text-text-secondary mb-4">
-              Use advanced tools to calculate and plan for closing your retirement gaps.
-            </p>
-            <button
-              onClick={() => navigate('/gap-calculator-tool')}
-              className="btn-secondary w-full py-2 rounded-md font-medium"
-            >
-              Open Calculator
-            </button>
-          </div>
-
-          {/* Profile Management Card */}
-          <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 bg-accent-100 rounded-lg flex items-center justify-center">
-                <Icon name="User" size={24} className="text-accent-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-text-primary">My Profile</h3>
-            </div>
-            <p className="text-text-secondary mb-4">
-              Manage your account settings and personal information.
-            </p>
-            <button
-              onClick={() => navigate('/manage-my-profile')}
-              className="btn-secondary w-full py-2 rounded-md font-medium"
-            >
-              Manage Profile
-            </button>
-          </div>
-
           {/* Admin Panel Card - Only for Admins */}
           {isAdmin() && (
             <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">

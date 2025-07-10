@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "./ToastProvider";
+import { useAuth } from "../../contexts/AuthContext";
 import Icon from "../AppIcon";
 
 const ProgressHeader = ({
@@ -11,6 +12,7 @@ const ProgressHeader = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
+  const { isAdmin, signOut, userProfile } = useAuth();
 
   const steps = [
     {
@@ -90,6 +92,15 @@ const ProgressHeader = ({
       "government-employee": "text-primary",
     };
     return themes[profession] || "text-primary";
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
+  const handleDashboard = () => {
+    navigate('/dashboard');
   };
 
   return (
@@ -172,6 +183,33 @@ const ProgressHeader = ({
               </div>
             )}
 
+            {/* Admin Controls */}
+            {isAdmin() && (
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleDashboard}
+                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary-50 rounded-md transition-colors duration-150"
+                >
+                  <Icon name="LayoutDashboard" size={16} />
+                  <span className="hidden lg:inline">Dashboard</span>
+                </button>
+
+                <div className="hidden md:flex items-center space-x-2 text-sm text-text-secondary">
+                  <span>{userProfile?.full_name || 'Admin'}</span>
+                  <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
+                    Admin
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-text-secondary hover:bg-secondary-50 rounded-md transition-colors duration-150"
+                >
+                  <Icon name="LogOut" size={16} />
+                  <span className="hidden lg:inline">Sign Out</span>
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
