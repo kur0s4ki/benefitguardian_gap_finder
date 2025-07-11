@@ -180,7 +180,7 @@ const RiskAssessmentQuestionnaire = () => {
     // Calculate results and navigate with data
     let results;
     try {
-      results = calculateBenefitGaps({
+      results = await calculateBenefitGaps({
         profession: allData.profession,
         yearsOfService: allData.serviceProfile.yearsOfService,
         pensionEstimate: allData.serviceProfile.pensionEstimate,

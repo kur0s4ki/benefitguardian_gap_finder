@@ -220,6 +220,13 @@ const UserManagement = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/admin/configuration')}
+                className="btn-secondary px-3 py-1 text-sm rounded flex items-center gap-2"
+              >
+                <Icon name="Settings" size={14} />
+                Configuration
+              </button>
               <span className="text-sm text-text-secondary">
                 {userProfile?.full_name || user?.email}
               </span>

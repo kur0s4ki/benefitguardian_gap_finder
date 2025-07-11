@@ -16,6 +16,9 @@ import Register from "pages/register";
 import PendingApproval from "pages/pending-approval";
 import Dashboard from "pages/dashboard";
 import UserManagement from "pages/admin/user-management";
+import ConfigurationDashboard from "pages/admin/configuration";
+import ConfigurationTest from "pages/admin/configuration/test";
+import ConfigurationVerification from "pages/admin/configuration/verification";
 
 // Assessment pages
 import ProfessionSelectionLanding from "pages/profession-selection-landing";
@@ -58,6 +61,21 @@ const Routes = () => {
           <Route path="/admin/user-management" element={
             <ProtectedRoute requireAdmin={true}>
               <UserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/configuration" element={
+            <ProtectedRoute requireAdmin={true}>
+              <ConfigurationDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/configuration/test" element={
+            <ProtectedRoute requireAdmin={true}>
+              <ConfigurationTest />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/configuration/verification" element={
+            <ProtectedRoute requireAdmin={true}>
+              <ConfigurationVerification />
             </ProtectedRoute>
           } />
 

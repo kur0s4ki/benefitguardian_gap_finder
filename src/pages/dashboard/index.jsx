@@ -29,6 +29,10 @@ const Dashboard = () => {
     navigate('/admin/user-management')
   }
 
+  const handleConfiguration = () => {
+    navigate('/admin/configuration')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -92,25 +96,45 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* Admin Panel Card - Only for Admins */}
+          {/* Admin Panel Cards - Only for Admins */}
           {isAdmin() && (
-            <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 bg-warning-100 rounded-lg flex items-center justify-center">
-                  <Icon name="Settings" size={24} className="text-warning-600" />
+            <>
+              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 bg-warning-100 rounded-lg flex items-center justify-center">
+                    <Icon name="Settings" size={24} className="text-warning-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-text-primary">User Management</h3>
                 </div>
-                <h3 className="text-lg font-semibold text-text-primary">User Management</h3>
+                <p className="text-text-secondary mb-4">
+                  Approve new users and manage user accounts and permissions.
+                </p>
+                <button
+                  onClick={handleUserManagement}
+                  className="btn-primary w-full py-2 rounded-md font-medium"
+                >
+                  Manage Users
+                </button>
               </div>
-              <p className="text-text-secondary mb-4">
-                Approve new users and manage user accounts and permissions.
-              </p>
-              <button
-                onClick={handleUserManagement}
-                className="btn-primary w-full py-2 rounded-md font-medium"
-              >
-                Manage Users
-              </button>
-            </div>
+
+              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                    <Icon name="Sliders" size={24} className="text-secondary-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-text-primary">Configuration</h3>
+                </div>
+                <p className="text-text-secondary mb-4">
+                  Configure system settings, calculations, and assessment parameters.
+                </p>
+                <button
+                  onClick={handleConfiguration}
+                  className="btn-primary w-full py-2 rounded-md font-medium"
+                >
+                  Configure System
+                </button>
+              </div>
+            </>
           )}
         </div>
       </main>

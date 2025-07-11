@@ -5,6 +5,7 @@ import BackNavigation from "components/ui/BackNavigation";
 import ResultsNavigation from "components/ui/ResultsNavigation";
 import ConversionFooter from "components/ui/ConversionFooter";
 import { useAssessment } from "contexts/AssessmentContext";
+import { configService } from "../../services/configurationService";
 
 import Icon from "components/AppIcon";
 import GapSummaryCard from "./components/GapSummaryCard";
@@ -92,7 +93,7 @@ const GapCalculatorTool = () => {
     },
   ];
 
-  const calculateProjections = (scenario) => {
+  const calculateProjections = async (scenario) => {
     // Add validation for userData and totalGap
     if (!userData || !userData.totalGap || userData.totalGap <= 0) {
       return {
@@ -145,12 +146,22 @@ const GapCalculatorTool = () => {
       };
     }
 
-    // Corrected annual growth rates (more realistic)
-    const annualGrowthRates = {
+    // Get growth rates from configuration with fallback
+    let annualGrowthRates = {
       conservative: 0.05, // 5% annual
       moderate: 0.07, // 7% annual
       aggressive: 0.09, // 9% annual
     };
+
+    // Try to get rates from configuration
+    try {
+      const config = await configService.getConfiguration();
+      if (config.INVESTMENT_GROWTH_RATES) {
+        annualGrowthRates = config.INVESTMENT_GROWTH_RATES;
+      }
+    } catch (error) {
+      console.warn('Failed to load investment growth rates from config, using fallback:', error);
+    }
 
     const annualRate = annualGrowthRates[scenario.riskTolerance];
     const monthlyRate = annualRate / 12;
