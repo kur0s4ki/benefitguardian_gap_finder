@@ -19,6 +19,10 @@ const UserManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all') // all, pending, approved
   const [showAddUserModal, setShowAddUserModal] = useState(false)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [usersPerPage, setUsersPerPage] = useState(10)
+
   // Redirect if not admin
   useEffect(() => {
     if (!isAdmin()) {
@@ -76,16 +80,15 @@ const UserManagement = () => {
   // Update user role
   const updateUserRole = async (userId, role) => {
     try {
-      const isAdmin = role === UserRoles.ADMIN
       const { error } = await supabase
         .from('user_profiles')
-        .update({ is_admin: isAdmin })
+        .update({ role: role })
         .eq('id', userId)
 
       if (error) throw error
 
       setUsers(users.map(user =>
-        user.id === userId ? { ...user, is_admin: isAdmin } : user
+        user.id === userId ? { ...user, role: role } : user
       ))
 
       addToast('User role updated successfully', 'success')
@@ -160,13 +163,24 @@ const UserManagement = () => {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesStatus = filterStatus === 'all' ||
                          (filterStatus === 'pending' && !user.is_approved) ||
                          (filterStatus === 'approved' && user.is_approved)
-    
+
     return matchesSearch && matchesStatus
   })
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
+  const startIndex = (currentPage - 1) * usersPerPage
+  const endIndex = startIndex + usersPerPage
+  const currentUsers = filteredUsers.slice(startIndex, endIndex)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterStatus, usersPerPage])
 
   const handleSignOut = async () => {
     await signOut()
@@ -253,16 +267,18 @@ const UserManagement = () => {
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
-            <div>
+            <div className="relative inline-block">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="px-3 py-2 pr-8 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary appearance-none bg-white min-w-[140px]"
               >
                 <option value="all">All Users</option>
                 <option value="pending">Pending Approval</option>
                 <option value="approved">Approved</option>
               </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+              </div>
             </div>
           </div>
         </div>
@@ -274,6 +290,23 @@ const UserManagement = () => {
           </div>
         ) : (
           <div className="bg-surface border border-border rounded-lg overflow-hidden">
+            {/* Summary Info */}
+            {filteredUsers.length > 0 && (
+              <div className="px-6 py-3 bg-secondary-50 border-b border-border">
+                <div className="flex justify-between items-center text-sm text-text-secondary">
+                  <span>
+                    {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
+                    {searchTerm && ` matching "${searchTerm}"`}
+                    {filterStatus !== 'all' && ` (${filterStatus})`}
+                  </span>
+                  {totalPages > 1 && (
+                    <span>
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-secondary-50 border-b border-border">
@@ -296,7 +329,7 @@ const UserManagement = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredUsers.map((user) => (
+                  {currentUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-secondary-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -307,14 +340,18 @@ const UserManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={user.role}
-                          onChange={(e) => updateUserRole(user.id, e.target.value)}
-                          className="text-sm border border-border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          <option value={UserRoles.USER}>User</option>
-                          <option value={UserRoles.ADMIN}>Admin</option>
-                        </select>
+                        <div className="relative inline-block">
+                          <select
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user.id, e.target.value)}
+                            className="text-sm border border-border rounded px-2 py-1 pr-6 focus:outline-none focus:ring-2 focus:ring-primary appearance-none bg-white min-w-[80px]"
+                          >
+                            <option value={UserRoles.USER}>User</option>
+                            <option value={UserRoles.ADMIN}>Admin</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none">
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -350,7 +387,132 @@ const UserManagement = () => {
                 </tbody>
               </table>
             </div>
-            
+
+            {/* Pagination Controls */}
+            {filteredUsers.length > 0 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface">
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-text-secondary">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-text-secondary">Show:</span>
+                    <div className="relative inline-block">
+                      <select
+                        value={usersPerPage}
+                        onChange={(e) => setUsersPerPage(Number(e.target.value))}
+                        className="border border-border rounded px-2 py-1 pr-6 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none bg-white min-w-[60px]"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none">
+
+                      </div>
+                    </div>
+                    <span className="text-text-secondary">per page</span>
+                  </div>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-border rounded hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      <Icon name="ChevronLeft" size={16} />
+                      Previous
+                    </button>
+
+                  <div className="flex items-center space-x-1">
+                    {/* Smart pagination - show first, last, current and nearby pages */}
+                    {totalPages <= 7 ? (
+                      // Show all pages if 7 or fewer
+                      Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 text-sm rounded ${
+                            currentPage === page
+                              ? 'bg-primary text-white'
+                              : 'border border-border hover:bg-secondary-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))
+                    ) : (
+                      // Show smart pagination with ellipsis
+                      <>
+                        {/* First page */}
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          className={`px-3 py-1 text-sm rounded ${
+                            currentPage === 1
+                              ? 'bg-primary text-white'
+                              : 'border border-border hover:bg-secondary-50'
+                          }`}
+                        >
+                          1
+                        </button>
+
+                        {/* Left ellipsis */}
+                        {currentPage > 3 && (
+                          <span className="px-2 text-text-secondary">...</span>
+                        )}
+
+                        {/* Current page and neighbors */}
+                        {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
+                          .filter(page => page > 1 && page < totalPages)
+                          .map(page => (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-1 text-sm rounded ${
+                                currentPage === page
+                                  ? 'bg-primary text-white'
+                                  : 'border border-border hover:bg-secondary-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+
+                        {/* Right ellipsis */}
+                        {currentPage < totalPages - 2 && (
+                          <span className="px-2 text-text-secondary">...</span>
+                        )}
+
+                        {/* Last page */}
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className={`px-3 py-1 text-sm rounded ${
+                            currentPage === totalPages
+                              ? 'bg-primary text-white'
+                              : 'border border-border hover:bg-secondary-50'
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-border rounded hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    Next
+                    <Icon name="ChevronRight" size={16} />
+                  </button>
+                </div>
+                )}
+              </div>
+            )}
+
             {filteredUsers.length === 0 && (
               <div className="text-center py-12">
                 <Icon name="Users" size={48} className="text-text-muted mx-auto mb-4" />
