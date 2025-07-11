@@ -6,7 +6,7 @@ const InteractiveCalculator = ({
   onScenarioChange,
   presetScenarios,
   userData,
-  calculateProjections
+  projections
 }) => {
   const [activePreset, setActivePreset] = useState('custom');
 
@@ -50,7 +50,15 @@ const InteractiveCalculator = ({
     }
   };
 
-  const projections = calculateProjections(scenario);
+  // Ensure projections has default values
+  const safeProjections = {
+    totalContributions: 0,
+    projectedValue: 0,
+    gapClosure: 0,
+    yearsToRetirement: 0,
+    monthlyNeeded: 0,
+    ...projections
+  };
 
   // Validation check
   if (!presetScenarios || presetScenarios.length === 0) {
@@ -260,12 +268,12 @@ const InteractiveCalculator = ({
                 Scenario Impact
               </div>
               <div className="text-xs sm:text-sm text-accent-700 break-words">
-                This scenario could close <strong>{projections.gapClosure.toFixed(1)}%</strong> of your
-                retirement gap, building <strong className="break-words">${projections.projectedValue.toLocaleString()}</strong> by
+                This scenario could close <strong>{safeProjections.gapClosure.toFixed(1)}%</strong> of your
+                retirement gap, building <strong className="break-words">${safeProjections.projectedValue.toLocaleString()}</strong> by
                 age {scenario.targetRetirementAge}.
-                {projections.gapClosure > 100 && (
+                {safeProjections.gapClosure > 100 && (
                   <span className="block mt-1 text-success-700 font-medium break-words">
-                    🎉 This scenario exceeds your gap by ${((projections.projectedValue - userData.totalGap)).toLocaleString()}!
+                    🎉 This scenario exceeds your gap by ${((safeProjections.projectedValue - userData.totalGap)).toLocaleString()}!
                   </span>
                 )}
               </div>

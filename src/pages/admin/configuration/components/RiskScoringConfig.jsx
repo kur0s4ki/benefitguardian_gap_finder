@@ -31,9 +31,45 @@ const RiskScoringConfig = ({ config, onUpdate }) => {
     }
   };
 
+  const validateThresholds = (lowValue, moderateValue) => {
+    const low = parseInt(lowValue);
+    const moderate = parseInt(moderateValue);
+
+    if (isNaN(low) || isNaN(moderate)) {
+      return { valid: false, message: 'Threshold values must be valid numbers' };
+    }
+
+    if (low < 0 || low > 100 || moderate < 0 || moderate > 100) {
+      return { valid: false, message: 'Threshold values must be between 0 and 100' };
+    }
+
+    if (low >= moderate) {
+      return { valid: false, message: 'Low risk threshold must be less than moderate risk threshold' };
+    }
+
+    if (moderate >= 100) {
+      return { valid: false, message: 'Moderate risk threshold must be less than 100 to allow for high risk category' };
+    }
+
+    return { valid: true, message: '' };
+  };
+
   const handleUpdateThreshold = async (key, value) => {
     try {
       setSaving(true);
+
+      // Get current values for validation
+      const currentLow = key === 'low' ? parseInt(value) : (riskThresholds.low || 39);
+      const currentModerate = key === 'moderate' ? parseInt(value) : (riskThresholds.moderate || 69);
+
+      // Validate thresholds
+      const validation = validateThresholds(currentLow, currentModerate);
+      if (!validation.valid) {
+        addToast(validation.message, 'error');
+        setSaving(false);
+        return;
+      }
+
       await configService.updateCoreConfig(
         'risk_thresholds',
         `${key}_risk_max`,
@@ -73,6 +109,12 @@ const RiskScoringConfig = ({ config, onUpdate }) => {
 
   const totalWeight = (riskWeights.pension || 0.5) + (riskWeights.tax || 0.3) + (riskWeights.survivor || 0.2);
   const isWeightValid = Math.abs(totalWeight - 1.0) < 0.01;
+
+  // Validate current threshold values
+  const currentLow = riskThresholds.low || 39;
+  const currentModerate = riskThresholds.moderate || 69;
+  const thresholdValidation = validateThresholds(currentLow, currentModerate);
+  const areThresholdsValid = thresholdValidation.valid;
 
   return (
     <div className="space-y-8">
@@ -213,6 +255,18 @@ const RiskScoringConfig = ({ config, onUpdate }) => {
             <strong>High Risk:</strong> Scores {(riskThresholds.moderate || 69) + 1}-100 = High Risk (Red)
           </p>
         </div>
+
+        {/* Validation Feedback */}
+        {!areThresholdsValid && (
+          <div className="mt-4 p-3 bg-error-50 border border-error-200 rounded">
+            <div className="flex items-center gap-2">
+              <Icon name="AlertTriangle" size={16} className="text-error" />
+              <p className="text-sm text-error-800 font-medium">
+                Validation Error: {thresholdValidation.message}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Risk Bonuses */}

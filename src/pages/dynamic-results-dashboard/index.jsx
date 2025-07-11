@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
 
-import { getRiskLevel } from "utils/riskUtils";
+import { getRiskLevelSync } from "utils/riskUtils";
 import { useAssessment } from "contexts/AssessmentContext";
 
 import RiskGauge from "./components/RiskGauge";
@@ -91,7 +91,7 @@ const DynamicResultsDashboard = () => {
   const riskLevel = useMemo(
     () =>
       calculatedResults
-        ? getRiskLevel(calculatedResults.riskScore)
+        ? getRiskLevelSync(calculatedResults.riskScore)
         : {
             level: "Unknown",
             shortLevel: "Unknown",
@@ -186,7 +186,7 @@ const DynamicResultsDashboard = () => {
       currentAge: calculatedResults.currentAge || 45,
       state: calculatedResults.state,
       riskScore: calculatedResults.riskScore,
-      riskColor: getRiskLevel(calculatedResults.riskScore).riskColor,
+      riskColor: getRiskLevelSync(calculatedResults.riskScore).riskColor,
       gaps: {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total

@@ -53,6 +53,10 @@ class ConfigurationService {
         moderate: 0.07,
         aggressive: 0.09,
       },
+      COMPONENT_THRESHOLDS: {
+        low: 30,
+        medium: 60,
+      },
       PRESET_SCENARIOS: [
         {
           id: "conservative",
@@ -234,6 +238,13 @@ class ConfigurationService {
         "16-20": configCategories.retirement_conversion.years_16_20 || 18,
         "21-25": configCategories.retirement_conversion.years_21_25 || 23,
         "26+": configCategories.retirement_conversion.years_26_plus || 28,
+      };
+    }
+
+    if (configCategories.component_thresholds) {
+      config.COMPONENT_THRESHOLDS = {
+        low: configCategories.component_thresholds.low_component_max || 30,
+        medium: configCategories.component_thresholds.medium_component_max || 60,
       };
     }
 

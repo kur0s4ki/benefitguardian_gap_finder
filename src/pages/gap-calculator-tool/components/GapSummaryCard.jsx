@@ -1,6 +1,6 @@
 import React from 'react';
 import Icon from 'components/AppIcon';
-import { getRiskLevel } from 'utils/riskUtils';
+import { getRiskLevelSync } from 'utils/riskUtils';
 
 const GapSummaryCard = ({ userData }) => {
   const gaps = [
@@ -131,7 +131,7 @@ const GapSummaryCard = ({ userData }) => {
 
       {/* Overall Risk Score */}
       {(() => {
-        const riskData = getRiskLevel(userData.riskScore);
+        const riskData = getRiskLevelSync(userData.riskScore);
         const score = userData.riskScore;
         
         // Determine background and border classes based on risk score

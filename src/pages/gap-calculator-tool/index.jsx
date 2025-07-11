@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
-import BackNavigation from "components/ui/BackNavigation";
-import ResultsNavigation from "components/ui/ResultsNavigation";
 import ConversionFooter from "components/ui/ConversionFooter";
 import { useAssessment } from "contexts/AssessmentContext";
 import { configService } from "../../services/configurationService";
@@ -29,6 +27,14 @@ const GapCalculatorTool = () => {
   });
   const [isCalculating, setIsCalculating] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [currentProjections, setCurrentProjections] = useState({
+    totalContributions: 0,
+    projectedValue: 0,
+    gapClosure: 0,
+    yearsToRetirement: 0,
+    monthlyNeeded: 0,
+  });
+  const [presetScenarios, setPresetScenarios] = useState([]);
 
   // Load calculated user data from navigation state
   const [userData, setUserData] = useState(null);
@@ -46,6 +52,107 @@ const GapCalculatorTool = () => {
       return;
     }
   }, [location.state, navigate, hasValidAssessment, contextUserData]);
+
+  // Load preset scenarios from database configuration
+  useEffect(() => {
+    const loadPresetScenarios = async () => {
+      try {
+        // Force refresh cache to get latest data
+        await configService.refreshCache();
+        const config = await configService.getConfiguration();
+        console.log('[GapCalculator] Loaded configuration:', config);
+        console.log('[GapCalculator] PRESET_SCENARIOS:', config.PRESET_SCENARIOS);
+
+        if (config.PRESET_SCENARIOS && config.PRESET_SCENARIOS.length > 0) {
+          console.log('[GapCalculator] Using database preset scenarios');
+          setPresetScenarios(config.PRESET_SCENARIOS);
+        } else {
+          console.log('[GapCalculator] No database scenarios found, using fallback');
+          // Fallback to hardcoded scenarios if database is empty
+          setPresetScenarios([
+            {
+              id: "conservative",
+              name: "Conservative",
+              monthlyContribution: 650,
+              targetRetirementAge: 67,
+              riskTolerance: "conservative",
+              description: "Lower risk, steady growth approach",
+            },
+            {
+              id: "moderate",
+              name: "Moderate",
+              monthlyContribution: 600,
+              targetRetirementAge: 65,
+              riskTolerance: "moderate",
+              description: "Balanced risk and growth strategy",
+            },
+            {
+              id: "aggressive",
+              name: "Aggressive",
+              monthlyContribution: 650,
+              targetRetirementAge: 62,
+              riskTolerance: "aggressive",
+              description: "Higher risk, accelerated growth plan",
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading preset scenarios:', error);
+        // Use fallback scenarios on error
+        setPresetScenarios([
+          {
+            id: "conservative",
+            name: "Conservative",
+            monthlyContribution: 650,
+            targetRetirementAge: 67,
+            riskTolerance: "conservative",
+            description: "Lower risk, steady growth approach",
+          },
+          {
+            id: "moderate",
+            name: "Moderate",
+            monthlyContribution: 600,
+            targetRetirementAge: 65,
+            riskTolerance: "moderate",
+            description: "Balanced risk and growth strategy",
+          },
+          {
+            id: "aggressive",
+            name: "Aggressive",
+            monthlyContribution: 650,
+            targetRetirementAge: 62,
+            riskTolerance: "aggressive",
+            description: "Higher risk, accelerated growth plan",
+          },
+        ]);
+      }
+    };
+
+    loadPresetScenarios();
+  }, []);
+
+  // Calculate projections when scenario or userData changes
+  useEffect(() => {
+    if (userData && currentScenario) {
+      const calculateAsync = async () => {
+        try {
+          const projections = await calculateProjections(currentScenario);
+          setCurrentProjections(projections);
+        } catch (error) {
+          console.error('Error calculating projections:', error);
+          // Set safe default values
+          setCurrentProjections({
+            totalContributions: 0,
+            projectedValue: 0,
+            gapClosure: 0,
+            yearsToRetirement: 0,
+            monthlyNeeded: 0,
+          });
+        }
+      };
+      calculateAsync();
+    }
+  }, [userData, currentScenario]);
 
   // Note: Scenarios are now stored in memory only for this session
   // Future enhancement: Save scenarios to user profile in database
@@ -65,33 +172,6 @@ const GapCalculatorTool = () => {
       </div>
     );
   }
-
-  const presetScenarios = [
-    {
-      id: "conservative",
-      name: "Conservative",
-      monthlyContribution: 650,
-      targetRetirementAge: 67,
-      riskTolerance: "conservative",
-      description: "Lower risk, steady growth approach",
-    },
-    {
-      id: "moderate",
-      name: "Moderate",
-      monthlyContribution: 600,
-      targetRetirementAge: 65,
-      riskTolerance: "moderate",
-      description: "Balanced risk and growth strategy",
-    },
-    {
-      id: "aggressive",
-      name: "Aggressive",
-      monthlyContribution: 650,
-      targetRetirementAge: 62,
-      riskTolerance: "aggressive",
-      description: "Higher risk, accelerated growth plan",
-    },
-  ];
 
   const calculateProjections = async (scenario) => {
     // Add validation for userData and totalGap
@@ -390,7 +470,7 @@ const GapCalculatorTool = () => {
                     onScenarioChange={setCurrentScenario}
                     presetScenarios={presetScenarios}
                     userData={userData}
-                    calculateProjections={calculateProjections}
+                    projections={currentProjections}
                   />
                 </div>
                 <div>
@@ -400,7 +480,7 @@ const GapCalculatorTool = () => {
                     </h3>
                     <ProjectionResults
                       scenario={currentScenario}
-                      projections={calculateProjections(currentScenario)}
+                      projections={currentProjections}
                       userData={userData}
                     />
                   </div>
@@ -518,8 +598,19 @@ const GapCalculatorTool = () => {
 
 // Projection Results Component
 const ProjectionResults = ({ scenario, projections, userData }) => {
+  // Ensure projections has default values
+  const safeProjections = {
+    totalContributions: 0,
+    projectedValue: 0,
+    gapClosure: 0,
+    yearsToRetirement: 0,
+    monthlyNeeded: 0,
+    error: null,
+    ...projections
+  };
+
   // Handle error cases
-  if (projections.error) {
+  if (safeProjections.error) {
     return (
       <div className="space-y-6">
         <div className="p-4 bg-error-50 rounded-lg border border-error-200">
@@ -533,7 +624,7 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
               <div className="font-medium text-error-800 mb-1">
                 Cannot Calculate Projections
               </div>
-              <div className="text-sm text-error-700">{projections.error}</div>
+              <div className="text-sm text-error-700">{safeProjections.error}</div>
             </div>
           </div>
         </div>
@@ -542,11 +633,11 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
   }
 
   const gapClosureColor =
-    projections.gapClosure >= 100
+    safeProjections.gapClosure >= 100
       ? "text-success"
-      : projections.gapClosure >= 80
+      : safeProjections.gapClosure >= 80
       ? "text-success"
-      : projections.gapClosure >= 50
+      : safeProjections.gapClosure >= 50
       ? "text-warning"
       : "text-error";
 
@@ -559,27 +650,27 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
             Gap Closure
           </span>
           <span className={`text-lg font-bold ${gapClosureColor}`}>
-            {projections.gapClosure.toFixed(1)}%
+            {safeProjections.gapClosure.toFixed(1)}%
           </span>
         </div>
         <div className="w-full bg-primary-100 rounded-full h-3">
           <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              projections.gapClosure >= 100
+              safeProjections.gapClosure >= 100
                 ? "bg-success"
-                : projections.gapClosure >= 80
+                : safeProjections.gapClosure >= 80
                 ? "bg-success"
-                : projections.gapClosure >= 50
+                : safeProjections.gapClosure >= 50
                 ? "bg-warning"
                 : "bg-error"
             }`}
-            style={{ width: `${Math.min(projections.gapClosure, 100)}%` }}
+            style={{ width: `${Math.min(safeProjections.gapClosure, 100)}%` }}
           />
         </div>
-        {projections.gapClosure > 100 && (
+        {safeProjections.gapClosure > 100 && (
           <div className="mt-2 text-xs sm:text-sm text-success font-medium break-words">
             🎉 Exceeds gap by $
-            {(projections.projectedValue - userData.totalGap).toLocaleString()}
+            {(safeProjections.projectedValue - userData.totalGap).toLocaleString()}
           </div>
         )}
       </div>
@@ -588,26 +679,26 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="text-center p-3 sm:p-4 bg-primary-50 rounded-lg">
           <div className="text-lg sm:text-2xl font-bold text-primary mb-1 break-words">
-            ${projections.projectedValue.toLocaleString()}
+            ${safeProjections.projectedValue.toLocaleString()}
           </div>
           <div className="text-xs sm:text-sm text-text-secondary">
             Projected Value (Nominal)
           </div>
           <div className="text-xs text-text-muted mt-1 break-words">
-            ${projections.inflationAdjustedValue.toLocaleString()} in today's
+            ${(safeProjections.inflationAdjustedValue || safeProjections.projectedValue).toLocaleString()} in today's
             dollars
           </div>
         </div>
 
         <div className="text-center p-3 sm:p-4 bg-secondary-50 rounded-lg">
           <div className="text-lg sm:text-2xl font-bold text-secondary mb-1">
-            {projections.yearsToRetirement}
+            {safeProjections.yearsToRetirement}
           </div>
           <div className="text-xs sm:text-sm text-text-secondary">
             Years to Retirement
           </div>
           <div className="text-xs text-text-muted mt-1">
-            {projections.annualRate}% growth rate
+            {safeProjections.annualRate || 7}% growth rate
           </div>
         </div>
       </div>
@@ -627,7 +718,7 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
             Total Contributions
           </span>
           <span className="font-semibold text-sm sm:text-base break-words text-right">
-            ${projections.totalContributions.toLocaleString()}
+            ${safeProjections.totalContributions.toLocaleString()}
           </span>
         </div>
         <div className="flex justify-between items-start gap-2">
@@ -637,14 +728,14 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           <span className="font-semibold text-success text-sm sm:text-base break-words text-right">
             $
             {(
-              projections.projectedValue - projections.totalContributions
+              safeProjections.projectedValue - safeProjections.totalContributions
             ).toLocaleString()}
           </span>
         </div>
       </div>
 
       {/* Recommendation */}
-      {projections.gapClosure < 100 && (
+      {safeProjections.gapClosure < 100 && (
         <div className="p-3 sm:p-4 bg-accent-50 rounded-lg border border-accent-200">
           <div className="flex items-start gap-3">
             <Icon
@@ -661,11 +752,11 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
                 contribution to
                 <strong className="break-words">
                   {" "}
-                  ${projections.monthlyNeeded.toLocaleString()}
+                  ${safeProjections.monthlyNeeded.toLocaleString()}
                 </strong>{" "}
                 or extending your retirement timeline.
                 <div className="mt-2 text-xs text-accent-600">
-                  Based on {projections.annualRate}% annual growth rate
+                  Based on {safeProjections.annualRate || 7}% annual growth rate
                 </div>
               </div>
             </div>

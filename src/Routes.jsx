@@ -19,6 +19,7 @@ import UserManagement from "pages/admin/user-management";
 import ConfigurationDashboard from "pages/admin/configuration";
 import ConfigurationTest from "pages/admin/configuration/test";
 import ConfigurationVerification from "pages/admin/configuration/verification";
+import ConfigurationIntegrationTest from "pages/admin/configuration/test-integration";
 
 // Assessment pages
 import ProfessionSelectionLanding from "pages/profession-selection-landing";
@@ -76,6 +77,11 @@ const Routes = () => {
           <Route path="/admin/configuration/verification" element={
             <ProtectedRoute requireAdmin={true}>
               <ConfigurationVerification />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/configuration/test-integration" element={
+            <ProtectedRoute requireAdmin={true}>
+              <ConfigurationIntegrationTest />
             </ProtectedRoute>
           } />
 
