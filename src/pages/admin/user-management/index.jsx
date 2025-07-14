@@ -99,6 +99,43 @@ const UserManagement = () => {
     }
   }
 
+  // Delete user using admin client
+  const handleDeleteUser = async (userId, userEmail) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${userEmail}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      // Create admin Supabase client with service role key
+      const { createClient } = await import('@supabase/supabase-js')
+      const adminSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+
+      // Delete user from auth.users (this will cascade to user_profiles due to foreign key)
+      const { error: deleteError } = await adminSupabase.auth.admin.deleteUser(userId)
+
+      if (deleteError) {
+        throw deleteError
+      }
+
+      addToast(`User "${userEmail}" has been permanently deleted`, 'success')
+
+      // Refresh the users list
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      addToast(`Failed to delete user: ${error.message}`, 'error')
+    }
+  }
+
   // Add new user using admin.createUser()
   const handleAddUser = async (userData) => {
     try {
@@ -355,6 +392,13 @@ const UserManagement = () => {
                             Revoke
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.email)}
+                          className="text-error-600 hover:text-error-800 font-medium ml-2"
+                          title="Permanently delete user"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -420,6 +464,13 @@ const UserManagement = () => {
                             Revoke
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.email)}
+                          className="px-3 py-1 text-sm bg-error-100 text-error-800 rounded-md hover:bg-error-200 font-medium"
+                          title="Permanently delete user"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
