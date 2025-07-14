@@ -64,7 +64,9 @@ const ProfessionSelectionLanding = () => {
     // Proceed directly to next step
     setIsTransitioning(true);
     setTimeout(() => {
-      const nextRoute = isPublic ? "/public/profile" : "/service-profile-collection";
+      const nextRoute = isPublic
+        ? "/public/profile"
+        : "/service-profile-collection";
       navigate(nextRoute, {
         state: {
           profession: profession.id,
@@ -106,7 +108,7 @@ const ProfessionSelectionLanding = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-2 flex justify-center">
             <img
-              src="assets/images/logo.png"
+              src="/assets/images/logo.png"
               alt="Company Logo"
               className="h-36 w-auto mx-auto"
             />
@@ -142,16 +144,15 @@ const ProfessionSelectionLanding = () => {
               )}
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              {isPublic ? (
-                "Get a quick overview of your Tax Torpedo risk and basic retirement gaps. Start by selecting your profession below."
-              ) : (
-                "Discover unclaimed benefits, identify income gaps, and secure your financial future. Start by selecting your profession below."
-              )}
+              {isPublic
+                ? "Get a quick overview of your Tax Torpedo risk and basic retirement gaps. Start by selecting your profession below."
+                : "Discover unclaimed benefits, identify income gaps, and secure your financial future. Start by selecting your profession below."}
             </p>
             {isPublic && (
               <div className="mt-4 p-3 bg-accent-50 border border-accent-200 rounded-lg max-w-xl mx-auto">
                 <p className="text-sm text-accent-700 font-medium">
-                  ⚡ Limited Version - Quick 5-minute assessment with key insights
+                  ⚡ Limited Version - Quick 5-minute assessment with key
+                  insights
                 </p>
               </div>
             )}
@@ -225,8 +226,6 @@ const ProfessionSelectionLanding = () => {
           </div>
         </motion.div>
       )}
-
-
     </div>
   );
 };
