@@ -212,6 +212,15 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
+  // Update user profile in state
+  const updateUserProfile = (updatedProfile) => {
+    setUserProfile(prev => ({
+      ...prev,
+      ...updatedProfile,
+      updated_at: new Date().toISOString()
+    }));
+  };
+
   // Helper methods
   const isAuthenticated = () => !!user
   const isApproved = () => userProfile?.is_approved === true
@@ -232,6 +241,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin,
     canAccessDashboard,
     getUserProfile,
+    updateUserProfile,
     setIsCreatingUser,
     isCreatingUser
   }

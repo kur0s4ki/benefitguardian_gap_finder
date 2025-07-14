@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import Icon from '../../components/AppIcon'
+import UserProfileCard from '../../components/user-profile/UserProfileCard'
 
 const Dashboard = () => {
   const { user, userProfile, signOut, isAdmin, loading } = useAuth()
@@ -95,6 +96,9 @@ const Dashboard = () => {
               Start Assessment
             </button>
           </div>
+
+          {/* User Profile Card - For all users */}
+          <UserProfileCard />
 
           {/* Admin Panel Cards - Only for Admins */}
           {isAdmin() && (

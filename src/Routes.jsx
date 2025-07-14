@@ -15,6 +15,7 @@ import Login from "pages/login";
 import Register from "pages/register";
 import PendingApproval from "pages/pending-approval";
 import Dashboard from "pages/dashboard";
+import UserProfile from "pages/user-profile";
 import UserManagement from "pages/admin/user-management";
 import ConfigurationDashboard from "pages/admin/configuration";
 import ConfigurationTest from "pages/admin/configuration/test";
@@ -55,6 +56,11 @@ const Routes = () => {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/user-profile" element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           } />
 
