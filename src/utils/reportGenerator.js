@@ -1,108 +1,207 @@
 import { jsPDF } from 'jspdf';
 
 /**
- * Generates a full report PDF using userData and projections.
- * @param {Object} userData - normalized results from calculation engine and transformed for UI.
+ * Generates a professional, single-page PDF report using the EXACT same data as results page.
+ * @param {Object} calculatedResults - Direct results from calculation engine (same as results page uses)
  * @param {Object} projections - calculator projections (optional)
  * @returns {Uint8Array} ArrayBuffer of PDF to be used for download or email attachment.
  */
-const buildDoc = (userData, projections = {}) => {
+const buildDoc = (calculatedResults, projections = {}) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-  const lineHeight = 18;
-  let y = 40;
+  // Page dimensions
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 50;
 
-  const addHeading = (text) => {
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(text, 40, y);
-    y += lineHeight * 1.5;
-  };
+  // Professional colors - only black and blue
+  const blue = [15, 94, 156]; // #0F5E9C
+  const black = [0, 0, 0];
+  const lightGray = [128, 128, 128];
 
-  const addBody = (text) => {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    const splitText = doc.splitTextToSize(text, 520);
-    splitText.forEach(t => {
-      doc.text(t, 40, y);
-      y += lineHeight;
-    });
-    y += lineHeight * 0.5;
-  };
+  let y = margin;
 
-  // Title Page
-  doc.setFontSize(22);
-  doc.text('GapGuardian Gold Standard™️ Analysis Report', 40, y);
-  y += lineHeight * 2;
-  doc.setFontSize(14);
-  doc.text(`Profession: ${userData.profession}`, 40, y);
-  y += lineHeight;
-  doc.text(`Risk Score: ${userData.riskScore}`, 40, y);
-  y += lineHeight;
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, y);
+  // Header Section
+  doc.setFontSize(24);
+  doc.setTextColor(...blue);
+  doc.setFont('helvetica', 'bold');
+  doc.text('GapGuardian Gold Standard™ Analysis Report', margin, y);
+  y += 40;
 
-  doc.addPage();
-  y = 40;
-  // Section: Detailed Risk Analysis
-  addHeading('1. Detailed Risk Analysis');
-  addBody(`Risk Score: ${userData.riskScore} / 100`);
-  addBody(`Risk Level: ${userData.riskColor === 'red' ? 'High' : userData.riskColor === 'gold' ? 'Moderate' : 'Low'}`);
-  addBody(`Pension Risk: ${userData.riskComponents?.pensionRisk ?? 'N/A'}`);
-  addBody(`Tax Risk: ${userData.riskComponents?.taxRisk ?? 'N/A'}`);
-  addBody(`Survivor Risk: ${userData.riskComponents?.survivorRisk ?? 'N/A'}`);
+  // Date and basic info
+  doc.setFontSize(12);
+  doc.setTextColor(...black);
+  doc.setFont('helvetica', 'normal');
 
-  // Section: Gap Calculations
-  addHeading('2. Gap Calculations');
-  if (userData.gaps) {
-    addBody(`Pension Gap: $${userData.gaps.pension.monthly || 0}/month ($${userData.gaps.pension.amount.toLocaleString()} over 20 years)`);
-    addBody(`Tax Torpedo Risk: $${userData.gaps.tax.amount.toLocaleString()}`);
-    addBody(`Survivor Protection Gap: $${userData.gaps.survivor.monthly || 0}/month ($${userData.gaps.survivor.amount.toLocaleString()} over 20 years)`);
-  } else {
-    // Fallback for older data format
-    addBody(`Pension Gap: $${(userData.pensionGap || 0).toLocaleString()}/month ($${((userData.pensionGap || 0)*240).toLocaleString()} over 20 years)`);
-    addBody(`Tax Torpedo Risk: $${(userData.taxTorpedo || 0).toLocaleString()}`);
-    addBody(`Survivor Protection Gap: $${(userData.survivorGap || 0).toLocaleString()}/month ($${((userData.survivorGap || 0)*240).toLocaleString()} over 20 years)`);
+  // Use actual current date
+  const currentDate = new Date();
+  const formattedDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+  doc.text(`Generated: ${formattedDate}`, margin, y);
+
+  // Format profession properly
+  const profession = calculatedResults.profession || 'Professional';
+  const formattedProfession = profession === 'teacher' ? 'Educator' :
+                             profession === 'government-employee' ? 'Government Employee' :
+                             profession.charAt(0).toUpperCase() + profession.slice(1);
+  doc.text(`Profession: ${formattedProfession}`, pageWidth - margin - 150, y);
+  y += 30;
+
+  // Risk Score Section
+  doc.setFontSize(16);
+  doc.setTextColor(...blue);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RISK ASSESSMENT', margin, y);
+  y += 25;
+
+  doc.setFontSize(12);
+  doc.setTextColor(...black);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Overall Risk Score: ${calculatedResults.riskScore || 0}/100`, margin, y);
+
+  const riskLevel = (calculatedResults.riskScore || 0) >= 70 ? 'High Risk' :
+                   (calculatedResults.riskScore || 0) >= 40 ? 'Moderate Risk' : 'Low Risk';
+  doc.text(`Risk Level: ${riskLevel}`, margin + 200, y);
+  y += 20;
+
+  // Risk Components
+  if (calculatedResults.riskComponents) {
+    doc.text(`Pension Risk: ${calculatedResults.riskComponents.pensionRisk || 0}%`, margin, y);
+    doc.text(`Tax Risk: ${calculatedResults.riskComponents.taxRisk || 0}%`, margin + 150, y);
+    doc.text(`Survivor Risk: ${calculatedResults.riskComponents.survivorRisk || 0}%`, margin + 300, y);
   }
-  addBody(`Total Gap: $${(userData.totalGap || 0).toLocaleString()}`);
+  y += 35;
 
-  // Section: Action Plan
-  addHeading('3. Action Plan');
-  const actions = [
-    'Increase contributions to retirement accounts to close the pension gap.',
-    'Implement tax-diversification strategies (Roth conversions, withdrawal sequencing).',
-    'Ensure survivor benefits or supplemental insurance are in place.'
+  // Gap Analysis Section - USE EXACT SAME DATA AS RESULTS PAGE
+  doc.setFontSize(16);
+  doc.setTextColor(...blue);
+  doc.setFont('helvetica', 'bold');
+  doc.text('GAP ANALYSIS', margin, y);
+  y += 25;
+
+  doc.setFontSize(12);
+  doc.setTextColor(...black);
+  doc.setFont('helvetica', 'normal');
+
+  // EXACT same data extraction as results page (lines 442, 456, 470 in dynamic-results-dashboard)
+  const pensionGap = calculatedResults.pensionGap || 0;
+  const taxTorpedo = calculatedResults.taxTorpedo || 0;
+  const survivorGap = calculatedResults.survivorGap || 0;
+  const totalGap = calculatedResults.totalGap || 0;
+
+  // Display gaps exactly like results page shows them
+  doc.text(`Monthly Pension Gap: $${pensionGap.toLocaleString()}`, margin, y);
+  y += 18;
+
+  doc.text(`Tax Torpedo Risk: $${taxTorpedo.toLocaleString()}`, margin, y);
+  y += 18;
+
+  doc.text(`Survivor Protection Gap: $${survivorGap.toLocaleString()}/month`, margin, y);
+  y += 18;
+
+  doc.text(`Total Retirement Gap: $${totalGap.toLocaleString()}`, margin, y);
+  y += 35;
+
+  // Current Age and Retirement Info
+  doc.setFontSize(16);
+  doc.setTextColor(...blue);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RETIREMENT PLANNING', margin, y);
+  y += 25;
+
+  doc.setFontSize(12);
+  doc.setTextColor(...black);
+  doc.setFont('helvetica', 'normal');
+
+  // Display available retirement planning data
+  const currentAge = calculatedResults.currentAge || 'N/A';
+  const retirementAge = calculatedResults.retirementAge || 'N/A';
+  const yearsOfService = calculatedResults.yearsOfService || 'N/A';
+
+  doc.text(`Current Age: ${currentAge}`, margin, y);
+  if (retirementAge !== 'N/A') {
+    doc.text(`Planned Retirement Age: ${retirementAge}`, margin + 150, y);
+  }
+  doc.text(`Years of Service: ${yearsOfService}`, margin + (retirementAge !== 'N/A' ? 350 : 200), y);
+  y += 35;
+
+  // Recommendations Section
+  doc.setFontSize(16);
+  doc.setTextColor(...blue);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RECOMMENDATIONS', margin, y);
+  y += 25;
+
+  doc.setFontSize(12);
+  doc.setTextColor(...black);
+  doc.setFont('helvetica', 'normal');
+
+  const recommendations = [
+    'Increase retirement contributions to close pension gap',
+    'Consider Roth IRA conversions for tax diversification',
+    'Review pension benefit options and survivor elections',
+    'Evaluate supplemental insurance for survivor protection',
+    'Implement tax-efficient withdrawal strategies'
   ];
-  actions.forEach(a => addBody(`• ${a}`));
 
-  // Section: Projection Scenarios
-  addHeading('4. Projection Scenarios');
-  if (projections && projections.totalContributions) {
-    addBody(`Scenario: Retirement age ${(projections.yearsToRetirement || 0) + (userData.currentAge || 45)}, contribution $${(projections.monthlyNeeded || 0).toLocaleString()}/month`);
-    addBody(`Projected value: $${(projections.projectedValue || 0).toLocaleString()}`);
-    addBody(`Gap closure: ${projections.gapClosure}%`);
-  } else {
-    addBody('No projection scenarios calculated yet. Use the Gap Calculator Tool to create scenarios.');
+  recommendations.forEach((rec, index) => {
+    doc.text(`${index + 1}. ${rec}`, margin, y);
+    y += 18;
+  });
+
+  y += 20;
+
+  // Projections Section (if available)
+  const hasProjections = projections && Object.keys(projections).length > 0;
+  const hasMonthlyContribution = calculatedResults.monthlyContribution;
+
+  if (hasProjections || hasMonthlyContribution) {
+    doc.setFontSize(16);
+    doc.setTextColor(...blue);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROJECTIONS', margin, y);
+    y += 25;
+
+    doc.setFontSize(12);
+    doc.setTextColor(...black);
+    doc.setFont('helvetica', 'normal');
+
+    // Show monthly contribution needed from projections or calculatedResults
+    const monthlyNeeded = projections?.monthlyNeeded || calculatedResults.monthlyContribution;
+    if (monthlyNeeded) {
+      doc.text(`Monthly Contribution Needed: $${Math.round(monthlyNeeded).toLocaleString()}`, margin, y);
+      y += 18;
+    }
+
+    if (projections?.projectedValue) {
+      doc.text(`Projected Portfolio Value: $${Math.round(projections.projectedValue).toLocaleString()}`, margin, y);
+      y += 18;
+    }
+
+    if (projections?.gapClosure) {
+      doc.text(`Gap Closure Percentage: ${Math.round(projections.gapClosure)}%`, margin, y);
+      y += 18;
+    }
+
+    // Add lifetime payout if available
+    if (calculatedResults.lifetimePayout) {
+      doc.text(`Projected Lifetime Payout: $${Math.round(calculatedResults.lifetimePayout).toLocaleString()}`, margin, y);
+      y += 18;
+    }
   }
 
-  // Section: Benefit Optimization
-  addHeading('5. Benefit Optimization');
-  addBody('• Review your pension plan for purchase-of-service or DROP options.');
-  addBody('• Coordinate Social Security claiming strategy with pension income.');
-  addBody('• Leverage health-savings or 457(b) plans available to first responders.');
-
-  // Section: Timeline Guidance
-  addHeading('6. Timeline Guidance');
-  addBody('Now – 5 Years: Increase contributions, execute Roth ladder conversions.');
-  addBody('5 – 10 Years: Evaluate partial lump-sum options, lock in COLA-protected benefits.');
-  addBody('Retirement Date: Finalize survivor elections, set tax-efficient withdrawal plan.');
+  // Footer
+  doc.setFontSize(10);
+  doc.setTextColor(...lightGray);
+  doc.setFont('helvetica', 'normal');
+  doc.text('This analysis is for educational purposes only. Consult a financial advisor for personalized advice.', margin, pageHeight - 40);
 
   return doc;
 };
 
-export const generateFullReport = (userData, projections = {}) => {
-  return buildDoc(userData, projections).output('arraybuffer');
+export const generateFullReport = (calculatedResults, projections = {}) => {
+  return buildDoc(calculatedResults, projections).output('arraybuffer');
 };
 
-export const downloadFullReport = (userData, projections = {}) => {
-  buildDoc(userData, projections).save('Retirement_Gap_Report.pdf');
-}; 
+export const downloadFullReport = (calculatedResults, projections = {}) => {
+  buildDoc(calculatedResults, projections).save('Retirement_Gap_Report.pdf');
+};

@@ -155,7 +155,7 @@ const DynamicResultsDashboard = () => {
       calculationLog: calculatedResults.calculationLog,
       monthlyContribution: calculatedResults.monthlyContribution,
       lifetimePayout: calculatedResults.lifetimePayout,
-      riskComponents: calculatedResults.riskComponents,
+      riskComponents: calculatedResults.riskComponents || {},
     };
 
     const nextRoute = isPublic ? "/public/calculator" : "/gap-calculator-tool";
@@ -369,7 +369,7 @@ const DynamicResultsDashboard = () => {
                   💡 Hidden Benefit Opportunity
                 </div>
                 <div className="text-2xl font-bold text-accent-900">
-                  ${calculatedResults.hiddenBenefitOpportunity.toLocaleString()}
+                  ${calculatedResults.hiddenBenefitOpportunity?.toLocaleString() || '0'}
                   /month
                 </div>
                 <div className="text-xs text-accent-700">
@@ -385,7 +385,7 @@ const DynamicResultsDashboard = () => {
               <RiskGauge
                 score={calculatedResults.riskScore}
                 profession={calculatedResults.profession}
-                riskComponents={calculatedResults.riskComponents}
+                riskComponents={calculatedResults.riskComponents || {}}
                 showResults={showResults}
               />
             </div>
@@ -409,9 +409,9 @@ const DynamicResultsDashboard = () => {
                     amount={calculatedResults.taxTorpedo}
                     icon="Zap"
                     emoji="💥"
-                    description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
                     riskLevel={
-                      calculatedResults.riskComponents.taxRisk > 50
+                      (calculatedResults.riskComponents?.taxRisk || 0) > 50
                         ? "high"
                         : "moderate"
                     }
@@ -444,7 +444,7 @@ const DynamicResultsDashboard = () => {
                     emoji="📉"
                     description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
                     riskLevel={
-                      calculatedResults.riskComponents.pensionRisk > 60
+                      (calculatedResults.riskComponents?.pensionRisk || 0) > 60
                         ? "high"
                         : "moderate"
                     }
@@ -456,9 +456,9 @@ const DynamicResultsDashboard = () => {
                     amount={calculatedResults.taxTorpedo}
                     icon="Zap"
                     emoji="💥"
-                    description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
                     riskLevel={
-                      calculatedResults.riskComponents.taxRisk > 50
+                      (calculatedResults.riskComponents?.taxRisk || 0) > 50
                         ? "high"
                         : "moderate"
                     }
@@ -472,7 +472,7 @@ const DynamicResultsDashboard = () => {
                     emoji="❤️‍🩹"
                     description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
                     riskLevel={
-                      calculatedResults.riskComponents.survivorRisk > 60
+                      (calculatedResults.riskComponents?.survivorRisk || 0) > 60
                         ? "high"
                         : "moderate"
                     }
@@ -483,8 +483,8 @@ const DynamicResultsDashboard = () => {
             </div>
           </div>
 
-          {/* Detailed Breakdown - Agent Version Only */}
-          {!isPublic && (
+          {/* Detailed Breakdown - Hidden for now (used for calculation debugging) */}
+          {false && !isPublic && (
             <div className="px-4 sm:px-6 lg:px-8 pb-8">
               <div className="max-w-4xl mx-auto">
                 <DetailedBreakdown

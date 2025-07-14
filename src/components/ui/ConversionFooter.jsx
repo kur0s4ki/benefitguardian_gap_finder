@@ -66,11 +66,21 @@ const ConversionFooter = ({ className = "" }) => {
         {/* Disclaimer */}
         <div className="text-center space-y-2">
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            Insights provided by PublicSery Wealth Group are for general informational purposes 
-            only. This material is not intended as personalized advice. Outcomes may vary 
-            based on individual circumstances. To explore strategies tailored to your goals, 
+            Insights provided by PublicSery Wealth Group are for general informational purposes
+            only. This material is not intended as personalized advice. Outcomes may vary
+            based on individual circumstances. To explore strategies tailored to your goals,
             consult a PublicSery Wealth Group professional.
           </p>
+
+          {/* Copyright and IP Notices */}
+          <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
+            © 2025 PublicServ Wealth Group. This GapGuardian Gold Standard Analysis™ report is proprietary and confidential.
+          </p>
+          <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
+            GapGuardian Gold Standard Analysis™ is the intellectual property of PublicServ Wealth Group.
+            Unauthorized use or reproduction is prohibited.
+          </p>
+
           <p className="text-xs text-text-muted font-medium">
             CA-License #6016374
           </p>

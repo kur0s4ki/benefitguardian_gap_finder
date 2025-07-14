@@ -10,7 +10,7 @@ import FAQSection from "./components/FAQSection";
 import TestimonialsSection from "./components/TestimonialsSection";
 import DeliveryInfoModal from "./components/DeliveryInfoModal";
 import CalculationLog from "./components/CalculationLog";
-import { downloadFullReport } from "utils/reportGenerator";
+// import { downloadFullReport } from "utils/reportGenerator"; // Removed - feature under development
 import { useAssessment } from "contexts/AssessmentContext";
 import { getRiskLevelSync } from "utils/riskUtils";
 import { useVersion } from "contexts/VersionContext";
@@ -27,11 +27,13 @@ const ReportDeliveryConfirmation = () => {
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [reportSent, setReportSent] = useState(false);
+  const [showFeaturePopup, setShowFeaturePopup] = useState(false);
 
   // Helper function to transform context data for report delivery
   const transformContextDataForReport = (contextUserData, contextCalculatedResults) => {
     if (!contextCalculatedResults) return null;
 
+    // Use the exact same data structure as the results page
     return {
       profession: contextCalculatedResults.profession,
       yearsOfService: contextCalculatedResults.yearsOfService,
@@ -39,13 +41,18 @@ const ReportDeliveryConfirmation = () => {
       state: contextCalculatedResults.state,
       riskScore: contextCalculatedResults.riskScore,
       riskColor: getRiskLevelSync(contextCalculatedResults.riskScore).riskColor,
-      totalGap: contextCalculatedResults.totalGap ||
-        ((contextCalculatedResults.pensionGap || 0) * 240 +
-         (contextCalculatedResults.survivorGap || 0) * 240 +
-         (contextCalculatedResults.taxTorpedo || 0)),
+      totalGap: contextCalculatedResults.totalGap,
+
+      // Direct properties (same as results page uses)
+      pensionGap: contextCalculatedResults.pensionGap || 0,
+      taxTorpedo: contextCalculatedResults.taxTorpedo || 0,
+      survivorGap: contextCalculatedResults.survivorGap || 0,
+
+      // Keep gaps structure for report preview
       gaps: {
         pension: {
           amount: (contextCalculatedResults.pensionGap || 0) * 240,
+          monthly: contextCalculatedResults.pensionGap || 0,
           description: `Monthly pension shortfall: $${contextCalculatedResults.pensionGap || 0}/month`,
         },
         tax: {
@@ -54,9 +61,11 @@ const ReportDeliveryConfirmation = () => {
         },
         survivor: {
           amount: (contextCalculatedResults.survivorGap || 0) * 240,
+          monthly: contextCalculatedResults.survivorGap || 0,
           description: `Monthly survivor benefit gap: $${contextCalculatedResults.survivorGap || 0}/month`,
         },
       },
+
       calculationLog: contextCalculatedResults.calculationLog,
     };
   };
@@ -230,13 +239,8 @@ const ReportDeliveryConfirmation = () => {
   const theme = getProfessionTheme();
 
   const handleDownloadPdf = () => {
-    // Use the calculation results from navigation state
-    if (calculatedResults) {
-      downloadFullReport(
-        calculatedResults,
-        location.state?.projections || {}
-      );
-    }
+    // Show feature under development popup
+    setShowFeaturePopup(true);
   };
 
   return (
@@ -252,29 +256,15 @@ const ReportDeliveryConfirmation = () => {
               <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-4">
                 Your Personalized Retirement Gap Report is on its way!
               </h1>
-              <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-2">
+              <div className="flex items-center justify-center gap-2 text-lg text-text-secondary mb-6">
                 <Icon name="Mail" size={20} className="text-primary" />
                 <span>
                   Sent to: <strong className="text-primary">{userEmail}</strong>
                 </span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handleSendReport}
-                  className="btn-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 hover:bg-primary-700 transition-colors duration-200"
-                >
-                  <Icon name="Mail" size={24} />
-                  <span>Email My Report</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadPdf}
-                  className="border border-primary text-primary px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 hover:bg-primary-50 transition-colors duration-200"
-                >
-                  <Icon name="Download" size={24} />
-                  <span>Download PDF</span>
-                </button>
-              </div>
+              <p className="text-lg text-text-secondary text-center">
+                Check your email for your comprehensive retirement gap analysis report.
+              </p>
             </div>
           )}
           {!reportSent && (
@@ -375,8 +365,8 @@ const ReportDeliveryConfirmation = () => {
               <FAQSection profession={profession} />
             )}
 
-            {/* Calculation Log for debugging/analysis */}
-            <CalculationLog log={calculatedResults?.calculationLog} />
+            {/* Calculation Log for debugging/analysis - Hidden for users */}
+            {false && <CalculationLog log={calculatedResults?.calculationLog} />}
           </div>
 
           {/* Sidebar */}
@@ -405,6 +395,32 @@ const ReportDeliveryConfirmation = () => {
                 Book Priority Benefits Audit
               </button>
             </div>
+
+            {/* Action Buttons - Only show before report is sent */}
+            {!reportSent && (
+              <div className="card p-6">
+                <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                  <Icon name="Send" size={20} />
+                  Get Your Report
+                </h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleSendReport}
+                    className="w-full btn-primary py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+                  >
+                    <Icon name="Mail" size={18} />
+                    Email My Report
+                  </button>
+                  <button
+                    onClick={handleDownloadPdf}
+                    className="w-full border border-primary text-primary py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors duration-200"
+                  >
+                    <Icon name="Download" size={18} />
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Contact Card */}
             <div className="card p-6">
@@ -496,6 +512,35 @@ const ReportDeliveryConfirmation = () => {
         onSubmit={handleModalSubmit}
         profession={profession}
       />
+
+      {/* Feature Under Development Popup */}
+      {showFeaturePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="Settings" size={32} className="text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold text-primary mb-2">
+                PDF Report Download
+              </h3>
+              <p className="text-lg font-medium text-text-primary mb-2">
+                Feature Under Development
+              </p>
+              <p className="text-text-secondary mb-6">
+                This feature is currently being enhanced and will be available soon.
+                In the meantime, you can email your report to access it immediately.
+              </p>
+              <button
+                onClick={() => setShowFeaturePopup(false)}
+                className="btn-primary px-6 py-3 rounded-lg font-semibold w-full"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -180,12 +180,20 @@ const ReportPreview = ({
 
       {/* Report Footer */}
       <div className="mt-6 pt-4 border-t border-border">
-        <div className="flex items-center justify-between text-sm text-text-secondary">
+        <div className="flex items-center justify-between text-sm text-text-secondary mb-3">
           <span>Personalized for {getProfessionTitle()}s</span>
           <div className="flex items-center gap-2">
             <Icon name="Clock" size={14} />
             <span>Generated {new Date().toLocaleDateString()}</span>
           </div>
+        </div>
+
+        {/* Intellectual Property Notice */}
+        <div className="text-center">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            GapGuardian Gold Standard Analysis™ is the intellectual property of PublicServ Wealth Group.
+            Unauthorized use or reproduction is prohibited.
+          </p>
         </div>
       </div>
     </div>
