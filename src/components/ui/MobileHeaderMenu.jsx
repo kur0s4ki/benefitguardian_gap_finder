@@ -92,23 +92,25 @@ const MobileHeaderMenu = ({
 
       {/* Mobile Side Panel Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden"
+          style={{ marginLeft: 0, marginRight: 0 }}
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
       {/* Mobile Side Panel */}
-      <div 
+      <div
         className={`fixed top-0 right-0 h-full w-80 bg-surface border-l border-border shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ marginLeft: 0, marginRight: 0 }}
       >
         <div className="flex flex-col h-full">
           {/* Panel Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <img
                 src="/assets/images/logo.png"
                 alt="GapGuardian Logo"
@@ -162,16 +164,6 @@ const MobileHeaderMenu = ({
 
             {/* Navigation Items */}
             <div className="py-2">
-              {/* Back Navigation for Mobile */}
-              {showBackButton && (
-                <button
-                  onClick={handleBackClick}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-primary-50 transition-colors duration-150"
-                >
-                  <Icon name="ChevronLeft" size={20} className="text-primary" />
-                  <span className="text-sm font-medium text-text-primary">Back</span>
-                </button>
-              )}
 
               {/* Navigation for Public Users */}
               {!userProfile && (

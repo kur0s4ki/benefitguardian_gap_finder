@@ -63,8 +63,20 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 via-primary-50 to-background p-4">
       <div className="w-full max-w-md bg-surface border border-border rounded-lg shadow-lg">
         <div className="flex justify-center pt-6">
-          <div className="h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center">
-            <Icon name="Shield" size={32} className="text-primary" />
+          <div className="flex items-center space-x-2">
+            <img
+              src="/assets/images/logo.png"
+              alt="GapGuardian Gold Standard™️ Analysis Logo"
+              className="w-12 h-12 object-contain"
+            />
+            <div>
+              <div className="font-semibold text-lg text-primary">
+                GapGuardian Gold Standard™️
+              </div>
+              <div className="text-xs text-text-secondary -mt-1">
+                Analysis
+              </div>
+            </div>
           </div>
         </div>
         

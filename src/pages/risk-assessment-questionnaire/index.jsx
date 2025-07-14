@@ -28,7 +28,7 @@ const RiskAssessmentQuestionnaire = () => {
     inflationProtection: undefined, // This maps to 'cola' in client spec - undefined means not selected, null means "not sure"
     survivorPlanning: null,
     survivorPlanningDetails: "",
-    currentAge: "",
+    currentAge: 25, // Set default value to 25
     retirementAge: 65,
     financialFears: [],
     currentSavings: "",

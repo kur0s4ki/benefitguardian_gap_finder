@@ -59,9 +59,12 @@ const ProgressHeader = ({
   const progressPercentage = (currentStepData.step / totalSteps) * 100;
 
   // Check if we're on a management page (not part of the main flow)
-  const isManagementPage = ["/user-management", "/manage-my-profile"].includes(
-    location.pathname
-  );
+  const isManagementPage = [
+    "/admin/user-management",
+    "/admin/configuration",
+    "/user-management",
+    "/manage-my-profile"
+  ].includes(location.pathname);
   const shouldShowProgress = !isManagementPage;
 
   const handleLogoClick = () => {

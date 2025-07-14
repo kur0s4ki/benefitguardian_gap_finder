@@ -91,23 +91,23 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
         {/* Header */}
-        <div className="p-6 border-b border-border">
+        <div className="p-4 sm:p-6 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
                 <Icon name="UserPlus" size={20} className="text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text-primary">Add New User</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Add New User</h2>
                 <p className="text-sm text-text-secondary">Create a new user account</p>
               </div>
             </div>
             {!isSubmitting && (
               <button
                 onClick={handleClose}
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="text-text-secondary hover:text-text-primary transition-colors p-1"
               >
                 <Icon name="X" size={20} />
               </button>
@@ -116,7 +116,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
           {/* Full Name Input */}
           <div className="mb-4">
             <label htmlFor="fullName" className="block text-sm font-medium text-text-primary mb-2">
