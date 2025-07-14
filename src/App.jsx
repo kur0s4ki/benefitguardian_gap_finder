@@ -3,7 +3,7 @@ import Routes from "./Routes";
 import { ToastProvider } from "components/ui/ToastProvider";
 import { AssessmentProvider } from "contexts/AssessmentContext";
 import { AuthProvider } from "contexts/AuthContext";
-//
+
 function App() {
   return (
     <ToastProvider>
