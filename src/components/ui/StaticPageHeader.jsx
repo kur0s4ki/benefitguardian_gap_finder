@@ -1,14 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "./ToastProvider";
+import { useAuth } from "../../contexts/AuthContext";
 import Icon from "../AppIcon";
+import MobileHeaderMenu from "./MobileHeaderMenu";
 
 const StaticPageHeader = () => {
   const navigate = useNavigate();
-  const { addToast } = useToast();
+  const { userProfile } = useAuth();
 
   const handleLogoClick = () => {
-    navigate("/profession-selection-landing");
+    // If logged in, go to first step; if not logged in, go to landing page
+    if (userProfile) {
+      navigate("/profession-selection-landing");
+    } else {
+      navigate("/");
+    }
   };
 
   const handleBackClick = () => {
@@ -33,8 +39,18 @@ const StaticPageHeader = () => {
                 alt="GapGuardian Gold Standard™️ Analysis Logo"
                 className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
               />
-              <div className="hidden sm:block">
+              {/* Desktop Title */}
+              <div className="hidden md:block">
                 <div className="font-semibold text-lg text-primary">
+                  GapGuardian Gold Standard™️
+                </div>
+                <div className="text-xs text-text-secondary -mt-1">
+                  Analysis
+                </div>
+              </div>
+              {/* Mobile Title */}
+              <div className="block md:hidden">
+                <div className="font-semibold text-base text-primary">
                   GapGuardian Gold Standard™️
                 </div>
                 <div className="text-xs text-text-secondary -mt-1">
@@ -46,18 +62,23 @@ const StaticPageHeader = () => {
 
           {/* Navigation Section */}
           <div className="flex items-center gap-2">
+            {/* Desktop Back Button */}
             <button
               onClick={handleBackClick}
-              className="flex items-center gap-1 px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
+              className="hidden md:flex items-center gap-1 px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
               aria-label="Go back to previous page"
             >
               <Icon name="ChevronLeft" size={20} className="text-primary" />
-              <span className="text-sm font-medium text-primary hidden md:inline">
+              <span className="text-sm font-medium text-primary">
                 Back
               </span>
             </button>
 
-
+            {/* Mobile Menu */}
+            <MobileHeaderMenu
+              showBackButton={true}
+              onBackClick={handleBackClick}
+            />
           </div>
         </div>
       </div>

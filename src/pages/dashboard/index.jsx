@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import Icon from '../../components/AppIcon'
+import MobileHeaderMenu from '../../components/ui/MobileHeaderMenu'
 import UserProfileCard from '../../components/user-profile/UserProfileCard'
 
 const Dashboard = () => {
@@ -19,7 +20,7 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     await signOut()
-    navigate('/login')
+    navigate('/') // Always redirect to landing page after logout
   }
 
   const handleStartAssessment = () => {
@@ -48,21 +49,27 @@ const Dashboard = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              <span className="text-sm text-text-secondary">
-                Welcome, {userProfile?.full_name || user?.email}
-              </span>
-              {isAdmin() && (
-                <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
-                  Admin
+              {/* Desktop User Info */}
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-text-secondary">
+                  Welcome, {userProfile?.full_name || user?.email}
                 </span>
-              )}
-              <button
-                onClick={handleSignOut}
-                className="btn-secondary px-3 py-1 text-sm rounded flex items-center gap-2"
-              >
-                <Icon name="LogOut" size={14} />
-                Sign Out
-              </button>
+                {isAdmin() && (
+                  <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
+                    Admin
+                  </span>
+                )}
+                <button
+                  onClick={handleSignOut}
+                  className="btn-secondary px-3 py-1 text-sm rounded flex items-center gap-2"
+                >
+                  <Icon name="LogOut" size={14} />
+                  Sign Out
+                </button>
+              </div>
+
+              {/* Mobile Menu */}
+              <MobileHeaderMenu />
             </div>
           </div>
         </div>

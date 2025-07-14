@@ -9,7 +9,7 @@ const PendingApproval = () => {
 
   const handleSignOut = async () => {
     await signOut()
-    navigate('/login')
+    navigate('/') // Always redirect to landing page after logout
   }
 
   return (

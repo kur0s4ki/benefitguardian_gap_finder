@@ -13,11 +13,14 @@ import CalculationLog from "./components/CalculationLog";
 import { downloadFullReport } from "utils/reportGenerator";
 import { useAssessment } from "contexts/AssessmentContext";
 import { getRiskLevelSync } from "utils/riskUtils";
+import { useVersion } from "contexts/VersionContext";
+import PublicVersionCTA from "components/ui/PublicVersionCTA";
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
+  const { isPublic, isAgent, enableReportDownload } = useVersion();
   const [userEmail, setUserEmail] = useState("");
   const [profession, setProfession] = useState("teacher");
   const [reportData, setReportData] = useState(null);
@@ -284,11 +287,21 @@ const ReportDeliveryConfirmation = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Report Preview */}
-            <ReportPreview reportData={reportData} profession={profession} />
+            {isPublic ? (
+              /* Public Version - Show CTA instead of report preview */
+              <PublicVersionCTA
+                title="Ready for Your Complete Retirement Analysis?"
+                showStatistic={true}
+                className="mb-8"
+              />
+            ) : (
+              /* Agent Version - Show report preview */
+              <ReportPreview reportData={reportData} profession={profession} />
+            )}
 
-            {/* What's Included */}
-            <div className="card p-6">
+            {/* What's Included - Agent Version Only */}
+            {!isPublic && (
+              <div className="card p-6">
               <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
                 <Icon name="FileText" size={24} />
                 What's Included in Your Full Report
@@ -344,8 +357,10 @@ const ReportDeliveryConfirmation = () => {
                 ))}
               </div>
             </div>
+            )}
 
-            {/* Next Steps */}
+            {/* Next Steps - Agent Version Only */}
+            {!isPublic && (
             <NextStepsSection
               onBookAudit={handleBookAudit}
               onShareResults={handleShareResults}
@@ -353,9 +368,12 @@ const ReportDeliveryConfirmation = () => {
               onReferColleague={handleReferColleague}
               profession={profession}
             />
+            )}
 
-            {/* FAQ Section */}
-            <FAQSection profession={profession} />
+            {/* FAQ Section - Agent Version Only */}
+            {!isPublic && (
+              <FAQSection profession={profession} />
+            )}
 
             {/* Calculation Log for debugging/analysis */}
             <CalculationLog log={calculatedResults?.calculationLog} />

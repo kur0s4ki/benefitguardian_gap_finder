@@ -5,16 +5,19 @@ import ConversionFooter from "components/ui/ConversionFooter";
 
 import { getRiskLevelSync } from "utils/riskUtils";
 import { useAssessment } from "contexts/AssessmentContext";
+import { useVersion } from "contexts/VersionContext";
 
 import RiskGauge from "./components/RiskGauge";
 import GapAnalysisCard from "./components/GapAnalysisCard";
 import DetailedBreakdown from "./components/DetailedBreakdown";
 import CallToActionSection from "./components/CallToActionSection";
+import { PublicHeroStatistic } from "components/ui/StatisticHighlight";
 
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData, calculatedResults: contextResults, hasValidAssessment, clearAssessmentData } = useAssessment();
+  const { calculatedResults: contextResults, hasValidAssessment, clearAssessmentData } = useAssessment();
+  const { isPublic, ctaMessage } = useVersion();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
@@ -30,17 +33,16 @@ const DynamicResultsDashboard = () => {
         // Fallback to context data if available
         setCalculatedResults(contextResults);
       } else {
-        // If no data available, redirect to start
-        setCalculationError(
-          "No assessment data found. Please complete the assessment first."
-        );
+        // If no data available, redirect to start based on version
+        const startRoute = isPublic ? "/public/assessment" : "/profession-selection-landing";
+        navigate(startRoute, { replace: true });
         return;
       }
     } catch (error) {
       console.error("Error loading results:", error);
       setCalculationError(error.message);
     }
-  }, [location.state, contextResults, hasValidAssessment]);
+  }, [location.state, contextResults, hasValidAssessment, isPublic, navigate]);
 
   const professionThemes = {
     teacher: {
@@ -156,7 +158,8 @@ const DynamicResultsDashboard = () => {
       riskComponents: calculatedResults.riskComponents,
     };
 
-    navigate("/gap-calculator-tool", {
+    const nextRoute = isPublic ? "/public/calculator" : "/gap-calculator-tool";
+    navigate(nextRoute, {
       state: {
         userData: transformedData,
       },
@@ -241,8 +244,9 @@ const DynamicResultsDashboard = () => {
 
   const handleStartNewAssessment = useCallback(() => {
     clearAssessmentData();
-    navigate("/");
-  }, [clearAssessmentData, navigate]);
+    const startRoute = isPublic ? "/public/assessment" : "/";
+    navigate(startRoute);
+  }, [clearAssessmentData, navigate, isPublic]);
 
 
 
@@ -290,7 +294,7 @@ const DynamicResultsDashboard = () => {
                 Start New Assessment
               </button>
               <button
-                onClick={() => navigate("/service-profile-collection")}
+                onClick={() => navigate(isPublic ? "/public/profile" : "/service-profile-collection")}
                 className="btn-secondary px-6 py-2 rounded-lg w-full"
               >
                 Return to Profile Setup
@@ -391,75 +395,118 @@ const DynamicResultsDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 pb-8">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
-                Critical Retirement Gaps Identified
+                {isPublic ? "Key Retirement Risk Identified" : "Critical Retirement Gaps Identified"}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <GapAnalysisCard
-                  title="Pension Gap"
-                  amount={calculatedResults.pensionGap}
-                  icon="TrendingDown"
-                  emoji="📉"
-                  description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
-                  riskLevel={
-                    calculatedResults.riskComponents.pensionRisk > 60
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={0}
-                />
+              {isPublic ? (
+                // Public Version - Show only Tax Torpedo
+                <div className="max-w-2xl mx-auto space-y-8">
+                  {/* Statistic Highlight */}
+                  <PublicHeroStatistic className="mb-6" />
 
-                <GapAnalysisCard
-                  title="Tax Torpedo Risk"
-                  amount={calculatedResults.taxTorpedo}
-                  icon="Zap"
-                  emoji="💥"
-                  description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
-                  riskLevel={
-                    calculatedResults.riskComponents.taxRisk > 50
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={200}
-                />
+                  <GapAnalysisCard
+                    title="Tax Torpedo Risk"
+                    amount={calculatedResults.taxTorpedo}
+                    icon="Zap"
+                    emoji="💥"
+                    description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                    riskLevel={
+                      calculatedResults.riskComponents.taxRisk > 50
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={0}
+                  />
 
-                <GapAnalysisCard
-                  title="Survivor Protection Gap"
-                  amount={calculatedResults.survivorGap}
-                  icon="Heart"
-                  emoji="❤️‍🩹"
-                  description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
-                  riskLevel={
-                    calculatedResults.riskComponents.survivorRisk > 60
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={400}
+                  {/* CTA Message for Public Version */}
+                  <div className="mt-8 p-6 bg-primary-50 border border-primary-200 rounded-lg text-center">
+                    <h3 className="text-lg font-semibold text-primary mb-3">
+                      Want to See Your Complete Analysis?
+                    </h3>
+                    <p className="text-primary-700 mb-4">
+                      {ctaMessage}
+                    </p>
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="btn-primary px-6 py-3 rounded-lg font-semibold"
+                    >
+                      Get Full Analysis
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Agent Version - Show all gaps
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <GapAnalysisCard
+                    title="Pension Gap"
+                    amount={calculatedResults.pensionGap}
+                    icon="TrendingDown"
+                    emoji="📉"
+                    description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
+                    riskLevel={
+                      calculatedResults.riskComponents.pensionRisk > 60
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={0}
+                  />
+
+                  <GapAnalysisCard
+                    title="Tax Torpedo Risk"
+                    amount={calculatedResults.taxTorpedo}
+                    icon="Zap"
+                    emoji="💥"
+                    description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
+                    riskLevel={
+                      calculatedResults.riskComponents.taxRisk > 50
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={200}
+                  />
+
+                  <GapAnalysisCard
+                    title="Survivor Protection Gap"
+                    amount={calculatedResults.survivorGap}
+                    icon="Heart"
+                    emoji="❤️‍🩹"
+                    description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
+                    riskLevel={
+                      calculatedResults.riskComponents.survivorRisk > 60
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={400}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Detailed Breakdown - Agent Version Only */}
+          {!isPublic && (
+            <div className="px-4 sm:px-6 lg:px-8 pb-8">
+              <div className="max-w-4xl mx-auto">
+                <DetailedBreakdown
+                  userData={calculatedResults}
+                  onNavigateToCalculator={handleNavigateToCalculator}
                 />
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Detailed Breakdown */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <DetailedBreakdown
-                userData={calculatedResults}
-                onNavigateToCalculator={handleNavigateToCalculator}
-              />
+          {/* Call to Action Section - Agent Version Only */}
+          {!isPublic && (
+            <div className="px-4 sm:px-6 lg:px-8 pb-12">
+              <div className="max-w-4xl mx-auto">
+                <CallToActionSection
+                  onEmailReport={handleEmailReport}
+                  onBookAudit={handleBookAudit}
+                  profession={calculatedResults.profession}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Call to Action Section */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="max-w-4xl mx-auto">
-              <CallToActionSection
-                onEmailReport={handleEmailReport}
-                onBookAudit={handleBookAudit}
-                profession={calculatedResults.profession}
-              />
-            </div>
-          </div>
+          )}
 
 
         </main>

@@ -4,6 +4,7 @@ import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
 import { useAssessment } from "contexts/AssessmentContext";
 import { configService } from "../../services/configurationService";
+import { useVersion } from "contexts/VersionContext";
 
 import Icon from "components/AppIcon";
 import GapSummaryCard from "./components/GapSummaryCard";
@@ -14,6 +15,7 @@ const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
+  const { isPublic, isAgent, enableAdvancedCalculator, enableScenarioComparison } = useVersion();
 
 
 
@@ -399,7 +401,8 @@ const GapCalculatorTool = () => {
 
   const handleScheduleConsultation = () => {
     // Navigate with scenario data
-    navigate("/report-delivery-confirmation", {
+    const nextRoute = isPublic ? "/public/report" : "/report-delivery-confirmation";
+    navigate(nextRoute, {
       state: {
         userData,
         currentScenario,
@@ -410,7 +413,7 @@ const GapCalculatorTool = () => {
 
   const tabs = [
     { id: "calculator", label: "Calculator", icon: "Calculator" },
-    { id: "comparison", label: "Compare", icon: "BarChart3" },
+    ...(enableScenarioComparison ? [{ id: "comparison", label: "Compare", icon: "BarChart3" }] : []),
   ];
 
   return (
@@ -534,7 +537,7 @@ const GapCalculatorTool = () => {
               </div>
             )}
 
-            {activeTab === "comparison" && (
+            {activeTab === "comparison" && enableScenarioComparison && (
               <ScenarioComparison
                 savedScenarios={savedScenarios}
                 onDeleteScenario={(id) =>

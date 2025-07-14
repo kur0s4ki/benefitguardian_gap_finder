@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import Icon from "components/AppIcon";
 import ProfessionCard from "./components/ProfessionCard";
 import ProgressIndicator from "./components/ProgressIndicator";
+import { useVersion } from "contexts/VersionContext";
 
 const ProfessionSelectionLanding = () => {
   const navigate = useNavigate();
+  const { isPublic, isAgent } = useVersion();
   const [selectedProfession, setSelectedProfession] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -62,7 +64,8 @@ const ProfessionSelectionLanding = () => {
     // Proceed directly to next step
     setIsTransitioning(true);
     setTimeout(() => {
-      navigate("/service-profile-collection", {
+      const nextRoute = isPublic ? "/public/profile" : "/service-profile-collection";
+      navigate(nextRoute, {
         state: {
           profession: profession.id,
         },
@@ -122,15 +125,36 @@ const ProfessionSelectionLanding = () => {
           {/* Hero Section */}
           <motion.div className="text-center mb-12" variants={itemVariants}>
             <h2 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4 leading-tight">
-              Uncover Your Hidden
-              <span className="text-primary block lg:inline lg:ml-2">
-                Retirement Benefits
-              </span>
+              {isPublic ? (
+                <>
+                  Quick Retirement
+                  <span className="text-primary block lg:inline lg:ml-2">
+                    Gap Assessment
+                  </span>
+                </>
+              ) : (
+                <>
+                  Uncover Your Hidden
+                  <span className="text-primary block lg:inline lg:ml-2">
+                    Retirement Benefits
+                  </span>
+                </>
+              )}
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Discover unclaimed benefits, identify income gaps, and secure your
-              financial future. Start by selecting your profession below.
+              {isPublic ? (
+                "Get a quick overview of your Tax Torpedo risk and basic retirement gaps. Start by selecting your profession below."
+              ) : (
+                "Discover unclaimed benefits, identify income gaps, and secure your financial future. Start by selecting your profession below."
+              )}
             </p>
+            {isPublic && (
+              <div className="mt-4 p-3 bg-accent-50 border border-accent-200 rounded-lg max-w-xl mx-auto">
+                <p className="text-sm text-accent-700 font-medium">
+                  ⚡ Limited Version - Quick 5-minute assessment with key insights
+                </p>
+              </div>
+            )}
           </motion.div>
 
           {/* Profession Selection Grid */}
@@ -154,8 +178,8 @@ const ProfessionSelectionLanding = () => {
           <motion.div variants={itemVariants}>
             <ProgressIndicator
               currentStep={1}
-              totalSteps={3}
-              percentage={33}
+              totalSteps={isPublic ? 3 : 6}
+              percentage={isPublic ? 33 : 17}
               isTransitioning={isTransitioning}
             />
           </motion.div>

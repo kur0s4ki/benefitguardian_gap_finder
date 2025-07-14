@@ -9,6 +9,7 @@ import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import ProtectedRoute from "components/auth/ProtectedRoute";
 import NotFound from "pages/NotFound";
+import { VersionProvider } from "contexts/VersionContext";
 
 // Authentication pages
 import Login from "pages/login";
@@ -23,6 +24,7 @@ import ConfigurationVerification from "pages/admin/configuration/verification";
 import ConfigurationIntegrationTest from "pages/admin/configuration/test-integration";
 
 // Assessment pages
+import EntryLanding from "pages/entry-landing";
 import ProfessionSelectionLanding from "pages/profession-selection-landing";
 import ServiceProfileCollection from "pages/service-profile-collection";
 import RiskAssessmentQuestionnaire from "pages/risk-assessment-questionnaire";
@@ -40,9 +42,10 @@ import Contact from "pages/contact";
 const Routes = () => {
   return (
     <BrowserRouter>
-      <ErrorBoundary>
-        <ScrollToTop />
-        <RouterRoutes>
+      <VersionProvider>
+        <ErrorBoundary>
+          <ScrollToTop />
+          <RouterRoutes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -91,8 +94,17 @@ const Routes = () => {
             </ProtectedRoute>
           } />
 
-          {/* Root route - redirect to dashboard if authenticated */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Entry landing page - new root route */}
+          <Route path="/" element={<EntryLanding />} />
+
+          {/* Public routes - no authentication required */}
+          <Route path="/public/assessment" element={<ProfessionSelectionLanding />} />
+          <Route path="/public/profile" element={<ServiceProfileCollection />} />
+          <Route path="/public/questionnaire" element={<RiskAssessmentQuestionnaire />} />
+          <Route path="/public/results" element={<DynamicResultsDashboard />} />
+          <Route path="/public/calculator" element={<GapCalculatorTool />} />
+          <Route path="/public/report" element={<ReportDeliveryConfirmation />} />
+          {/* Agent routes - require authentication and approval */}
           <Route path="/profession-selection-landing" element={
             <ProtectedRoute>
               <ProfessionSelectionLanding />
@@ -134,7 +146,8 @@ const Routes = () => {
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </RouterRoutes>
-      </ErrorBoundary>
+        </ErrorBoundary>
+      </VersionProvider>
     </BrowserRouter>
   );
 };

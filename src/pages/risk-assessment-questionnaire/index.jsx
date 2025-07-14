@@ -14,11 +14,13 @@ import {
 } from "utils/calculationEngine";
 import { useToast } from "components/ui/ToastProvider";
 import { useAssessment } from "contexts/AssessmentContext";
+import { useVersion } from "contexts/VersionContext";
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { saveAssessmentResults } = useAssessment();
+  const { isPublic, isAgent } = useVersion();
 
   // Get profession from previous step or default
   const [profession, setProfession] = useState("teacher");
@@ -219,7 +221,8 @@ const RiskAssessmentQuestionnaire = () => {
     saveAssessmentResults(allData, results);
 
     // Navigate to results with calculated data
-    navigate("/dynamic-results-dashboard", {
+    const nextRoute = isPublic ? "/public/results" : "/dynamic-results-dashboard";
+    navigate(nextRoute, {
       state: {
         calculatedResults: results,
         userData: allData,

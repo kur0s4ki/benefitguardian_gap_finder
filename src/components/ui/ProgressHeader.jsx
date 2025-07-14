@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "./ToastProvider";
 import { useAuth } from "../../contexts/AuthContext";
 import Icon from "../AppIcon";
+import MobileHeaderMenu from "./MobileHeaderMenu";
 
 const ProgressHeader = ({
   currentStep = 1,
@@ -11,8 +11,9 @@ const ProgressHeader = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToast } = useToast();
   const { isAdmin, signOut, userProfile } = useAuth();
+
+
 
   const steps = [
     {
@@ -64,7 +65,12 @@ const ProgressHeader = ({
   const shouldShowProgress = !isManagementPage;
 
   const handleLogoClick = () => {
-    navigate("/profession-selection-landing");
+    // If logged in, go to first step; if not logged in, go to landing page
+    if (userProfile) {
+      navigate("/profession-selection-landing");
+    } else {
+      navigate("/");
+    }
   };
 
   const canNavigateBack = currentStepData.step > 1;
@@ -96,7 +102,7 @@ const ProgressHeader = ({
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login');
+    navigate('/'); // Always redirect to landing page after logout
   };
 
   const handleDashboard = () => {
@@ -119,10 +125,20 @@ const ProgressHeader = ({
                 alt="GapGuardian Gold Standard™️ Analysis Logo"
                 className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
               />
-              <div className="hidden sm:block">
+              {/* Desktop Title */}
+              <div className="hidden md:block">
                 <div
                   className={`font-semibold text-lg ${getProfessionTheme()}`}
                 >
+                  GapGuardian Gold Standard™️
+                </div>
+                <div className="text-xs text-text-secondary -mt-1">
+                  Analysis
+                </div>
+              </div>
+              {/* Mobile Title */}
+              <div className="block md:hidden">
+                <div className={`font-semibold text-base ${getProfessionTheme()}`}>
                   GapGuardian Gold Standard™️
                 </div>
                 <div className="text-xs text-text-secondary -mt-1">
@@ -134,34 +150,27 @@ const ProgressHeader = ({
 
           {/* Navigation Section */}
           <div className="flex items-center space-x-4 lg:space-x-6">
-            {/* Back Navigation */}
+            {/* Back Navigation - Desktop Only */}
             {canNavigateBack && shouldShowProgress && (
               <button
                 onClick={handleBackClick}
-                className="back-button px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
+                className="hidden md:flex back-button px-3 py-2 rounded-md hover:bg-primary-50 transition-colors duration-150"
                 aria-label="Go back to previous step"
               >
                 <Icon name="ChevronLeft" size={20} className="text-primary" />
-                <span className="hidden md:inline text-sm font-medium">
-                  Back
-                </span>
+                <span className="text-sm font-medium">Back</span>
               </button>
             )}
 
-            {/* Progress Indicator - Mobile */}
-            {shouldShowProgress && (
-              <div className="flex items-center space-x-3 md:hidden">
-                <div className="text-sm font-medium text-text-secondary">
-                  {currentStepData.step}/{totalSteps}
-                </div>
-                <div className="w-16 h-2 bg-primary-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 ease-out"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-              </div>
-            )}
+            {/* Mobile Menu */}
+            <MobileHeaderMenu
+              showBackButton={canNavigateBack && shouldShowProgress}
+              onBackClick={handleBackClick}
+              showProgress={shouldShowProgress}
+              currentStep={currentStepData.step}
+              totalSteps={totalSteps}
+              stepLabel={currentStepData.label}
+            />
 
             {/* Progress Indicator - Desktop */}
             {shouldShowProgress && (
@@ -183,9 +192,9 @@ const ProgressHeader = ({
               </div>
             )}
 
-            {/* User Controls */}
+            {/* User Controls - Desktop Only */}
             {userProfile && (
-              <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center space-x-3">
                 <button
                   onClick={handleDashboard}
                   className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary-50 rounded-md transition-colors duration-150"
@@ -194,7 +203,7 @@ const ProgressHeader = ({
                   <span className="hidden lg:inline">Dashboard</span>
                 </button>
 
-                <div className="hidden md:flex items-center space-x-2 text-sm text-text-secondary">
+                <div className="hidden lg:flex items-center space-x-2 text-sm text-text-secondary">
                   <span>{userProfile?.full_name || userProfile?.email || 'User'}</span>
                   {isAdmin() && (
                     <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
@@ -217,28 +226,7 @@ const ProgressHeader = ({
         </div>
       </div>
 
-      {/* Mobile Step Indicator */}
-      {shouldShowProgress && (
-        <div className="md:hidden px-4 pb-3">
-          <div className="text-center">
-            <div className="text-xs font-medium text-text-secondary mb-1">
-              {currentStepData.shortLabel}
-            </div>
-            <div className="flex justify-center space-x-1">
-              {steps.map((step) => (
-                <div
-                  key={step.step}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    step.step <= currentStepData.step
-                      ? "bg-primary"
-                      : "bg-primary-100"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+
     </header>
   );
 };
