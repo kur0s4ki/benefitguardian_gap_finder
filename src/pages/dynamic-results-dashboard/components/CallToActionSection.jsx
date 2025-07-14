@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "contexts/AuthContext";
 import Icon from "components/AppIcon";
 
 const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
-  const { isPublic } = useAuth();
   const [emailSent, setEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,11 +37,7 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
     setIsLoading(true);
     try {
       await onEmailReport();
-      // Only set emailSent to true for authenticated users
-      // Public users will see the modal and this function won't complete the flow
-      if (!isPublic) {
-        setEmailSent(true);
-      }
+      setEmailSent(true);
     } catch (error) {
       console.error("Error sending email:", error);
     } finally {

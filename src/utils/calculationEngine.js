@@ -1,96 +1,43 @@
-// PublicServ Wealth Group™ Gap Finder - Calculation Engine
+// GapGuardian Gold Standard™️ Analysis - Calculation Engine
 // Implements the client's specified calculation logic
 
-/**
- * Default pension values when user selects "I don't know"
- */
-const DEFAULT_PENSION_VALUES = {
+import { configService } from '../services/configurationService';
+
+// Fallback constants (kept for safety)
+const FALLBACK_DEFAULT_PENSION_VALUES = {
   teacher: 3200,
   nurse: 2800,
   "first-responder": 4100,
   "state-local-hero": 3500,
 };
 
-/**
- * Profession multipliers for calculations
- */
-const PROFESSION_FACTORS = {
+// Fallback constants (kept for safety)
+const FALLBACK_PROFESSION_FACTORS = {
   teacher: 1.0,
   nurse: 1.15,
   "first-responder": 1.25,
   "state-local-hero": 1.05,
 };
 
-/**
- * State multipliers for cost of living adjustments
- */
-const STATE_FACTORS = {
-  CA: 1.2,
-  NY: 1.2,
-  TX: 1.2,
-  FL: 1.1,
-  PA: 1.1,
-  IL: 1.1,
-  WA: 1.1,
-  MA: 1.1,
-  NJ: 1.1,
-  VA: 1.1,
-  NC: 1.0,
-  GA: 1.0,
-  OH: 1.0,
-  MI: 1.0,
-  AZ: 1.0,
-  TN: 1.0,
-  IN: 1.0,
-  MO: 1.0,
-  MD: 1.1,
-  WI: 1.0,
-  CO: 1.1,
-  MN: 1.0,
-  SC: 1.0,
-  AL: 1.0,
-  LA: 1.0,
-  KY: 1.0,
-  OR: 1.1,
-  OK: 1.0,
-  CT: 1.1,
-  UT: 1.0,
-  IA: 1.0,
-  NV: 1.0,
-  AR: 1.0,
-  MS: 1.0,
-  KS: 1.0,
-  NM: 1.0,
-  NE: 1.0,
-  WV: 1.0,
-  ID: 1.0,
-  HI: 1.2,
-  NH: 1.0,
-  ME: 1.0,
-  MT: 1.0,
-  RI: 1.0,
-  DE: 1.0,
-  SD: 1.0,
-  ND: 1.0,
-  AK: 1.2,
-  VT: 1.0,
-  WY: 1.0,
+const FALLBACK_STATE_FACTORS = {
+  CA: 1.2, NY: 1.2, TX: 1.2, FL: 1.1, PA: 1.1, IL: 1.1, WA: 1.1, MA: 1.1,
+  NJ: 1.1, VA: 1.1, NC: 1.0, GA: 1.0, OH: 1.0, MI: 1.0, AZ: 1.0, TN: 1.0,
+  IN: 1.0, MO: 1.0, MD: 1.1, WI: 1.0, CO: 1.1, MN: 1.0, SC: 1.0, AL: 1.0,
+  LA: 1.0, KY: 1.0, OR: 1.1, OK: 1.0, CT: 1.1, UT: 1.0, IA: 1.0, NV: 1.0,
+  AR: 1.0, MS: 1.0, KS: 1.0, NM: 1.0, NE: 1.0, WV: 1.0, ID: 1.0, HI: 1.2,
+  NH: 1.0, ME: 1.0, MT: 1.0, RI: 1.0, DE: 1.0, SD: 1.0, ND: 1.0, AK: 1.2,
+  VT: 1.0, WY: 1.0,
 };
 
-/**
- * Coverage level mapping for survivor benefits
- */
-const COVERAGE_LEVELS = {
+// Fallback constants (kept for safety)
+const FALLBACK_COVERAGE_LEVELS = {
   yes: 0.3,
   no: 1.0,
   true: 0.3,
   false: 1.0,
 };
 
-/**
- * COLA (Cost of Living Adjustment) values
- */
-const COLA_VALUES = {
+const FALLBACK_COLA_VALUES = {
   yes: 1,
   no: 0,
   unsure: 0,
@@ -98,16 +45,16 @@ const COLA_VALUES = {
   false: 0,
 };
 
-/**
- * Years until retirement conversion from bands to numeric values
- */
-const YEARS_UNTIL_RETIREMENT_CONVERSION = {
+const FALLBACK_YEARS_UNTIL_RETIREMENT_CONVERSION = {
   "5-10": 8,
   "11-15": 13,
   "16-20": 18,
   "21-25": 23,
   "26+": 28,
 };
+
+// Configuration cache
+let cachedConfig = null;
 
 /**
  * Convert retirement age to band
@@ -252,14 +199,51 @@ const createErrorResult = (error, userData, calculationLog) => {
 };
 
 /**
+ * Get calculation configuration from database with fallback
+ */
+async function getCalculationConfig() {
+  if (!cachedConfig) {
+    try {
+      cachedConfig = await configService.getConfiguration();
+      console.log('[Config] Loaded configuration from database');
+    } catch (error) {
+      console.error('Failed to load configuration, using fallback:', error);
+      cachedConfig = {
+        DEFAULT_PENSION_VALUES: FALLBACK_DEFAULT_PENSION_VALUES,
+        PROFESSION_FACTORS: FALLBACK_PROFESSION_FACTORS,
+        STATE_FACTORS: FALLBACK_STATE_FACTORS,
+        COVERAGE_LEVELS: FALLBACK_COVERAGE_LEVELS,
+        COLA_VALUES: FALLBACK_COLA_VALUES,
+        YEARS_UNTIL_RETIREMENT_CONVERSION: FALLBACK_YEARS_UNTIL_RETIREMENT_CONVERSION,
+        RISK_WEIGHTS: { pension: 0.5, tax: 0.3, survivor: 0.2 },
+        RISK_THRESHOLDS: { low: 39, moderate: 69 },
+        GAP_RATES: { pension: 0.03, tax: 0.3, survivor: 0.4 },
+        RISK_BONUSES: { early_retirement: 20, tax_surprises: 30 },
+        CALCULATION_CONSTANTS: {
+          hidden_benefit_base: 1800,
+          max_service_years: 28,
+          lifetime_multiplier: 3.0,
+          monthly_to_20year: 240,
+        },
+      };
+    }
+  }
+  return cachedConfig;
+}
+
+/**
  * Main calculation engine
  * @param {Object} userData - User input data
  * @returns {Object} Calculated results
  */
-export const calculateBenefitGaps = (userData) => {
+export const calculateBenefitGaps = async (userData) => {
   const calculationLog = ["[Log] Calculation engine started."];
 
   try {
+    // Load configuration from database with fallback
+    const config = await getCalculationConfig();
+    calculationLog.push("[Config] Configuration loaded successfully");
+
     // Enhanced input validation with specific error messages
     if (!userData) {
       throw new Error("User data is required");
@@ -351,7 +335,7 @@ export const calculateBenefitGaps = (userData) => {
 
     // Validate state input
     const state = userData.state || "CA";
-    if (!STATE_FACTORS.hasOwnProperty(state)) {
+    if (!config.STATE_FACTORS.hasOwnProperty(state)) {
       calculationLog.push(
         `[Warning] Unknown state '${state}', using default factor`
       );
@@ -380,7 +364,7 @@ export const calculateBenefitGaps = (userData) => {
       !userData.pensionEstimate
     ) {
       currentPension =
-        DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+        config.DEFAULT_PENSION_VALUES[profession] || config.DEFAULT_PENSION_VALUES.teacher;
       calculationLog.push(
         `[Pension] User pension unknown. Using default for ${profession}: $${currentPension}`
       );
@@ -388,7 +372,7 @@ export const calculateBenefitGaps = (userData) => {
       const parsedPension = parseFloat(userData.pensionEstimate);
       if (isNaN(parsedPension) || parsedPension < 0) {
         currentPension =
-          DEFAULT_PENSION_VALUES[profession] || DEFAULT_PENSION_VALUES.teacher;
+          config.DEFAULT_PENSION_VALUES[profession] || config.DEFAULT_PENSION_VALUES.teacher;
         calculationLog.push(
           `[Pension] Invalid pension value provided. Using default for ${profession}: $${currentPension}`
         );
@@ -419,33 +403,35 @@ export const calculateBenefitGaps = (userData) => {
       `[Derived] Retirement bands: age=${retirementAgeBand}, years=${yearsUntilRetirementBand}`
     );
 
-    // Get multipliers
-    const professionFactor = PROFESSION_FACTORS[profession] || 1.0;
-    const stateFactor = STATE_FACTORS[state] || 1.0;
-    const coverageLevel = COVERAGE_LEVELS[survivorIncome] || 1.0;
-    const colaValue = COLA_VALUES[cola] || 0;
+    // Get multipliers from configuration
+    const professionFactor = config.PROFESSION_FACTORS[profession] || 1.0;
+    const stateFactor = config.STATE_FACTORS[state] || 1.0;
+    const coverageLevel = config.COVERAGE_LEVELS[survivorIncome] || 1.0;
+    const colaValue = config.COLA_VALUES[cola] || 0;
     const yearsUntilRetirementConverted =
-      YEARS_UNTIL_RETIREMENT_CONVERSION[yearsUntilRetirementBand] || 18;
+      config.YEARS_UNTIL_RETIREMENT_CONVERSION[yearsUntilRetirementBand] || 18;
 
     calculationLog.push(
       `[Factors] Multipliers: profession=${professionFactor}, state=${stateFactor}, coverage=${coverageLevel}, cola=${colaValue}, yearsBand=${yearsUntilRetirementConverted}`
     );
 
     // A. Hidden Benefit Opportunity
+    const hiddenBenefitBase = config.CALCULATION_CONSTANTS?.hidden_benefit_base || 1800;
+    const maxServiceYears = config.CALCULATION_CONSTANTS?.max_service_years || 28;
     const hiddenBenefitOpportunity = Math.round(
-      1800 * (yearsOfService / 28) * professionFactor * stateFactor
+      hiddenBenefitBase * (yearsOfService / maxServiceYears) * professionFactor * stateFactor
     );
 
     calculationLog.push(
-      `[Calc] Hidden Benefit Opportunity: $${hiddenBenefitOpportunity} = 1800 * (${yearsOfService}/28) * ${professionFactor} * ${stateFactor}`
+      `[Calc] Hidden Benefit Opportunity: $${hiddenBenefitOpportunity} = ${hiddenBenefitBase} * (${yearsOfService}/${maxServiceYears}) * ${professionFactor} * ${stateFactor}`
     );
 
     // B. Risk Score Components
-    const earlyRetireBonus = retirementAgeBand === "55-62" ? 20 : 0;
+    const earlyRetireBonus = retirementAgeBand === "55-62" ? (config.RISK_BONUSES?.early_retirement || 20) : 0;
     const taxSurprisesBonus =
       financialFears.includes("tax-surprises") ||
       financialFears.includes("Tax surprises")
-        ? 30
+        ? (config.RISK_BONUSES?.tax_surprises || 30)
         : 0;
 
     calculationLog.push(
@@ -466,11 +452,13 @@ export const calculateBenefitGaps = (userData) => {
       `[Risk] Risk components: pensionRisk=${pensionRisk}, taxRisk=${taxRisk}, survivorRisk=${survivorRisk}`
     );
 
+    // Risk score calculation using configurable weights
+    const riskWeights = config.RISK_WEIGHTS || { pension: 0.5, tax: 0.3, survivor: 0.2 };
     const riskScore = Math.round(
-      pensionRisk * 0.5 + taxRisk * 0.3 + survivorRisk * 0.2
+      pensionRisk * riskWeights.pension + taxRisk * riskWeights.tax + survivorRisk * riskWeights.survivor
     );
 
-    calculationLog.push(`[Risk] Raw risk score: ${riskScore}`);
+    calculationLog.push(`[Risk] Raw risk score: ${riskScore} (weights: ${JSON.stringify(riskWeights)})`);
 
     // Ensure riskScore stays within 0-100 bounds even as weightings evolve
     const clampedRiskScore = Math.min(100, Math.max(0, riskScore));
@@ -478,16 +466,18 @@ export const calculateBenefitGaps = (userData) => {
     if (clampedRiskScore !== riskScore)
       calculationLog.push(`[Risk] Clamped risk score: ${clampedRiskScore}`);
 
-    // C. Gap Calculations
-    const pensionGap = Math.round(currentPension * 0.03 * yearsOfService);
-    const taxTorpedo = Math.round(otherSavings * 0.3);
-    const survivorGap = Math.round(currentPension * 0.4);
+    // C. Gap Calculations using configurable rates
+    const gapRates = config.GAP_RATES || { pension: 0.03, tax: 0.3, survivor: 0.4 };
+    const pensionGap = Math.round(currentPension * gapRates.pension * yearsOfService);
+    const taxTorpedo = Math.round(otherSavings * gapRates.tax);
+    const survivorGap = Math.round(currentPension * gapRates.survivor);
 
     calculationLog.push(
-      `[Gaps] Calculated gaps: pension=$${pensionGap}, taxTorpedo=$${taxTorpedo}, survivor=$${survivorGap}`
+      `[Gaps] Calculated gaps: pension=$${pensionGap}, taxTorpedo=$${taxTorpedo}, survivor=$${survivorGap} (rates: ${JSON.stringify(gapRates)})`
     );
 
-    const monthlyGap = pensionGap + survivorGap + Math.round(taxTorpedo / 240);
+    const monthlyTo20Year = config.CALCULATION_CONSTANTS?.monthly_to_20year || 240;
+    const monthlyGap = pensionGap + survivorGap + Math.round(taxTorpedo / monthlyTo20Year);
 
     calculationLog.push(`[Gaps] Total monthly gap: $${monthlyGap}`);
 
@@ -503,27 +493,29 @@ export const calculateBenefitGaps = (userData) => {
       `[Calc] Required monthly contribution: $${monthlyContribution}`
     );
 
+    const lifetimeMultiplier = config.CALCULATION_CONSTANTS?.lifetime_multiplier || 3.0;
     const lifetimePayout = Math.round(
-      monthlyContribution * 12 * yearsUntilRetirementConverted * 3.0
+      monthlyContribution * 12 * yearsUntilRetirementConverted * lifetimeMultiplier
     );
 
     calculationLog.push(`[Calc] Estimated lifetime payout: $${lifetimePayout}`);
 
-    // Risk color mapping - consistent with centralized thresholds
+    // Risk color mapping using configurable thresholds
+    const riskThresholds = config.RISK_THRESHOLDS || { low: 39, moderate: 69 };
     let riskColor;
-    if (clampedRiskScore < 40) {
+    if (clampedRiskScore <= riskThresholds.low) {
       riskColor = "green";
-    } else if (clampedRiskScore < 70) {
+    } else if (clampedRiskScore <= riskThresholds.moderate) {
       riskColor = "gold";
     } else {
       riskColor = "red";
     }
 
-    // Calculate total gap for downstream components (fixed calculation)
-    const totalGap = pensionGap * 240 + survivorGap * 240 + taxTorpedo;
+    // Calculate total gap for downstream components
+    const totalGap = pensionGap * monthlyTo20Year + survivorGap * monthlyTo20Year + taxTorpedo;
 
     calculationLog.push(
-      `[Total] Total gap calculated: $${totalGap} = (${pensionGap} * 240) + (${survivorGap} * 240) + ${taxTorpedo}`
+      `[Total] Total gap calculated: $${totalGap} = (${pensionGap} * ${monthlyTo20Year}) + (${survivorGap} * ${monthlyTo20Year}) + ${taxTorpedo}`
     );
 
     // Return calculated results
@@ -734,4 +726,13 @@ export const validateUserData = (userData) => {
     warnings,
   };
 };
+
+/**
+ * Refresh configuration cache - call this when admin updates settings
+ */
+export const refreshCalculationConfig = async () => {
+  cachedConfig = null;
+  return configService.refreshCache();
+};
+
 export default calculateBenefitGaps;

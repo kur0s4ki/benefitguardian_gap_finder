@@ -13,10 +13,14 @@ import {
   validateUserData,
 } from "utils/calculationEngine";
 import { useToast } from "components/ui/ToastProvider";
+import { useAssessment } from "contexts/AssessmentContext";
+import { useVersion } from "contexts/VersionContext";
 
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { saveAssessmentResults } = useAssessment();
+  const { isPublic, isAgent } = useVersion();
 
   // Get profession from previous step or default
   const [profession, setProfession] = useState("teacher");
@@ -24,7 +28,7 @@ const RiskAssessmentQuestionnaire = () => {
     inflationProtection: undefined, // This maps to 'cola' in client spec - undefined means not selected, null means "not sure"
     survivorPlanning: null,
     survivorPlanningDetails: "",
-    currentAge: "",
+    currentAge: 25, // Set default value to 25
     retirementAge: 65,
     financialFears: [],
     currentSavings: "",
@@ -178,7 +182,7 @@ const RiskAssessmentQuestionnaire = () => {
     // Calculate results and navigate with data
     let results;
     try {
-      results = calculateBenefitGaps({
+      results = await calculateBenefitGaps({
         profession: allData.profession,
         yearsOfService: allData.serviceProfile.yearsOfService,
         pensionEstimate: allData.serviceProfile.pensionEstimate,
@@ -213,16 +217,12 @@ const RiskAssessmentQuestionnaire = () => {
       return;
     }
 
-    // Store results in localStorage for persistence
-    try {
-      localStorage.setItem("calculatedResults", JSON.stringify(results));
-      localStorage.setItem("userData", JSON.stringify(allData));
-    } catch (error) {
-      console.error("Error storing results:", error);
-    }
+    // Save results to context for global access
+    saveAssessmentResults(allData, results);
 
     // Navigate to results with calculated data
-    navigate("/dynamic-results-dashboard", {
+    const nextRoute = isPublic ? "/public/results" : "/dynamic-results-dashboard";
+    navigate(nextRoute, {
       state: {
         calculatedResults: results,
         userData: allData,
