@@ -11,10 +11,13 @@ import TestimonialsSection from "./components/TestimonialsSection";
 import DeliveryInfoModal from "./components/DeliveryInfoModal";
 import CalculationLog from "./components/CalculationLog";
 import { downloadFullReport } from "utils/reportGenerator";
+import { useAssessment } from "contexts/AssessmentContext";
+import { getRiskLevelSync } from "utils/riskUtils";
 
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
   const [userEmail, setUserEmail] = useState("");
   const [profession, setProfession] = useState("teacher");
   const [reportData, setReportData] = useState(null);
@@ -22,21 +25,72 @@ const ReportDeliveryConfirmation = () => {
   const [showModal, setShowModal] = useState(false);
   const [reportSent, setReportSent] = useState(false);
 
+  // Helper function to transform context data for report delivery
+  const transformContextDataForReport = (contextUserData, contextCalculatedResults) => {
+    if (!contextCalculatedResults) return null;
+
+    return {
+      profession: contextCalculatedResults.profession,
+      yearsOfService: contextCalculatedResults.yearsOfService,
+      currentAge: contextCalculatedResults.currentAge || 45,
+      state: contextCalculatedResults.state,
+      riskScore: contextCalculatedResults.riskScore,
+      riskColor: getRiskLevelSync(contextCalculatedResults.riskScore).riskColor,
+      totalGap: contextCalculatedResults.totalGap ||
+        ((contextCalculatedResults.pensionGap || 0) * 240 +
+         (contextCalculatedResults.survivorGap || 0) * 240 +
+         (contextCalculatedResults.taxTorpedo || 0)),
+      gaps: {
+        pension: {
+          amount: (contextCalculatedResults.pensionGap || 0) * 240,
+          description: `Monthly pension shortfall: $${contextCalculatedResults.pensionGap || 0}/month`,
+        },
+        tax: {
+          amount: contextCalculatedResults.taxTorpedo || 0,
+          description: `Tax torpedo impact on retirement withdrawals`,
+        },
+        survivor: {
+          amount: (contextCalculatedResults.survivorGap || 0) * 240,
+          description: `Monthly survivor benefit gap: $${contextCalculatedResults.survivorGap || 0}/month`,
+        },
+      },
+      calculationLog: contextCalculatedResults.calculationLog,
+    };
+  };
+
   useEffect(() => {
     // Automatically show the modal as soon as the component loads
     setShowModal(true);
 
-    // Load data from navigation state
+    // Load data from navigation state or context
     try {
-      if (location.state?.userData && location.state?.projections) {
-        const userData = location.state.userData;
-        const projections = location.state.projections;
+      let userData, projections;
 
+      if (location.state?.userData && location.state?.projections) {
+        // Use navigation state data
+        userData = location.state.userData;
+        projections = location.state.projections;
+      } else if (hasValidAssessment() && contextUserData && contextCalculatedResults) {
+        // Fallback to context data
+        userData = transformContextDataForReport(contextUserData, contextCalculatedResults);
+        projections = {
+          monthlyNeeded: Math.round(
+            ((contextCalculatedResults.pensionGap || 0) +
+             (contextCalculatedResults.survivorGap || 0)) * 0.8
+          ) || 500,
+        };
+      } else {
+        // If no data available, redirect to start
+        navigate("/profession-selection-landing");
+        return;
+      }
+
+      if (userData) {
         setCalculatedResults(userData);
         setProfession(userData.profession);
         // Don't set default email - user will enter it in modal
 
-        // Create report highlights from navigation data
+        // Create report highlights from data
         const reportHighlights = {
           riskScore: userData.riskScore || 72,
           riskLevel:
@@ -69,7 +123,7 @@ const ReportDeliveryConfirmation = () => {
           ],
           keyRecommendations: [
             `Monthly contribution: $${
-              userData.monthlyContribution || projections.monthlyNeeded || 500
+              userData.monthlyContribution || projections?.monthlyNeeded || 500
             }`,
             "Maximize 403(b) contributions to reduce tax torpedo impact",
             "Consider Roth IRA conversions during lower-income years",
@@ -78,15 +132,12 @@ const ReportDeliveryConfirmation = () => {
         };
 
         setReportData(reportHighlights);
-      } else {
-        // If no navigation state, redirect to start
-        navigate("/profession-selection-landing");
       }
     } catch (error) {
       console.error("Error loading report data:", error);
       navigate("/profession-selection-landing");
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, hasValidAssessment, contextUserData, contextCalculatedResults]);
 
   const handleBookAudit = () => {
     // In real app, this would integrate with Calendly
@@ -114,7 +165,13 @@ const ReportDeliveryConfirmation = () => {
   };
 
   const handleCalculateScenarios = () => {
-    navigate("/gap-calculator-tool");
+    // Pass the calculated results and userData to the gap calculator tool
+    navigate("/gap-calculator-tool", {
+      state: {
+        userData: calculatedResults,
+        calculatedResults: calculatedResults
+      }
+    });
   };
 
   const handleReferColleague = () => {

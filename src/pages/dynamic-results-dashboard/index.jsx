@@ -120,29 +120,23 @@ const DynamicResultsDashboard = () => {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240,
           monthly: calculatedResults.pensionGap || 0,
-          risk:
-            (calculatedResults.riskComponents?.pensionRisk || 0) > 60
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly pension shortfall: $${
             calculatedResults.pensionGap || 0
           }/month`,
         },
         tax: {
           amount: calculatedResults.taxTorpedo || 0,
-          risk:
-            (calculatedResults.riskComponents?.taxRisk || 0) > 50
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
           description: `Tax torpedo impact on retirement withdrawals`,
         },
         survivor: {
           amount: (calculatedResults.survivorGap || 0) * 240,
           monthly: calculatedResults.survivorGap || 0,
-          risk:
-            (calculatedResults.riskComponents?.survivorRisk || 0) > 60
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly survivor benefit gap: $${
             calculatedResults.survivorGap || 0
           }/month`,
@@ -187,19 +181,30 @@ const DynamicResultsDashboard = () => {
       state: calculatedResults.state,
       riskScore: calculatedResults.riskScore,
       riskColor: getRiskLevelSync(calculatedResults.riskScore).riskColor,
+      // Calculate totalGap using the same formula as calculation engine
+      totalGap: calculatedResults.totalGap ||
+        ((calculatedResults.pensionGap || 0) * 240 +
+         (calculatedResults.survivorGap || 0) * 240 +
+         (calculatedResults.taxTorpedo || 0)),
       gaps: {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total
+          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly pension shortfall: $${
             calculatedResults.pensionGap || 0
           }/month`,
         },
         tax: {
           amount: calculatedResults.taxTorpedo || 0,
+          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
           description: `Tax torpedo impact on retirement withdrawals`,
         },
         survivor: {
           amount: (calculatedResults.survivorGap || 0) * 240, // Convert monthly to 20-year total
+          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly survivor benefit gap: $${
             calculatedResults.survivorGap || 0
           }/month`,

@@ -3,33 +3,44 @@ import Icon from 'components/AppIcon';
 import { getRiskLevelSync } from 'utils/riskUtils';
 
 const GapSummaryCard = ({ userData }) => {
+  // Add defensive checks for userData and gaps
+  if (!userData || !userData.gaps) {
+    return (
+      <div className="card p-6">
+        <div className="text-center text-text-secondary">
+          <p>Gap data is not available. Please complete the assessment first.</p>
+        </div>
+      </div>
+    );
+  }
+
   const gaps = [
     {
       type: 'pension',
       title: 'Pension Gap',
-      amount: userData.gaps.pension.amount,
-      risk: userData.gaps.pension.risk,
+      amount: userData.gaps.pension?.amount || 0,
+      risk: userData.gaps.pension?.risk || 'low',
       icon: 'TrendingDown',
       emoji: '📉',
-      description: userData.gaps.pension.description
+      description: userData.gaps.pension?.description || 'No pension gap data available'
     },
     {
       type: 'tax',
       title: 'Tax Torpedo Risk',
-      amount: userData.gaps.tax.amount,
-      risk: userData.gaps.tax.risk,
+      amount: userData.gaps.tax?.amount || 0,
+      risk: userData.gaps.tax?.risk || 'low',
       icon: 'Zap',
       emoji: '💥',
-      description: userData.gaps.tax.description
+      description: userData.gaps.tax?.description || 'No tax risk data available'
     },
     {
       type: 'survivor',
       title: 'Survivor Protection',
-      amount: userData.gaps.survivor.amount,
-      risk: userData.gaps.survivor.risk,
+      amount: userData.gaps.survivor?.amount || 0,
+      risk: userData.gaps.survivor?.risk || 'low',
       icon: 'Heart',
       emoji: '❤️‍🩹',
-      description: userData.gaps.survivor.description
+      description: userData.gaps.survivor?.description || 'No survivor protection data available'
     }
   ];
 
@@ -64,7 +75,7 @@ const GapSummaryCard = ({ userData }) => {
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-error">
-            ${userData.totalGap.toLocaleString()}
+            ${(userData.totalGap || 0).toLocaleString()}
           </div>
           <div className="text-sm text-text-secondary">Total Gap</div>
         </div>
@@ -131,8 +142,8 @@ const GapSummaryCard = ({ userData }) => {
 
       {/* Overall Risk Score */}
       {(() => {
-        const riskData = getRiskLevelSync(userData.riskScore);
-        const score = userData.riskScore;
+        const score = userData.riskScore || 50;
+        const riskData = getRiskLevelSync(score);
         
         // Determine background and border classes based on risk score
         const bgGradient = score < 40 ? 'from-success-50 to-success-50' :
@@ -159,7 +170,7 @@ const GapSummaryCard = ({ userData }) => {
               </div>
               <div className="text-right">
                 <div className={`text-3xl font-bold ${riskData.color}`}>
-                  {userData.riskScore}
+                  {score}
                 </div>
                 <div className={`text-sm ${riskData.color} font-medium`}>{riskData.level}</div>
               </div>

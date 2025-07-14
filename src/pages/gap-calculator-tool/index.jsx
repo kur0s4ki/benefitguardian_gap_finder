@@ -13,7 +13,7 @@ import ScenarioComparison from "./components/ScenarioComparison";
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData: contextUserData, hasValidAssessment } = useAssessment();
+  const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
 
 
 
@@ -39,19 +39,65 @@ const GapCalculatorTool = () => {
   // Load calculated user data from navigation state
   const [userData, setUserData] = useState(null);
 
+  // Helper function to transform context data to the format expected by this component
+  const transformContextData = (contextUserData, contextCalculatedResults) => {
+    if (!contextCalculatedResults) return null;
+
+    return {
+      profession: contextCalculatedResults.profession,
+      yearsOfService: contextCalculatedResults.yearsOfService,
+      currentAge: contextCalculatedResults.currentAge || 45,
+      state: contextCalculatedResults.state,
+      riskScore: contextCalculatedResults.riskScore,
+      // Use the totalGap from calculation engine or calculate it
+      totalGap: contextCalculatedResults.totalGap ||
+        ((contextCalculatedResults.pensionGap || 0) * 240 +
+         (contextCalculatedResults.survivorGap || 0) * 240 +
+         (contextCalculatedResults.taxTorpedo || 0)),
+      // Use the structured gaps from calculation engine or create them
+      gaps: contextCalculatedResults.gaps || {
+        pension: {
+          amount: (contextCalculatedResults.pensionGap || 0) * 240,
+          risk: (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
+                (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
+          description: `Monthly pension gap: $${contextCalculatedResults.pensionGap || 0}/month`,
+        },
+        tax: {
+          amount: contextCalculatedResults.taxTorpedo || 0,
+          risk: (contextCalculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
+                (contextCalculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
+          description: `Tax torpedo impact: $${contextCalculatedResults.taxTorpedo || 0}`,
+        },
+        survivor: {
+          amount: (contextCalculatedResults.survivorGap || 0) * 240,
+          risk: (contextCalculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
+                (contextCalculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
+          description: `Monthly survivor benefit gap: $${contextCalculatedResults.survivorGap || 0}/month`,
+        },
+      },
+      calculationLog: contextCalculatedResults.calculationLog,
+    };
+  };
+
   useEffect(() => {
     // Check if we have data from navigation state (from results dashboard)
     if (location.state?.userData) {
       setUserData(location.state.userData);
-    } else if (hasValidAssessment() && contextUserData) {
-      // Fallback to context data if available
-      setUserData(contextUserData);
+    } else if (hasValidAssessment() && contextUserData && contextCalculatedResults) {
+      // Transform context data to the format expected by this component
+      const transformedData = transformContextData(contextUserData, contextCalculatedResults);
+      if (transformedData) {
+        setUserData(transformedData);
+      } else {
+        navigate("/");
+        return;
+      }
     } else {
       // If no data available, redirect to start assessment
       navigate("/");
       return;
     }
-  }, [location.state, navigate, hasValidAssessment, contextUserData]);
+  }, [location.state, navigate, hasValidAssessment, contextUserData, contextCalculatedResults]);
 
   // Load preset scenarios from database configuration
   useEffect(() => {

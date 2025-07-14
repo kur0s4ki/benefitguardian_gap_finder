@@ -78,19 +78,19 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Start Assessment Card */}
-          <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+          <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-12 w-12 bg-primary-100 rounded-lg flex items-center justify-center">
                 <Icon name="Calculator" size={24} className="text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-text-primary">Gap Assessment</h3>
             </div>
-            <p className="text-text-secondary mb-4">
+            <p className="text-text-secondary mb-4 flex-grow">
               Analyze your retirement benefits and identify potential gaps in your financial planning.
             </p>
             <button
               onClick={handleStartAssessment}
-              className="btn-primary w-full py-2 rounded-md font-medium"
+              className="btn-primary w-full py-2 rounded-md font-medium mt-auto"
             >
               Start Assessment
             </button>
@@ -99,37 +99,37 @@ const Dashboard = () => {
           {/* Admin Panel Cards - Only for Admins */}
           {isAdmin() && (
             <>
-              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-12 w-12 bg-warning-100 rounded-lg flex items-center justify-center">
                     <Icon name="Settings" size={24} className="text-warning-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-text-primary">User Management</h3>
                 </div>
-                <p className="text-text-secondary mb-4">
+                <p className="text-text-secondary mb-4 flex-grow">
                   Approve new users and manage user accounts and permissions.
                 </p>
                 <button
                   onClick={handleUserManagement}
-                  className="btn-primary w-full py-2 rounded-md font-medium"
+                  className="btn-primary w-full py-2 rounded-md font-medium mt-auto"
                 >
                   Manage Users
                 </button>
               </div>
 
-              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-12 w-12 bg-secondary-100 rounded-lg flex items-center justify-center">
                     <Icon name="Sliders" size={24} className="text-secondary-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-text-primary">Configuration</h3>
                 </div>
-                <p className="text-text-secondary mb-4">
+                <p className="text-text-secondary mb-4 flex-grow">
                   Configure system settings, calculations, and assessment parameters.
                 </p>
                 <button
                   onClick={handleConfiguration}
-                  className="btn-primary w-full py-2 rounded-md font-medium"
+                  className="btn-primary w-full py-2 rounded-md font-medium mt-auto"
                 >
                   Configure System
                 </button>
