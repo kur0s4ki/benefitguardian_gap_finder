@@ -11,16 +11,16 @@ describe('calculateBenefitGaps – core logic', () => {
     financialFears: []
   };
 
-  test('survivor-risk is lower when survivor planning is "yes"', () => {
-    const withProtection = calculateBenefitGaps({ ...baseInput, survivorPlanning: 'yes' });
-    const noProtection = calculateBenefitGaps({ ...baseInput, survivorPlanning: 'no' });
+  test('survivor-risk is lower when survivor planning is "yes"', async () => {
+    const withProtection = await calculateBenefitGaps({ ...baseInput, survivorPlanning: 'yes' });
+    const noProtection = await calculateBenefitGaps({ ...baseInput, survivorPlanning: 'no' });
 
     expect(withProtection.riskComponents.survivorRisk).toBeLessThan(noProtection.riskComponents.survivorRisk);
     expect(withProtection.riskScore).toBeLessThan(noProtection.riskScore);
   });
 
-  test('riskScore is clamped to 0-100', () => {
-    const result = calculateBenefitGaps({
+  test('riskScore is clamped to 0-100', async () => {
+    const result = await calculateBenefitGaps({
       ...baseInput,
       otherSavings: 10_000_000, // extreme savings to push risk high
       survivorPlanning: 'no'
@@ -30,8 +30,8 @@ describe('calculateBenefitGaps – core logic', () => {
     expect(result.riskScore).toBeGreaterThanOrEqual(0);
   });
 
-  test('totalGap is calculated correctly', () => {
-    const result = calculateBenefitGaps({
+  test('totalGap is calculated correctly', async () => {
+    const result = await calculateBenefitGaps({
       ...baseInput,
       survivorPlanning: 'no'
     });
@@ -41,8 +41,8 @@ describe('calculateBenefitGaps – core logic', () => {
     expect(result.totalGap).toBeGreaterThan(0);
   });
 
-  test('gaps structure is properly formatted', () => {
-    const result = calculateBenefitGaps({
+  test('gaps structure is properly formatted', async () => {
+    const result = await calculateBenefitGaps({
       ...baseInput,
       survivorPlanning: 'no'
     });
@@ -51,7 +51,7 @@ describe('calculateBenefitGaps – core logic', () => {
     expect(result.gaps.pension).toBeDefined();
     expect(result.gaps.tax).toBeDefined();
     expect(result.gaps.survivor).toBeDefined();
-    
+
     // Check that gap amounts are consistent
     expect(result.gaps.pension.amount).toBe(result.pensionGap * 240);
     expect(result.gaps.survivor.amount).toBe(result.survivorGap * 240);
@@ -68,8 +68,8 @@ describe('calculateBenefitGaps – core logic', () => {
     ];
 
     cases.forEach(({ diff, exp }) => {
-      it(`${diff} years ⇒ ${exp}`, () => {
-        const r = calculateBenefitGaps({
+      it(`${diff} years ⇒ ${exp}`, async () => {
+        const r = await calculateBenefitGaps({
           ...baseInput,
           retirementAge: baseInput.currentAge + diff,
           survivorPlanning: 'no'
@@ -79,17 +79,17 @@ describe('calculateBenefitGaps – core logic', () => {
     });
   });
 
-  test('COLA protection lowers pensionRisk', () => {
-    const noCola = calculateBenefitGaps({ ...baseInput, inflationProtection: 'no' });
-    const withCola = calculateBenefitGaps({ ...baseInput, inflationProtection: 'yes' });
+  test('COLA protection lowers pensionRisk', async () => {
+    const noCola = await calculateBenefitGaps({ ...baseInput, inflationProtection: 'no' });
+    const withCola = await calculateBenefitGaps({ ...baseInput, inflationProtection: 'yes' });
 
     expect(withCola.riskComponents.pensionRisk).toBeLessThan(noCola.riskComponents.pensionRisk);
   });
 
   describe('Hidden Benefit Opportunity varies by profession/state', () => {
-    it('Teacher in CA vs Nurse in FL should differ', () => {
-      const teacherCA = calculateBenefitGaps({ ...baseInput, profession: 'teacher', state: 'CA' });
-      const nurseFL = calculateBenefitGaps({ ...baseInput, profession: 'nurse', state: 'FL' });
+    it('Teacher in CA vs Nurse in FL should differ', async () => {
+      const teacherCA = await calculateBenefitGaps({ ...baseInput, profession: 'teacher', state: 'CA' });
+      const nurseFL = await calculateBenefitGaps({ ...baseInput, profession: 'nurse', state: 'FL' });
 
       expect(teacherCA.hiddenBenefitOpportunity).not.toBe(nurseFL.hiddenBenefitOpportunity);
       // Ensure formula responds in expected direction (nurse has 1.15 factor, FL state 1.1)

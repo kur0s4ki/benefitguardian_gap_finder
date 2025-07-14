@@ -164,7 +164,7 @@ const YearsOfServiceSlider = ({
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .slider-thumb::-webkit-slider-thumb {
           appearance: none;
           height: 24px;

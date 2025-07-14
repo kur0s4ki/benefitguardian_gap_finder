@@ -1,12 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Icon from 'components/AppIcon';
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const { userProfile } = useAuth();
 
   const handleGoHome = () => {
-    navigate('/profession-selection-landing');
+    // If logged in, go to first step; if not logged in, go to landing page
+    if (userProfile) {
+      navigate('/profession-selection-landing');
+    } else {
+      navigate('/');
+    }
   };
 
   return (

@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
+import { useAssessment } from 'contexts/AssessmentContext';
 
-const ResultsNavigation = ({ 
+const ResultsNavigation = ({
   className = "",
   variant = "button", // "button", "link", "card"
   showIcon = true,
@@ -10,30 +11,23 @@ const ResultsNavigation = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasValidAssessment, userData, calculatedResults } = useAssessment();
 
   // Only show on post-results screens
   const showOnPaths = ['/gap-calculator-tool', '/report-delivery-confirmation'];
   const shouldShow = showOnPaths.includes(location.pathname);
 
   const handleResultsClick = () => {
-    // Try to get stored results data from localStorage or sessionStorage
-    try {
-      const storedResults = localStorage.getItem('calculatedResults');
-      const storedUserData = localStorage.getItem('userData');
-
-      if (storedResults && storedUserData) {
-        navigate('/dynamic-results-dashboard', {
-          state: {
-            calculatedResults: JSON.parse(storedResults),
-            userData: JSON.parse(storedUserData)
-          }
-        });
-      } else {
-        // If no stored data, redirect to start assessment
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Error loading stored results:', error);
+    // Check if we have assessment data in context
+    if (hasValidAssessment()) {
+      navigate('/dynamic-results-dashboard', {
+        state: {
+          calculatedResults,
+          userData
+        }
+      });
+    } else {
+      // If no assessment data, redirect to start
       navigate('/');
     }
   };

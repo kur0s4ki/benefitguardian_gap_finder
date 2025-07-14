@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Icon from "components/AppIcon";
 import { getRiskLevel } from "utils/riskUtils";
+import { configService } from "../../../services/configurationService";
 
 const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
@@ -9,11 +10,58 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
     taxRisk: 0,
     survivorRisk: 0
   });
-  
-  const riskData = getRiskLevel(score);
+  const [riskData, setRiskData] = useState({
+    level: 'Moderate Risk',
+    description: 'Loading risk assessment...',
+    icon: 'ShieldAlert',
+    shieldClass: 'text-warning'
+  });
+  const [riskThresholds, setRiskThresholds] = useState({ low: 39, moderate: 69 });
   const circumference = 2 * Math.PI * 45; // radius of 45
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
+
+  // Load risk thresholds and risk data when component mounts or score changes
+  useEffect(() => {
+    const loadRiskData = async () => {
+      try {
+        // Load risk thresholds from configuration
+        const config = await configService.getConfiguration();
+        const thresholds = config.RISK_THRESHOLDS || { low: 39, moderate: 69 };
+        setRiskThresholds(thresholds);
+
+        // Get risk level data using the thresholds
+        const riskLevelData = await getRiskLevel(score, thresholds);
+        setRiskData(riskLevelData);
+
+        console.log('[RiskGauge] Loaded risk thresholds:', thresholds);
+      } catch (error) {
+        console.warn('[RiskGauge] Failed to load risk configuration, using fallback:', error);
+        // Keep default fallback values
+        const fallbackThresholds = { low: 39, moderate: 69 };
+        setRiskThresholds(fallbackThresholds);
+
+        const fallbackRiskData = await getRiskLevel(score, fallbackThresholds);
+        setRiskData(fallbackRiskData);
+      }
+    };
+
+    loadRiskData();
+  }, [score]);
+
+  // Helper function to get risk color based on score and thresholds
+  const getRiskColor = (currentScore) => {
+    if (currentScore <= riskThresholds.low) return '#2A9D8F'; // Green
+    if (currentScore <= riskThresholds.moderate) return '#f59e0b'; // Yellow
+    return '#ef4444'; // Red
+  };
+
+  // Helper function to get risk level text based on score and thresholds
+  const getRiskLevelText = (currentScore) => {
+    if (currentScore <= riskThresholds.low) return 'Low Risk';
+    if (currentScore <= riskThresholds.moderate) return 'Medium Risk';
+    return 'High Risk';
+  };
 
   // Animate the score value and components when showResults changes
   useEffect(() => {
@@ -90,7 +138,7 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
     >
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
         <h3 className="text-2xl font-bold text-text-primary text-center mb-6">
-          GrowthGuard Risk Score
+          GapGuardian Gold Standard™️ Risk Score
         </h3>
 
         {/* Animated Gauge */}
@@ -113,9 +161,7 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
               cx="50"
               cy="50"
               r="45"
-              stroke={
-                animatedScore < 40 ? "#2A9D8F" : animatedScore < 70 ? "#f59e0b" : "#ef4444"
-              }
+              stroke={getRiskColor(animatedScore)}
               strokeWidth="6"
               fill="none"
               strokeLinecap="round"
@@ -131,10 +177,10 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
           {/* Center Content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {/* Icon and Risk Level */}
-            <div 
+            <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all duration-300`}
               style={{
-                backgroundColor: animatedScore < 40 ? '#2A9D8F' : animatedScore < 70 ? '#f59e0b' : '#ef4444'
+                backgroundColor: getRiskColor(animatedScore)
               }}
             >
               <Icon 
@@ -156,23 +202,23 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
           <div
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300`}
             style={{
-              backgroundColor: animatedScore < 40 ? 'rgba(42, 157, 143, 0.1)' : animatedScore < 70 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-              borderColor: animatedScore < 40 ? '#2A9D8F' : animatedScore < 70 ? '#f59e0b' : '#ef4444'
+              backgroundColor: `${getRiskColor(animatedScore)}1A`, // 10% opacity
+              borderColor: getRiskColor(animatedScore)
             }}
           >
-            <div 
+            <div
               className={`w-2 h-2 rounded-full transition-colors duration-300`}
               style={{
-                backgroundColor: animatedScore < 40 ? '#2A9D8F' : animatedScore < 70 ? '#f59e0b' : '#ef4444'
+                backgroundColor: getRiskColor(animatedScore)
               }}
             ></div>
-            <span 
+            <span
               className={`font-semibold transition-colors duration-300`}
               style={{
-                color: animatedScore < 40 ? '#2A9D8F' : animatedScore < 70 ? '#f59e0b' : '#ef4444'
+                color: getRiskColor(animatedScore)
               }}
             >
-              {animatedScore < 40 ? 'Low Risk' : animatedScore < 70 ? 'Medium Risk' : 'High Risk'}
+              {getRiskLevelText(animatedScore)}
             </span>
           </div>
         </div>

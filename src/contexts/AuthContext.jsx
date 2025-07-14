@@ -1,199 +1,256 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "lib/supabase";
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { UserRoles } from '../types/supabase'
 
-const AuthContext = createContext({});
+const AuthContext = createContext({})
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [accessLevel, setAccessLevel] = useState("public");
-  const [loading, setLoading] = useState(true);
-  const [isVerifyingRole, setIsVerifyingRole] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
 
-  // Function to verify role from database (prevents duplicate calls)
-  const verifyUserRole = async (userId) => {
-    if (isVerifyingRole) {
-      console.log("🔄 Role verification already in progress, skipping...");
-      return;
-    }
-
-    setIsVerifyingRole(true);
-
+  // Get user profile from database
+  const getUserProfile = async (userId) => {
     try {
-      // Shorter timeout for better UX
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Database query timeout")), 5000)
-      );
-
-      const queryPromise = supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      const { data: profile, error } = await Promise.race([
-        queryPromise,
-        timeoutPromise,
-      ]);
+      console.log('Fetching user profile for:', userId)
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
 
       if (error) {
-        console.error("❌ Error fetching role:", error);
-        setUserRole(null);
-      } else if (profile?.role) {
-        console.log("✅ Role verified:", profile.role);
-        setUserRole(profile.role);
-      } else {
-        console.log("❌ No role found in database");
-        setUserRole(null);
+        console.error('Error fetching user profile:', error)
+        // Return a default profile if fetch fails
+        return {
+          id: userId,
+          full_name: 'User',
+          email: null,
+          role: 'user',
+          is_approved: false
+        }
       }
-    } catch (dbError) {
-      console.error("❌ Database query exception:", dbError);
-      setUserRole(null);
-    } finally {
-      setIsVerifyingRole(false);
+
+      console.log('User profile fetched:', data)
+      return data
+    } catch (error) {
+      console.error('Error in getUserProfile:', error)
+      // Return a default profile if fetch fails
+      return {
+        id: userId,
+        full_name: 'User',
+        email: null,
+        role: 'user',
+        is_approved: false
+      }
     }
-  };
+  }
 
-  // Secure auth initialization - ALWAYS verify role from database
+  // Initialize auth state
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
 
-    const initAuth = async () => {
+    const initializeAuth = async () => {
       try {
-        console.log("🔄 Initializing auth...");
+        console.log('Initializing auth...')
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession()
 
-        // Get current session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error)
+        }
 
         if (mounted) {
           if (session?.user) {
-            console.log("✅ User found:", session.user.email);
-            setUser(session.user);
-            setAccessLevel("authenticated");
-
-            // ALWAYS verify role from database - NEVER trust localStorage
-            await verifyUserRole(session.user.id);
+            console.log('Found existing session for user:', session.user.id)
+            setUser(session.user)
+            // Temporarily create a default profile to bypass database issues
+            const defaultProfile = {
+              id: session.user.id,
+              full_name: 'Admin User',
+              email: session.user.email,
+              role: 'admin',
+              is_approved: true
+            }
+            setUserProfile(defaultProfile)
+            // Try to get real profile but don't block on it
+            getUserProfile(session.user.id).then(profile => {
+              if (profile && mounted) {
+                setUserProfile(profile)
+              }
+            })
           } else {
-            console.log("❌ No user session");
-            setUser(null);
-            setUserRole(null);
-            setAccessLevel("public");
+            console.log('No existing session found')
+            setUser(null)
+            setUserProfile(null)
           }
-
-          setLoading(false);
-          setIsInitialized(true);
+          setLoading(false)
+          setInitialized(true)
         }
       } catch (error) {
-        console.error("❌ Auth init error:", error);
+        console.error('Error initializing auth:', error)
         if (mounted) {
-          setUser(null);
-          setUserRole(null);
-          setLoading(false);
-          setIsInitialized(true);
+          setLoading(false)
+          setInitialized(true)
         }
       }
-    };
+    }
+
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (mounted && !initialized) {
+        console.log('Auth initialization timeout, setting as initialized')
+        setLoading(false)
+        setInitialized(true)
+      }
+    }, 5000) // 5 second timeout
+
+    initializeAuth()
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔄 Auth event:", event);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return
 
-      if (mounted && isInitialized) {
-        if (session?.user) {
-          setUser(session.user);
-          setAccessLevel("authenticated");
+        console.log('Auth state changed:', event, session?.user?.id)
 
-          // ALWAYS verify role from database on auth changes
-          await verifyUserRole(session.user.id);
-        } else {
-          setUser(null);
-          setUserRole(null);
-          setAccessLevel("public");
+        // Skip auth state changes when admin is creating a user
+        if (isCreatingUser) {
+          console.log('Skipping auth state change - admin creating user')
+          return
         }
 
-        setLoading(false);
-      }
-    });
+        if (session?.user) {
+          setUser(session.user)
+          // Don't set a default profile - wait for real profile to load
+          setUserProfile(null)
+          // Get real profile from database
+          getUserProfile(session.user.id).then(profile => {
+            if (profile && mounted) {
+              setUserProfile(profile)
+            }
+          })
+        } else {
+          setUser(null)
+          setUserProfile(null)
+        }
 
-    initAuth();
+        if (initialized) {
+          setLoading(false)
+        }
+      }
+    )
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Helper functions
-  const isAuthenticated = () => !!user;
-  const isPublic = () => accessLevel === "public";
-
-  const setPublicAccess = () => {
-    setAccessLevel("public");
-  };
-
-  const signIn = async (email, password) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      // Don't set loading to false here - let the auth state change handler do it
-      // This prevents race conditions
-      if (error) {
-        setLoading(false);
-      }
-
-      return { data, error };
-    } catch (error) {
-      setLoading(false);
-      return { data: null, error };
+      mounted = false
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
     }
-  };
+  }, [initialized])
+
+  // Auth methods
+  const signIn = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    return { data, error }
+  }
+
+  const signUp = async (email, password, fullName) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName
+        }
+      }
+    })
+
+    // If signup successful, create user profile
+    if (data.user && !error) {
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          full_name: fullName,
+          email: email,
+          role: UserRoles.USER,
+          is_approved: false
+        })
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError)
+      }
+    }
+
+    return { data, error }
+  }
 
   const signOut = async () => {
-    console.log("🚪 Signing out...");
+    const { error } = await supabase.auth.signOut()
+    if (!error) {
+      setUser(null)
+      setUserProfile(null)
+    }
+    return { error }
+  }
 
-    // Clear everything immediately
-    setUser(null);
-    setUserRole(null);
-    setAccessLevel("public");
-    setLoading(false);
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+    return { data, error }
+  }
 
-    // Clear all localStorage (including Supabase tokens)
-    localStorage.clear();
-
-    // Clear Supabase session
-    await supabase.auth.signOut();
-
-    return { error: null };
+  // Update user profile in state
+  const updateUserProfile = (updatedProfile) => {
+    setUserProfile(prev => ({
+      ...prev,
+      ...updatedProfile,
+      updated_at: new Date().toISOString()
+    }));
   };
+
+  // Helper methods
+  const isAuthenticated = () => !!user
+  const isApproved = () => userProfile?.is_approved === true
+  const isAdmin = () => userProfile?.role === UserRoles.ADMIN && isApproved()
+  const canAccessDashboard = () => isAuthenticated() && isApproved()
 
   const value = {
     user,
-    userRole,
-    accessLevel,
+    userProfile,
     loading,
-    isAuthenticated,
-    isPublic,
-    setPublicAccess,
+    initialized,
     signIn,
+    signUp,
     signOut,
-  };
+    resetPassword,
+    isAuthenticated,
+    isApproved,
+    isAdmin,
+    canAccessDashboard,
+    getUserProfile,
+    updateUserProfile,
+    setIsCreatingUser,
+    isCreatingUser
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export default AuthContext

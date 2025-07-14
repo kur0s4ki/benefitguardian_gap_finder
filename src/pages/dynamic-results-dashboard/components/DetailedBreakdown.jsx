@@ -1,12 +1,8 @@
 import React, { useState } from "react";
-import { useAuth } from "contexts/AuthContext";
-import PublicAccessModal from "components/auth/PublicAccessModal";
 import Icon from "components/AppIcon";
 
 const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
-  const { isPublic } = useAuth();
   const [expandedSection, setExpandedSection] = useState(null);
-  const [showGapCalculatorModal, setShowGapCalculatorModal] = useState(false);
 
   const breakdownData = [
     {
@@ -87,15 +83,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
   };
 
   const handleGapCalculatorClick = () => {
-    if (isPublic) {
-      setShowGapCalculatorModal(true);
-    } else {
-      onNavigateToCalculator();
-    }
-  };
-
-  const handleCloseGapCalculatorModal = () => {
-    setShowGapCalculatorModal(false);
+    onNavigateToCalculator();
   };
 
   return (
@@ -104,23 +92,13 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
         <h3 className="text-xl font-semibold text-text-primary">
           Detailed Gap Breakdown
         </h3>
-        {isPublic ? (
-          <button
-            onClick={handleGapCalculatorClick}
-            className="btn-secondary px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2 border border-warning-300 text-warning-700 hover:bg-warning-50"
-          >
-            <Icon name="Lock" size={16} />
-            Login for Gap Calculator
-          </button>
-        ) : (
-          <button
-            onClick={handleGapCalculatorClick}
-            className="btn-primary px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2"
-          >
-            <Icon name="Calculator" size={16} />
-            Gap Calculator
-          </button>
-        )}
+        <button
+          onClick={handleGapCalculatorClick}
+          className="btn-primary px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2"
+        >
+          <Icon name="Calculator" size={16} />
+          Gap Calculator
+        </button>
       </div>
 
       <div className="space-y-4">
@@ -146,17 +124,11 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-lg font-bold text-error">
-                      {isPublic ? "Gap Identified" : formatCurrency(item.gap)}
+                      {formatCurrency(item.gap)}
                     </div>
                     <div className="text-xs text-text-secondary">
-                      {isPublic ? "Analysis Result" : "Total Gap"}
+                      Total Gap
                     </div>
-                    {isPublic && (
-                      <div className="text-xs text-text-secondary mt-1 flex items-center gap-1">
-                        <Icon name="Lock" size={12} className="text-warning" />
-                        <span>Sign in to see amount</span>
-                      </div>
-                    )}
                   </div>
 
                   <Icon
@@ -190,18 +162,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
                         </span>
                       </div>
                       <div className="text-2xl font-bold text-primary">
-                        {isPublic ? (
-                          <div className="flex items-center gap-2">
-                            <span>Available with login</span>
-                            <Icon
-                              name="Lock"
-                              size={16}
-                              className="text-warning"
-                            />
-                          </div>
-                        ) : (
-                          `${formatCurrency(item.monthlyContribution)}/month`
-                        )}
+                        {`${formatCurrency(item.monthlyContribution)}/month`}
                       </div>
                     </div>
 
@@ -262,15 +223,7 @@ const DetailedBreakdown = ({ userData, onNavigateToCalculator }) => {
         ))}
       </div>
 
-             {showGapCalculatorModal && (
-         <PublicAccessModal 
-           isOpen={showGapCalculatorModal}
-           onClose={handleCloseGapCalculatorModal}
-           feature="Gap Calculator Tool"
-           title="Gap Calculator Access Required"
-           description="The Gap Calculator Tool is available to logged-in users only. Sign in to explore personalized scenarios and close your retirement gaps."
-         />
-       )}
+
     </div>
   );
 };

@@ -2,51 +2,47 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
-import PublicVersionBanner from "components/ui/PublicVersionBanner";
-import PublicResultsMessage from "components/ui/PublicResultsMessage";
-import PublicAccessModal from "components/auth/PublicAccessModal";
-import { useAuth } from "contexts/AuthContext";
-import { getRiskLevel } from "utils/riskUtils";
+
+import { getRiskLevelSync } from "utils/riskUtils";
+import { useAssessment } from "contexts/AssessmentContext";
+import { useVersion } from "contexts/VersionContext";
 
 import RiskGauge from "./components/RiskGauge";
 import GapAnalysisCard from "./components/GapAnalysisCard";
 import DetailedBreakdown from "./components/DetailedBreakdown";
 import CallToActionSection from "./components/CallToActionSection";
+import { PublicHeroStatistic } from "components/ui/StatisticHighlight";
 
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPublic } = useAuth();
+  const { calculatedResults: contextResults, hasValidAssessment, clearAssessmentData } = useAssessment();
+  const { isPublic, ctaMessage } = useVersion();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
   const [calculatedResults, setCalculatedResults] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
 
-  // Load data from navigation state or localStorage
+  // Load data from navigation state or context
   useEffect(() => {
     try {
       // Check if we have calculated results from navigation state
       if (location.state?.calculatedResults) {
         setCalculatedResults(location.state.calculatedResults);
+      } else if (hasValidAssessment()) {
+        // Fallback to context data if available
+        setCalculatedResults(contextResults);
       } else {
-        // Try to load from localStorage
-        const storedResults = localStorage.getItem("calculatedResults");
-        if (storedResults) {
-          setCalculatedResults(JSON.parse(storedResults));
-        } else {
-          // If no stored data, redirect to start
-          setCalculationError(
-            "No assessment data found. Please complete the assessment first."
-          );
-          return;
-        }
+        // If no data available, redirect to start based on version
+        const startRoute = isPublic ? "/public/assessment" : "/profession-selection-landing";
+        navigate(startRoute, { replace: true });
+        return;
       }
     } catch (error) {
       console.error("Error loading results:", error);
       setCalculationError(error.message);
     }
-  }, [location.state]);
+  }, [location.state, contextResults, hasValidAssessment, isPublic, navigate]);
 
   const professionThemes = {
     teacher: {
@@ -97,7 +93,7 @@ const DynamicResultsDashboard = () => {
   const riskLevel = useMemo(
     () =>
       calculatedResults
-        ? getRiskLevel(calculatedResults.riskScore)
+        ? getRiskLevelSync(calculatedResults.riskScore)
         : {
             level: "Unknown",
             shortLevel: "Unknown",
@@ -108,12 +104,6 @@ const DynamicResultsDashboard = () => {
   );
 
   const handleNavigateToCalculator = useCallback(() => {
-    // Block access for public users
-    if (isPublic) {
-      navigate("/login");
-      return;
-    }
-
     // Validate calculatedResults before transformation
     if (!calculatedResults) {
       console.error("No calculated results available for navigation");
@@ -132,29 +122,23 @@ const DynamicResultsDashboard = () => {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240,
           monthly: calculatedResults.pensionGap || 0,
-          risk:
-            (calculatedResults.riskComponents?.pensionRisk || 0) > 60
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly pension shortfall: $${
             calculatedResults.pensionGap || 0
           }/month`,
         },
         tax: {
           amount: calculatedResults.taxTorpedo || 0,
-          risk:
-            (calculatedResults.riskComponents?.taxRisk || 0) > 50
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
           description: `Tax torpedo impact on retirement withdrawals`,
         },
         survivor: {
           amount: (calculatedResults.survivorGap || 0) * 240,
           monthly: calculatedResults.survivorGap || 0,
-          risk:
-            (calculatedResults.riskComponents?.survivorRisk || 0) > 60
-              ? "high"
-              : "medium",
+          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly survivor benefit gap: $${
             calculatedResults.survivorGap || 0
           }/month`,
@@ -171,10 +155,11 @@ const DynamicResultsDashboard = () => {
       calculationLog: calculatedResults.calculationLog,
       monthlyContribution: calculatedResults.monthlyContribution,
       lifetimePayout: calculatedResults.lifetimePayout,
-      riskComponents: calculatedResults.riskComponents,
+      riskComponents: calculatedResults.riskComponents || {},
     };
 
-    navigate("/gap-calculator-tool", {
+    const nextRoute = isPublic ? "/public/calculator" : "/gap-calculator-tool";
+    navigate(nextRoute, {
       state: {
         userData: transformedData,
       },
@@ -182,12 +167,6 @@ const DynamicResultsDashboard = () => {
   }, [calculatedResults, navigate]);
 
   const handleEmailReport = useCallback(async () => {
-    // Check if user is public and show modal instead of navigating
-    if (isPublic) {
-      setShowEmailModal(true);
-      return;
-    }
-
     // Validate calculatedResults before processing
     if (!calculatedResults) {
       console.error("No calculated results available for email report");
@@ -204,20 +183,31 @@ const DynamicResultsDashboard = () => {
       currentAge: calculatedResults.currentAge || 45,
       state: calculatedResults.state,
       riskScore: calculatedResults.riskScore,
-      riskColor: getRiskLevel(calculatedResults.riskScore).riskColor,
+      riskColor: getRiskLevelSync(calculatedResults.riskScore).riskColor,
+      // Calculate totalGap using the same formula as calculation engine
+      totalGap: calculatedResults.totalGap ||
+        ((calculatedResults.pensionGap || 0) * 240 +
+         (calculatedResults.survivorGap || 0) * 240 +
+         (calculatedResults.taxTorpedo || 0)),
       gaps: {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total
+          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly pension shortfall: $${
             calculatedResults.pensionGap || 0
           }/month`,
         },
         tax: {
           amount: calculatedResults.taxTorpedo || 0,
+          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
           description: `Tax torpedo impact on retirement withdrawals`,
         },
         survivor: {
           amount: (calculatedResults.survivorGap || 0) * 240, // Convert monthly to 20-year total
+          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
+                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
           description: `Monthly survivor benefit gap: $${
             calculatedResults.survivorGap || 0
           }/month`,
@@ -244,17 +234,21 @@ const DynamicResultsDashboard = () => {
         projections: projections,
       },
     });
-  }, [calculatedResults, navigate, isPublic]);
+  }, [calculatedResults, navigate]);
 
   const handleBookAudit = useCallback(() => {
     // Calendly integration would go here
     console.log("Audit booking requested");
-    window.open("https://calendly.com/publicserv-wealth", "_blank");
+    window.open("https://calendly.com/gapguardian-gold", "_blank");
   }, []);
 
-  const handleCloseEmailModal = () => {
-    setShowEmailModal(false);
-  };
+  const handleStartNewAssessment = useCallback(() => {
+    clearAssessmentData();
+    const startRoute = isPublic ? "/public/assessment" : "/";
+    navigate(startRoute);
+  }, [clearAssessmentData, navigate, isPublic]);
+
+
 
   if (isLoading) {
     return (
@@ -270,8 +264,8 @@ const DynamicResultsDashboard = () => {
               Analyzing Your Retirement Profile
             </h2>
             <p className="text-text-secondary">
-              Calculating personalized gap analysis using PublicServ Wealth
-              Group™ engine...
+              Calculating personalized gap analysis using GapGuardian Gold Standard™️
+              Analysis engine...
             </p>
           </div>
         </div>
@@ -292,12 +286,20 @@ const DynamicResultsDashboard = () => {
               Calculation Error
             </h2>
             <p className="text-text-secondary mb-4">{calculationError}</p>
-            <button
-              onClick={() => navigate("/service-profile-collection")}
-              className="btn-primary px-6 py-2 rounded-lg"
-            >
-              Return to Profile Setup
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleStartNewAssessment}
+                className="btn-primary px-6 py-2 rounded-lg w-full"
+              >
+                Start New Assessment
+              </button>
+              <button
+                onClick={() => navigate(isPublic ? "/public/profile" : "/service-profile-collection")}
+                className="btn-secondary px-6 py-2 rounded-lg w-full"
+              >
+                Return to Profile Setup
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -330,10 +332,7 @@ const DynamicResultsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Public Version Banner */}
-      <PublicVersionBanner />
-
-      <div className={isPublic ? "pt-16" : ""}>
+      <div>
         <ProgressHeader
           currentStep={4}
           profession={calculatedResults.profession}
@@ -370,7 +369,7 @@ const DynamicResultsDashboard = () => {
                   💡 Hidden Benefit Opportunity
                 </div>
                 <div className="text-2xl font-bold text-accent-900">
-                  ${calculatedResults.hiddenBenefitOpportunity.toLocaleString()}
+                  ${calculatedResults.hiddenBenefitOpportunity?.toLocaleString() || '0'}
                   /month
                 </div>
                 <div className="text-xs text-accent-700">
@@ -386,7 +385,7 @@ const DynamicResultsDashboard = () => {
               <RiskGauge
                 score={calculatedResults.riskScore}
                 profession={calculatedResults.profession}
-                riskComponents={calculatedResults.riskComponents}
+                riskComponents={calculatedResults.riskComponents || {}}
                 showResults={showResults}
               />
             </div>
@@ -396,97 +395,126 @@ const DynamicResultsDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 pb-8">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
-                Critical Retirement Gaps Identified
+                {isPublic ? "Key Retirement Risk Identified" : "Critical Retirement Gaps Identified"}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <GapAnalysisCard
-                  title="Pension Gap"
-                  amount={calculatedResults.pensionGap}
-                  icon="TrendingDown"
-                  emoji="📉"
-                  description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
-                  riskLevel={
-                    calculatedResults.riskComponents.pensionRisk > 60
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={0}
-                />
+              {isPublic ? (
+                // Public Version - Show only Tax Torpedo
+                <div className="max-w-2xl mx-auto space-y-8">
+                  {/* Statistic Highlight */}
+                  <PublicHeroStatistic className="mb-6" />
 
-                <GapAnalysisCard
-                  title="Tax Torpedo Risk"
-                  amount={calculatedResults.taxTorpedo}
-                  icon="Zap"
-                  emoji="💥"
-                  description={`Potential tax impact on $${calculatedResults.otherSavings.toLocaleString()} in savings`}
-                  riskLevel={
-                    calculatedResults.riskComponents.taxRisk > 50
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={200}
-                />
+                  <GapAnalysisCard
+                    title="Tax Torpedo Risk"
+                    amount={calculatedResults.taxTorpedo}
+                    icon="Zap"
+                    emoji="💥"
+                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
+                    riskLevel={
+                      (calculatedResults.riskComponents?.taxRisk || 0) > 50
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={0}
+                  />
 
-                <GapAnalysisCard
-                  title="Survivor Protection Gap"
-                  amount={calculatedResults.survivorGap}
-                  icon="Heart"
-                  emoji="❤️‍🩹"
-                  description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
-                  riskLevel={
-                    calculatedResults.riskComponents.survivorRisk > 60
-                      ? "high"
-                      : "moderate"
-                  }
-                  delay={400}
+                  {/* CTA Message for Public Version */}
+                  <div className="mt-8 p-6 bg-primary-50 border border-primary-200 rounded-lg text-center">
+                    <h3 className="text-lg font-semibold text-primary mb-3">
+                      Want to See Your Complete Analysis?
+                    </h3>
+                    <p className="text-primary-700 mb-4">
+                      {ctaMessage}
+                    </p>
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="btn-primary px-6 py-3 rounded-lg font-semibold"
+                    >
+                      Get Full Analysis
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Agent Version - Show all gaps
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <GapAnalysisCard
+                    title="Pension Gap"
+                    amount={calculatedResults.pensionGap}
+                    icon="TrendingDown"
+                    emoji="📉"
+                    description={`Monthly pension shortfall: $${calculatedResults.pensionGap}/month`}
+                    riskLevel={
+                      (calculatedResults.riskComponents?.pensionRisk || 0) > 60
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={0}
+                  />
+
+                  <GapAnalysisCard
+                    title="Tax Torpedo Risk"
+                    amount={calculatedResults.taxTorpedo}
+                    icon="Zap"
+                    emoji="💥"
+                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
+                    riskLevel={
+                      (calculatedResults.riskComponents?.taxRisk || 0) > 50
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={200}
+                  />
+
+                  <GapAnalysisCard
+                    title="Survivor Protection Gap"
+                    amount={calculatedResults.survivorGap}
+                    icon="Heart"
+                    emoji="❤️‍🩹"
+                    description={`Monthly survivor benefit gap: $${calculatedResults.survivorGap}/month`}
+                    riskLevel={
+                      (calculatedResults.riskComponents?.survivorRisk || 0) > 60
+                        ? "high"
+                        : "moderate"
+                    }
+                    delay={400}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Detailed Breakdown - Hidden for now (used for calculation debugging) */}
+          {false && !isPublic && (
+            <div className="px-4 sm:px-6 lg:px-8 pb-8">
+              <div className="max-w-4xl mx-auto">
+                <DetailedBreakdown
+                  userData={calculatedResults}
+                  onNavigateToCalculator={handleNavigateToCalculator}
                 />
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Detailed Breakdown */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <DetailedBreakdown
-                userData={calculatedResults}
-                onNavigateToCalculator={handleNavigateToCalculator}
-              />
+          {/* Call to Action Section - Agent Version Only */}
+          {!isPublic && (
+            <div className="px-4 sm:px-6 lg:px-8 pb-12">
+              <div className="max-w-4xl mx-auto">
+                <CallToActionSection
+                  onEmailReport={handleEmailReport}
+                  onBookAudit={handleBookAudit}
+                  profession={calculatedResults.profession}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Call to Action Section */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="max-w-4xl mx-auto">
-              <CallToActionSection
-                onEmailReport={handleEmailReport}
-                onBookAudit={handleBookAudit}
-                profession={calculatedResults.profession}
-              />
-            </div>
-          </div>
 
-          {/* Public Results Message */}
-          <div className="px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="max-w-4xl mx-auto">
-              <PublicResultsMessage />
-            </div>
-          </div>
         </main>
 
         <ConversionFooter />
       </div>
 
-      {/* Email Report Access Modal for Public Users */}
-      {showEmailModal && (
-        <PublicAccessModal 
-          isOpen={showEmailModal}
-          onClose={handleCloseEmailModal}
-          feature="Email My Report"
-          title="Report Delivery Access Required"
-          description="Detailed report delivery with personalized recommendations is available to logged-in users only. Sign in to receive your comprehensive retirement gap analysis via email."
-        />
-      )}
+
     </div>
   );
 };

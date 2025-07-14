@@ -27,13 +27,7 @@ const BackNavigation = ({
   const handleBackClick = () => {
     if (!canNavigateBack) return;
 
-    // Preserve form data if needed
-    if (preserveData) {
-      const currentFormData = sessionStorage.getItem('formData');
-      if (currentFormData) {
-        sessionStorage.setItem('preservedFormData', currentFormData);
-      }
-    }
+    // Note: Form data preservation removed - using navigation state instead
 
     // Custom back handler
     if (onBack && typeof onBack === 'function') {

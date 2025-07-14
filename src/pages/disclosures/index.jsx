@@ -5,7 +5,7 @@ import StaticPageHeader from 'components/ui/StaticPageHeader';
 
 const Disclosures = () => {
   const disclosurePoints = [
-    'PublicServ Wealth Group specializes in public sector retirement optimization',
+    'GapGuardian Gold Standard™️ Analysis specializes in public sector retirement optimization',
     'Illustrations utilize actuarial models approved for government employee benefit planning',
     'Guarantees subject to institutional claims-paying capacity',
   ];

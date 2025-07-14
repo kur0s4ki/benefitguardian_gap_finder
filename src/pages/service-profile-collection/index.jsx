@@ -6,10 +6,12 @@ import Icon from "components/AppIcon";
 import YearsOfServiceSlider from "./components/YearsOfServiceSlider";
 import PensionEstimateInput from "./components/PensionEstimateInput";
 import StateSelector from "./components/StateSelector";
+import { useVersion } from "contexts/VersionContext";
 
 const ServiceProfileCollection = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isPublic, isAgent } = useVersion();
 
   // Get profession from previous step, sessionStorage, or default
   const getProfession = () => {
@@ -135,7 +137,8 @@ const ServiceProfileCollection = () => {
         state: formData.selectedState,
       };
 
-      navigate("/risk-assessment-questionnaire", {
+      const nextRoute = isPublic ? "/public/questionnaire" : "/risk-assessment-questionnaire";
+      navigate(nextRoute, {
         state: {
           profession,
           serviceProfile: serviceProfileData,
