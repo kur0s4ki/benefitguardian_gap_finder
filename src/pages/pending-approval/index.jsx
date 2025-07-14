@@ -35,7 +35,7 @@ const PendingApproval = () => {
                 <ul className="text-sm text-warning-700 space-y-1">
                   <li>• An administrator will review your registration</li>
                   <li>• You'll receive an email notification once approved</li>
-                  <li>• You can then access the full BenefitGuardian platform</li>
+                  <li>• You can then access the full GapGuardian Gold Standard™️ Analysis platform</li>
                 </ul>
               </div>
             </div>
@@ -61,7 +61,7 @@ const PendingApproval = () => {
         </div>
 
         <div className="p-4 border-t border-border bg-secondary-50 rounded-b-lg text-center text-xs text-text-muted">
-          Need help? Contact support at support@benefitguardian.com
+          Need help? Contact support at support@gapguardian.com
         </div>
       </div>
     </div>

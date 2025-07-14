@@ -67,7 +67,7 @@ const ReportPreview = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-text-primary mb-1">
-              GrowthGuard Risk Score
+              GapGuardian Gold Standard™️ Risk Score
             </h3>
             <p className="text-sm text-text-secondary">
               Your overall retirement security assessment

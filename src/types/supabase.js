@@ -1,4 +1,4 @@
-// Database type definitions for BenefitGuardian
+// Database type definitions for GapGuardian Gold Standard™️ Analysis
 export const UserRoles = {
   ADMIN: 'admin',
   USER: 'user'

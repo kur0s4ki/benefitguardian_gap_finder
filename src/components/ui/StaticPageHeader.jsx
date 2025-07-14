@@ -26,19 +26,19 @@ const StaticPageHeader = () => {
             <button
               onClick={handleLogoClick}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-150"
-              aria-label="PublicServ Wealth Group - Return to start"
+              aria-label="GapGuardian Gold Standard™️ Analysis - Return to start"
             >
               <img
                 src="/assets/images/logo.png"
-                alt="PublicServ Wealth Group Logo"
+                alt="GapGuardian Gold Standard™️ Analysis Logo"
                 className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
               />
               <div className="hidden sm:block">
                 <div className="font-semibold text-lg text-primary">
-                  PublicServ Wealth Group
+                  GapGuardian Gold Standard™️
                 </div>
                 <div className="text-xs text-text-secondary -mt-1">
-                  Gap Finder
+                  Analysis
                 </div>
               </div>
             </button>

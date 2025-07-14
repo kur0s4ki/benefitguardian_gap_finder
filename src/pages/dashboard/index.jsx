@@ -23,7 +23,7 @@ const Dashboard = () => {
   }
 
   const handleStartAssessment = () => {
-    navigate('/service-profile-collection')
+    navigate('/profession-selection-landing')
   }
 
   const handleUserManagement = () => {
@@ -44,7 +44,7 @@ const Dashboard = () => {
               <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
                 <Icon name="Shield" size={20} className="text-primary" />
               </div>
-              <h1 className="text-xl font-bold text-text-primary">BenefitGuardian</h1>
+              <h1 className="text-xl font-bold text-text-primary">GapGuardian Gold Standard™️</h1>
             </div>
             
             <div className="flex items-center gap-4">
@@ -73,7 +73,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text-primary mb-2">Dashboard</h2>
           <p className="text-text-secondary">
-            Welcome to BenefitGuardian Gap Finder. Start your retirement planning assessment or manage your account.
+            Welcome to GapGuardian Gold Standard™️ Analysis. Start your retirement planning assessment or manage your account.
           </p>
         </div>
 

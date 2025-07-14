@@ -32,12 +32,12 @@ const buildDoc = (userData, projections = {}) => {
 
   // Title Page
   doc.setFontSize(22);
-  doc.text('Personalized Retirement Gap Analysis', 40, y);
+  doc.text('GapGuardian Gold Standard™️ Analysis Report', 40, y);
   y += lineHeight * 2;
   doc.setFontSize(14);
   doc.text(`Profession: ${userData.profession}`, 40, y);
   y += lineHeight;
-  doc.text(`GrowthGuard Risk Score: ${userData.riskScore}`, 40, y);
+  doc.text(`Risk Score: ${userData.riskScore}`, 40, y);
   y += lineHeight;
   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, y);
 

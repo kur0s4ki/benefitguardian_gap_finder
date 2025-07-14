@@ -76,7 +76,7 @@ const ConversionFooter = ({ className = "" }) => {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-xs text-text-muted">
-            <span>© {currentYear} PublicServ Wealth Group</span>
+            <span>© {currentYear} GapGuardian Gold Standard™️</span>
             <span className="hidden sm:inline">•</span>
             <span>All rights reserved</span>
             <span className="hidden sm:inline">•</span>

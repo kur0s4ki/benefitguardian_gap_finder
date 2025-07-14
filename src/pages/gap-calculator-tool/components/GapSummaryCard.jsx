@@ -162,7 +162,7 @@ const GapSummaryCard = ({ userData }) => {
                   <Icon name={riskData.icon} size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary">GrowthGuard Risk Score</h3>
+                  <h3 className="font-semibold text-text-primary">GapGuardian Gold Standard™️ Risk Score</h3>
                   <p className="text-sm text-text-secondary">
                     Your overall retirement security rating
                   </p>

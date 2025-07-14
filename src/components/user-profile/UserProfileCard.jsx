@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Icon from '../../AppIcon';
+import Icon from '../AppIcon';
 import { useAuth } from '../../contexts/AuthContext';
 
 const UserProfileCard = () => {

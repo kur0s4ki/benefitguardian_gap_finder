@@ -1,4 +1,4 @@
-// PublicServ Wealth Group™ Gap Finder - Calculation Engine
+// GapGuardian Gold Standard™️ Analysis - Calculation Engine
 // Implements the client's specified calculation logic
 
 import { configService } from '../services/configurationService';

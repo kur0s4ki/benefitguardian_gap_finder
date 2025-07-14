@@ -138,7 +138,7 @@ const RiskGauge = ({ score, profession, riskComponents, showResults }) => {
     >
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
         <h3 className="text-2xl font-bold text-text-primary text-center mb-6">
-          GrowthGuard Risk Score
+          GapGuardian Gold Standard™️ Risk Score
         </h3>
 
         {/* Animated Gauge */}

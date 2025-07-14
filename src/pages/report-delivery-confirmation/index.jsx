@@ -298,7 +298,7 @@ const ReportDeliveryConfirmation = () => {
                   {
                     icon: "BarChart3",
                     title: "Detailed Risk Analysis",
-                    desc: "Complete breakdown of your GrowthGuard Risk Score",
+                    desc: "Complete breakdown of your GapGuardian Gold Standard™️ Risk Score",
                   },
                   {
                     icon: "Calculator",

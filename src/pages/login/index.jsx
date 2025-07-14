@@ -71,7 +71,7 @@ const Login = () => {
         <div className="p-6">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-text-primary mb-2">Welcome Back</h1>
-            <p className="text-text-secondary">Sign in to access BenefitGuardian Gap Finder</p>
+            <p className="text-text-secondary">Sign in to access GapGuardian Gold Standard™️ Analysis</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -131,7 +131,7 @@ const Login = () => {
         </div>
 
         <div className="p-4 border-t border-border bg-secondary-50 rounded-b-lg text-center text-xs text-text-muted">
-          BenefitGuardian Gap Finder • Secure Login • Public Sector Retirement Planning
+          GapGuardian Gold Standard™️ Analysis • Secure Login • Public Sector Retirement Planning
         </div>
       </div>
     </div>

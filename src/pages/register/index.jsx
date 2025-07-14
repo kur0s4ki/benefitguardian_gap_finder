@@ -75,7 +75,7 @@ const Register = () => {
         <div className="p-6">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-text-primary mb-2">Create Account</h1>
-            <p className="text-text-secondary">Join BenefitGuardian Gap Finder</p>
+            <p className="text-text-secondary">Join GapGuardian Gold Standard™️ Analysis</p>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
@@ -166,7 +166,7 @@ const Register = () => {
         </div>
 
         <div className="p-4 border-t border-border bg-secondary-50 rounded-b-lg text-center text-xs text-text-muted">
-          BenefitGuardian Gap Finder • Secure Registration • Public Sector Retirement Planning
+          GapGuardian Gold Standard™️ Analysis • Secure Registration • Public Sector Retirement Planning
         </div>
       </div>
     </div>

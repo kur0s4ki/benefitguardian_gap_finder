@@ -236,7 +236,7 @@ const DynamicResultsDashboard = () => {
   const handleBookAudit = useCallback(() => {
     // Calendly integration would go here
     console.log("Audit booking requested");
-    window.open("https://calendly.com/publicserv-wealth", "_blank");
+    window.open("https://calendly.com/gapguardian-gold", "_blank");
   }, []);
 
   const handleStartNewAssessment = useCallback(() => {
@@ -260,8 +260,8 @@ const DynamicResultsDashboard = () => {
               Analyzing Your Retirement Profile
             </h2>
             <p className="text-text-secondary">
-              Calculating personalized gap analysis using PublicServ Wealth
-              Group™ engine...
+              Calculating personalized gap analysis using GapGuardian Gold Standard™️
+              Analysis engine...
             </p>
           </div>
         </div>
