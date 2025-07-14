@@ -183,8 +183,8 @@ const ProgressHeader = ({
               </div>
             )}
 
-            {/* Admin Controls */}
-            {isAdmin() && (
+            {/* User Controls */}
+            {userProfile && (
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handleDashboard}
@@ -195,10 +195,12 @@ const ProgressHeader = ({
                 </button>
 
                 <div className="hidden md:flex items-center space-x-2 text-sm text-text-secondary">
-                  <span>{userProfile?.full_name || 'Admin'}</span>
-                  <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
-                    Admin
-                  </span>
+                  <span>{userProfile?.full_name || userProfile?.email || 'User'}</span>
+                  {isAdmin() && (
+                    <span className="px-2 py-1 bg-primary-100 text-primary text-xs font-medium rounded">
+                      Admin
+                    </span>
+                  )}
                 </div>
 
                 <button
