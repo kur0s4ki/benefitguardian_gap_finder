@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { configService } from '../../../services/configurationService';
-import Icon from '../../../components/AppIcon';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import { useToast } from '../../../components/ui/ToastProvider';
-import RiskScoringConfig from './components/RiskScoringConfig';
-import CalculationsConfig from './components/CalculationsConfig';
-import ProfessionsConfig from './components/ProfessionsConfig';
-import StatesConfig from './components/StatesConfig';
-import InvestmentsConfig from './components/InvestmentsConfig';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { configService } from "../../../services/configurationService";
+import Icon from "../../../components/AppIcon";
+import LoadingSpinner from "../../../components/ui/LoadingSpinner";
+import { useToast } from "../../../components/ui/ToastProvider";
+import StaticPageHeader from "../../../components/ui/StaticPageHeader";
+import RiskScoringConfig from "./components/RiskScoringConfig";
+import CalculationsConfig from "./components/CalculationsConfig";
+import ProfessionsConfig from "./components/ProfessionsConfig";
+import StatesConfig from "./components/StatesConfig";
+import InvestmentsConfig from "./components/InvestmentsConfig";
 
 const ConfigurationDashboard = () => {
   const { isAdmin } = useAuth();
   const { addToast } = useToast();
-  const [activeTab, setActiveTab] = useState('risk-scoring');
+  const [activeTab, setActiveTab] = useState("risk-scoring");
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState(null);
 
@@ -28,19 +29,19 @@ const ConfigurationDashboard = () => {
       const configuration = await configService.getConfiguration();
       setConfig(configuration);
     } catch (error) {
-      console.error('Failed to load configuration:', error);
-      addToast('Failed to load configuration', 'error');
+      console.error("Failed to load configuration:", error);
+      addToast("Failed to load configuration", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'risk-scoring', name: 'Risk Scoring', icon: 'Target' },
-    { id: 'calculations', name: 'Calculations', icon: 'Calculator' },
-    { id: 'professions', name: 'Professions', icon: 'Users' },
-    { id: 'states', name: 'States', icon: 'Map' },
-    { id: 'investments', name: 'Investments', icon: 'TrendingUp' },
+    { id: "risk-scoring", name: "Risk Scoring", icon: "Target" },
+    { id: "calculations", name: "Calculations", icon: "Calculator" },
+    { id: "professions", name: "Professions", icon: "Users" },
+    { id: "states", name: "States", icon: "Map" },
+    { id: "investments", name: "Investments", icon: "TrendingUp" },
   ];
 
   if (!isAdmin()) {
@@ -48,8 +49,12 @@ const ConfigurationDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Icon name="ShieldX" size={48} className="text-error mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Access Denied</h1>
-          <p className="text-text-secondary">You don't have permission to access this page.</p>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
+            Access Denied
+          </h1>
+          <p className="text-text-secondary">
+            You don't have permission to access this page.
+          </p>
         </div>
       </div>
     );
@@ -68,6 +73,8 @@ const ConfigurationDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <StaticPageHeader />
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -84,15 +91,22 @@ const ConfigurationDashboard = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <Icon name="AlertTriangle" size={20} className="text-warning-600 mt-0.5" />
+              <Icon
+                name="AlertTriangle"
+                size={20}
+                className="text-warning-600 mt-0.5"
+              />
               <div>
-                <h3 className="font-medium text-warning-800 mb-1">Important Notice</h3>
+                <h3 className="font-medium text-warning-800 mb-1">
+                  Important Notice
+                </h3>
                 <p className="text-sm text-warning-700">
-                  Changes to these settings will affect all future calculations. 
-                  Please test thoroughly before making significant modifications.
+                  Changes to these settings will affect all future calculations.
+                  Please test thoroughly before making significant
+                  modifications.
                 </p>
               </div>
             </div>
@@ -101,18 +115,20 @@ const ConfigurationDashboard = () => {
 
         {/* Tab Navigation */}
         <div className="border-b border-border mb-8">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-2 md:space-x-8 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                className={`py-4 px-3 md:px-2 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border'
+                    ? "border-primary text-primary"
+                    : "border-transparent text-text-secondary hover:text-text-primary hover:border-border"
                 }`}
               >
-                {tab.name}
+                <Icon name={tab.icon} size={16} className="md:hidden" />
+                <span className="hidden md:inline">{tab.name}</span>
+                <span className="md:hidden">{tab.name.split(" ")[0]}</span>
               </button>
             ))}
           </nav>
@@ -120,19 +136,19 @@ const ConfigurationDashboard = () => {
 
         {/* Tab Content */}
         <div className="space-y-6">
-          {activeTab === 'risk-scoring' && (
+          {activeTab === "risk-scoring" && (
             <RiskScoringConfig config={config} onUpdate={loadConfiguration} />
           )}
-          {activeTab === 'calculations' && (
+          {activeTab === "calculations" && (
             <CalculationsConfig config={config} onUpdate={loadConfiguration} />
           )}
-          {activeTab === 'professions' && (
+          {activeTab === "professions" && (
             <ProfessionsConfig config={config} onUpdate={loadConfiguration} />
           )}
-          {activeTab === 'states' && (
+          {activeTab === "states" && (
             <StatesConfig config={config} onUpdate={loadConfiguration} />
           )}
-          {activeTab === 'investments' && (
+          {activeTab === "investments" && (
             <InvestmentsConfig config={config} onUpdate={loadConfiguration} />
           )}
         </div>
