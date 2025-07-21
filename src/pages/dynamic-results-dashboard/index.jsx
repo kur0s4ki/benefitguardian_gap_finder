@@ -166,81 +166,7 @@ const DynamicResultsDashboard = () => {
     });
   }, [calculatedResults, navigate]);
 
-  const handleEmailReport = useCallback(async () => {
-    // Validate calculatedResults before processing
-    if (!calculatedResults) {
-      console.error("No calculated results available for email report");
-      return;
-    }
 
-    // HubSpot integration would go here
-    console.log("Email report requested");
-
-    // Transform calculated results to the format expected by report delivery confirmation
-    const transformedUserData = {
-      profession: calculatedResults.profession,
-      yearsOfService: calculatedResults.yearsOfService,
-      currentAge: calculatedResults.currentAge || 45,
-      state: calculatedResults.state,
-      riskScore: calculatedResults.riskScore,
-      riskColor: getRiskLevelSync(calculatedResults.riskScore).riskColor,
-      // Calculate totalGap using the same formula as calculation engine
-      totalGap: calculatedResults.totalGap ||
-        ((calculatedResults.pensionGap || 0) * 240 +
-         (calculatedResults.survivorGap || 0) * 240 +
-         (calculatedResults.taxTorpedo || 0)),
-      gaps: {
-        pension: {
-          amount: (calculatedResults.pensionGap || 0) * 240, // Convert monthly to 20-year total
-          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
-          description: `Monthly pension shortfall: $${
-            calculatedResults.pensionGap || 0
-          }/month`,
-        },
-        tax: {
-          amount: calculatedResults.taxTorpedo || 0,
-          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
-          description: `Tax torpedo impact on retirement withdrawals`,
-        },
-        survivor: {
-          amount: (calculatedResults.survivorGap || 0) * 240, // Convert monthly to 20-year total
-          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
-          description: `Monthly survivor benefit gap: $${
-            calculatedResults.survivorGap || 0
-          }/month`,
-        },
-      },
-      calculationLog: calculatedResults.calculationLog,
-    };
-
-    const projections = {
-      monthlyNeeded:
-        Math.round(
-          ((calculatedResults.pensionGap || 0) +
-            (calculatedResults.survivorGap || 0)) *
-            0.8
-        ) || 500,
-    };
-
-    // Small delay to show loading state
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    navigate("/report-delivery-confirmation", {
-      state: {
-        userData: transformedUserData,
-        projections: projections,
-      },
-    });
-  }, [calculatedResults, navigate]);
-
-  const handleBookAudit = useCallback(() => {
-    // Calendly integration would go here
-    console.log("Audit booking requested");
-    window.open("https://calendly.com/gapguardian-gold", "_blank");
-  }, []);
 
   const handleStartNewAssessment = useCallback(() => {
     clearAssessmentData();
@@ -500,8 +426,7 @@ const DynamicResultsDashboard = () => {
             <div className="px-4 sm:px-6 lg:px-8 pb-12">
               <div className="max-w-4xl mx-auto">
                 <CallToActionSection
-                  onEmailReport={handleEmailReport}
-                  onBookAudit={handleBookAudit}
+                  onNext={handleNavigateToCalculator}
                   profession={calculatedResults.profession}
                 />
               </div>
