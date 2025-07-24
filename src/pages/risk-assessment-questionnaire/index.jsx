@@ -19,7 +19,7 @@ import { useVersion } from "contexts/VersionContext";
 const RiskAssessmentQuestionnaire = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { saveAssessmentResults } = useAssessment();
+  const { saveAssessmentResults, userData: contextUserData, hasValidAssessment } = useAssessment();
   const { isPublic, isAgent } = useVersion();
 
   // Get profession from previous step or default
@@ -100,17 +100,29 @@ const RiskAssessmentQuestionnaire = () => {
     };
   }, []);
 
-  // Load data from navigation state
+  // Load data from navigation state or context
   useEffect(() => {
     if (location.state) {
+      // Load from navigation state (coming from previous step)
       if (location.state.profession) {
         setProfession(location.state.profession);
       }
+    } else if (hasValidAssessment() && contextUserData) {
+      // Load from context (coming back from results dashboard)
+      setProfession(contextUserData.profession || "teacher");
+
+      // Restore form data from context if available
+      if (contextUserData.riskAssessment) {
+        setFormData(prev => ({
+          ...prev,
+          ...contextUserData.riskAssessment
+        }));
+      }
     } else {
-      // If no navigation state, redirect to start
+      // If no navigation state and no context data, redirect to start
       navigate("/profession-selection-landing");
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, hasValidAssessment, contextUserData]);
 
   const updateFormData = (field, value) => {
     setFormData((prev) => ({
@@ -133,15 +145,18 @@ const RiskAssessmentQuestionnaire = () => {
 
     setIsSubmitting(true);
 
+    // Get service profile from navigation state or context
+    const serviceProfile = location.state?.serviceProfile || contextUserData?.serviceProfile || {};
+
     // Validate combined data before calculations
     const preliminaryData = {
       profession,
-      yearsOfService: location.state?.serviceProfile?.yearsOfService,
-      state: location.state?.serviceProfile?.state,
+      yearsOfService: serviceProfile.yearsOfService,
+      state: serviceProfile.state,
       retirementAge: formData.retirementAge,
       currentAge: formData.currentAge,
-      pensionEstimate: location.state?.serviceProfile?.pensionEstimate,
-      pensionUnknown: location.state?.serviceProfile?.pensionUnknown,
+      pensionEstimate: serviceProfile.pensionEstimate,
+      pensionUnknown: serviceProfile.pensionUnknown,
       currentSavings: formData.currentSavings,
       preferNotToSay: formData.preferNotToSay,
       inflationProtection: formData.inflationProtection,
@@ -175,7 +190,7 @@ const RiskAssessmentQuestionnaire = () => {
     // Combine all collected data
     const allData = {
       profession,
-      serviceProfile: location.state?.serviceProfile || {},
+      serviceProfile: serviceProfile,
       riskAssessment: formData,
     };
 

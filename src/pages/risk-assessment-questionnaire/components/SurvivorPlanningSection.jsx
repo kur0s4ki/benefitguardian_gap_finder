@@ -150,7 +150,7 @@ const SurvivorPlanningSection = ({ value, details, onChange, onDetailsChange, pr
             <div>
               <h4 className="font-semibold text-success-600">Great planning ahead!</h4>
               <p className="text-sm text-success-700">
-                Having survivor income protection shows excellent financial planning.
+                Having survivor income protection shows excellent Hidden Benefits.
               </p>
             </div>
           </div>

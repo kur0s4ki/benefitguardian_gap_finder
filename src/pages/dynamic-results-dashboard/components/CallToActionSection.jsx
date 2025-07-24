@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import Icon from "components/AppIcon";
+import EnhancedCTAWrapper from "components/ui/EnhancedCTAWrapper";
 
-const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
-  const [emailSent, setEmailSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const CallToActionSection = ({ onNext, profession }) => {
 
   const professionData = {
     teacher: {
@@ -33,17 +32,7 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
   const currentProfession =
     professionData[profession] || professionData.teacher;
 
-  const handleEmailReport = async () => {
-    setIsLoading(true);
-    try {
-      await onEmailReport();
-      setEmailSent(true);
-    } catch (error) {
-      console.error("Error sending email:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   const benefits = [
     {
@@ -112,116 +101,23 @@ const CallToActionSection = ({ onEmailReport, onBookAudit, profession }) => {
         ))}
       </div>
 
-      {/* Main CTAs */}
-      <div className="card p-8 bg-gradient-to-r from-primary-50 to-accent-50">
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold text-text-primary mb-2">
-            Ready to Close Your Retirement Gaps?
-          </h3>
-          <p className="text-text-secondary">
-            Choose how you'd like to receive your personalized action plan
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Email Report CTA */}
+      {/* Enhanced Navigation Button */}
+      <div className="text-center">
+        <EnhancedCTAWrapper
+          title="Ready to Close Your Retirement Gaps?"
+          subtitle="Use our interactive calculator to explore scenarios and see exactly how to secure your financial future."
+          urgencyText="TAKE ACTION NOW"
+          className="max-w-lg mx-auto"
+        >
           <button
-            onClick={handleEmailReport}
-            disabled={isLoading || emailSent}
-            className={`p-6 rounded-lg border-2 transition-all duration-200 ${
-              emailSent
-                ? "bg-success-50 border-success text-success"
-                : "bg-surface border-primary hover:bg-primary-50 hover:border-primary-600"
-            }`}
+            onClick={onNext}
+            className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
           >
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                {emailSent ? (
-                  <Icon name="CheckCircle" size={24} className="text-success" />
-                ) : isLoading ? (
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Icon name="Mail" size={24} className="text-primary" />
-                )}
-              </div>
-
-              <h4 className="font-semibold text-text-primary mb-2">
-                {emailSent ? "Report Sent!" : "Email My Report"}
-              </h4>
-
-              <p className="text-sm text-text-secondary mb-4">
-                {emailSent
-                  ? "Check your inbox for your detailed analysis"
-                  : "Get your comprehensive gap analysis delivered instantly"}
-              </p>
-
-              {!emailSent && (
-                <div className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-                  <Icon name="Zap" size={12} />
-                  Instant Delivery
-                </div>
-              )}
-            </div>
+            <Icon name="Calculator" size={20} />
+            Gap Calculator Tool
+            <Icon name="ArrowRight" size={16} />
           </button>
-
-          {/* Book Audit CTA */}
-          <button
-            onClick={onBookAudit}
-            className="p-6 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-          >
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Icon name="Calendar" size={24} className="text-white" />
-              </div>
-
-              <h4 className="font-semibold mb-2">
-                Book Priority Benefits Audit
-              </h4>
-
-              <p className="text-sm text-primary-100 mb-4">
-                Schedule your personalized consultation with a retirement
-                specialist
-              </p>
-
-              <div className="inline-flex items-center gap-1 text-xs text-accent font-medium">
-                <Icon name="Star" size={12} />
-                Priority Access
-              </div>
-            </div>
-          </button>
-        </div>
-
-        {/* Social Proof */}
-        <div className="mt-6 pt-6 border-t border-border text-center">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 bg-primary-200 rounded-full border-2 border-white"
-                ></div>
-              ))}
-            </div>
-            <div className="text-sm text-text-secondary">
-              <span className="font-semibold text-text-primary">2,847</span>{" "}
-              public servants
-            </div>
-          </div>
-          <p className="text-xs text-text-muted">
-            have already secured their retirement with our gap analysis
-          </p>
-        </div>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="text-center text-xs text-text-muted max-w-3xl mx-auto leading-relaxed">
-        <Icon name="Info" size={12} className="inline mr-1" />
-        Insights provided by PublicSery Wealth Group are for general
-        informational purposes only. This material is not intended as
-        personalized advice. Outcomes may vary based on individual
-        circumstances. To explore strategies tailored to your goals, consult a
-        PublicSery Wealth Group professional.
-        <div className="mt-2 font-medium">CA-License #6016374</div>
+        </EnhancedCTAWrapper>
       </div>
     </div>
   );

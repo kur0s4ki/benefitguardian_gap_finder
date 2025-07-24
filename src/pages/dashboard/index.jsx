@@ -94,7 +94,7 @@ const Dashboard = () => {
               <h3 className="text-lg font-semibold text-text-primary">Gap Assessment</h3>
             </div>
             <p className="text-text-secondary mb-4 flex-grow">
-              Analyze your retirement benefits and identify potential gaps in your financial planning.
+              Analyze your retirement benefits and identify potential gaps in your hidden Benefits.
             </p>
             <button
               onClick={handleStartAssessment}

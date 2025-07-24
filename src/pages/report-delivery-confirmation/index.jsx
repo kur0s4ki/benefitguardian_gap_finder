@@ -71,9 +71,6 @@ const ReportDeliveryConfirmation = () => {
   };
 
   useEffect(() => {
-    // Automatically show the modal as soon as the component loads
-    setShowModal(true);
-
     // Load data from navigation state or context
     try {
       let userData, projections;
@@ -82,6 +79,14 @@ const ReportDeliveryConfirmation = () => {
         // Use navigation state data
         userData = location.state.userData;
         projections = location.state.projections;
+
+        // Check if email data was provided from Gap Calculator Tool
+        if (location.state?.emailData?.email) {
+          setUserEmail(location.state.emailData.email);
+          setReportSent(true); // Skip modal and show success state
+        } else {
+          setShowModal(true); // Show modal to collect email
+        }
       } else if (hasValidAssessment() && contextUserData && contextCalculatedResults) {
         // Fallback to context data
         userData = transformContextDataForReport(contextUserData, contextCalculatedResults);
@@ -91,6 +96,7 @@ const ReportDeliveryConfirmation = () => {
              (contextCalculatedResults.survivorGap || 0)) * 0.8
           ) || 500,
         };
+        setShowModal(true); // Show modal for context data (no pre-filled email)
       } else {
         // If no data available, redirect to start
         navigate("/profession-selection-landing");
