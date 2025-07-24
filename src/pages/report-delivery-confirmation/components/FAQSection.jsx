@@ -1,53 +1,61 @@
-import React, { useState } from 'react';
-import Icon from 'components/AppIcon';
+import React, { useState } from "react";
+import Icon from "components/AppIcon";
 
-const FAQSection = ({ profession = 'teacher' }) => {
+const FAQSection = ({ profession = "teacher" }) => {
   const [openFAQ, setOpenFAQ] = useState(null);
 
   const getProfessionSpecificFAQs = () => {
     const baseFAQs = [
       {
         question: "When will I receive my full report?",
-        answer: "Your personalized PDF report will be delivered to your email within 5-10 minutes. If you don\'t see it in your inbox, please check your spam or promotions folder."
+        answer:
+          "Your personalized PDF report will be delivered to your email within 5-10 minutes. If you don't see it in your inbox, please check your spam or promotions folder.",
       },
       {
         question: "Is this analysis really free?",
-        answer: "Yes, absolutely! This comprehensive retirement gap analysis is completely free with no hidden fees or obligations. We provide this service to help public service professionals understand their retirement planning needs."
+        answer:
+          "Yes, absolutely! This comprehensive retirement gap analysis is completely free with no hidden fees or obligations. We provide this service to help public service professionals understand their retirement planning needs.",
       },
       {
         question: "How accurate are these projections?",
-        answer: "Our calculations use current pension data, inflation rates, and tax regulations. While projections are estimates based on current conditions, they provide valuable insights into potential retirement gaps you should address."
+        answer:
+          "Our calculations use current pension data, inflation rates, and tax regulations. While projections are estimates based on current conditions, they provide valuable insights into potential retirement gaps you should address.",
       },
-      {
-        question: "What happens during a benefit audit consultation?",
-        answer: "During your consultation, a retirement specialist will review your personalized report, explain your gaps in detail, and provide specific strategies to optimize your benefits and close identified gaps."
-      },
+
       {
         question: "Do I need to purchase anything?",
-        answer: "There\'s no obligation to purchase anything. The consultation is designed to help you understand your options. Any recommendations will be tailored to your specific situation and budget."
-      }
+        answer:
+          "There's no obligation to purchase anything. This analysis is designed to help you understand your retirement planning options and identify potential gaps in your current strategy.",
+      },
     ];
 
     const professionSpecific = {
       teacher: {
         question: "Does this account for teacher-specific benefits?",
-        answer: "Yes! Our analysis includes teacher pension systems, 403(b) plans, and state-specific educator benefits. We understand the unique retirement landscape for educators."
+        answer:
+          "Yes! Our analysis includes teacher pension systems, 403(b) plans, and state-specific educator benefits. We understand the unique retirement landscape for educators.",
       },
       nurse: {
         question: "Are healthcare worker benefits included?",
-        answer: "Absolutely! We factor in healthcare worker pensions, shift differentials, and medical professional retirement benefits specific to your state and employer type."
+        answer:
+          "Absolutely! We factor in healthcare worker pensions, shift differentials, and medical professional retirement benefits specific to your state and employer type.",
       },
-      'first-responder': {
+      "first-responder": {
         question: "Does this include first responder benefits?",
-        answer: "Yes! Our analysis accounts for public safety pensions, hazard pay considerations, and early retirement options available to first responders."
+        answer:
+          "Yes! Our analysis accounts for public safety pensions, hazard pay considerations, and early retirement options available to first responders.",
       },
-      'government-employee': {
+      "government-employee": {
         question: "Are government employee benefits covered?",
-        answer: "Definitely! We include federal and state employee retirement systems, TSP contributions, and government-specific benefit programs."
-      }
+        answer:
+          "Definitely! We include federal and state employee retirement systems, TSP contributions, and government-specific benefit programs.",
+      },
     };
 
-    return [...baseFAQs, professionSpecific[profession] || professionSpecific.teacher];
+    return [
+      ...baseFAQs,
+      professionSpecific[profession] || professionSpecific.teacher,
+    ];
   };
 
   const faqs = getProfessionSpecificFAQs();
@@ -65,7 +73,10 @@ const FAQSection = ({ profession = 'teacher' }) => {
 
       <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <div key={index} className="border border-border rounded-lg overflow-hidden">
+          <div
+            key={index}
+            className="border border-border rounded-lg overflow-hidden"
+          >
             <button
               onClick={() => toggleFAQ(index)}
               className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-primary-50 transition-colors duration-150"
@@ -73,13 +84,13 @@ const FAQSection = ({ profession = 'teacher' }) => {
               <span className="font-medium text-text-primary pr-4">
                 {faq.question}
               </span>
-              <Icon 
-                name={openFAQ === index ? "ChevronUp" : "ChevronDown"} 
-                size={20} 
-                className="text-primary flex-shrink-0 transition-transform duration-200" 
+              <Icon
+                name={openFAQ === index ? "ChevronUp" : "ChevronDown"}
+                size={20}
+                className="text-primary flex-shrink-0 transition-transform duration-200"
               />
             </button>
-            
+
             {openFAQ === index && (
               <div className="px-4 pb-4 border-t border-border bg-background">
                 <p className="text-text-secondary leading-relaxed pt-3">

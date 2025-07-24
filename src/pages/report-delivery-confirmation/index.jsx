@@ -19,7 +19,11 @@ import PublicVersionCTA from "components/ui/PublicVersionCTA";
 const ReportDeliveryConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
+  const {
+    userData: contextUserData,
+    calculatedResults: contextCalculatedResults,
+    hasValidAssessment,
+  } = useAssessment();
   const { isPublic, isAgent, enableReportDownload } = useVersion();
   const [userEmail, setUserEmail] = useState("");
   const [profession, setProfession] = useState("teacher");
@@ -30,7 +34,10 @@ const ReportDeliveryConfirmation = () => {
   const [showFeaturePopup, setShowFeaturePopup] = useState(false);
 
   // Helper function to transform context data for report delivery
-  const transformContextDataForReport = (contextUserData, contextCalculatedResults) => {
+  const transformContextDataForReport = (
+    contextUserData,
+    contextCalculatedResults
+  ) => {
     if (!contextCalculatedResults) return null;
 
     // Use the exact same data structure as the results page
@@ -53,7 +60,9 @@ const ReportDeliveryConfirmation = () => {
         pension: {
           amount: (contextCalculatedResults.pensionGap || 0) * 240,
           monthly: contextCalculatedResults.pensionGap || 0,
-          description: `Monthly pension shortfall: $${contextCalculatedResults.pensionGap || 0}/month`,
+          description: `Monthly pension shortfall: $${
+            contextCalculatedResults.pensionGap || 0
+          }/month`,
         },
         tax: {
           amount: contextCalculatedResults.taxTorpedo || 0,
@@ -62,7 +71,9 @@ const ReportDeliveryConfirmation = () => {
         survivor: {
           amount: (contextCalculatedResults.survivorGap || 0) * 240,
           monthly: contextCalculatedResults.survivorGap || 0,
-          description: `Monthly survivor benefit gap: $${contextCalculatedResults.survivorGap || 0}/month`,
+          description: `Monthly survivor benefit gap: $${
+            contextCalculatedResults.survivorGap || 0
+          }/month`,
         },
       },
 
@@ -87,14 +98,23 @@ const ReportDeliveryConfirmation = () => {
         } else {
           setShowModal(true); // Show modal to collect email
         }
-      } else if (hasValidAssessment() && contextUserData && contextCalculatedResults) {
+      } else if (
+        hasValidAssessment() &&
+        contextUserData &&
+        contextCalculatedResults
+      ) {
         // Fallback to context data
-        userData = transformContextDataForReport(contextUserData, contextCalculatedResults);
+        userData = transformContextDataForReport(
+          contextUserData,
+          contextCalculatedResults
+        );
         projections = {
-          monthlyNeeded: Math.round(
-            ((contextCalculatedResults.pensionGap || 0) +
-             (contextCalculatedResults.survivorGap || 0)) * 0.8
-          ) || 500,
+          monthlyNeeded:
+            Math.round(
+              ((contextCalculatedResults.pensionGap || 0) +
+                (contextCalculatedResults.survivorGap || 0)) *
+                0.8
+            ) || 500,
         };
         setShowModal(true); // Show modal for context data (no pre-filled email)
       } else {
@@ -155,15 +175,13 @@ const ReportDeliveryConfirmation = () => {
       console.error("Error loading report data:", error);
       navigate("/profession-selection-landing");
     }
-  }, [location.state, navigate, hasValidAssessment, contextUserData, contextCalculatedResults]);
-
-  const handleBookAudit = () => {
-    // In real app, this would integrate with Calendly
-    window.open(
-      "https://calendly.com/publicserv-wealth/benefit-audit",
-      "_blank"
-    );
-  };
+  }, [
+    location.state,
+    navigate,
+    hasValidAssessment,
+    contextUserData,
+    contextCalculatedResults,
+  ]);
 
   const handleShareResults = () => {
     const shareText = `I just discovered significant gaps in my retirement planning! Check out this free analysis tool for ${profession}s.`;
@@ -187,8 +205,8 @@ const ReportDeliveryConfirmation = () => {
     navigate("/gap-calculator-tool", {
       state: {
         userData: calculatedResults,
-        calculatedResults: calculatedResults
-      }
+        calculatedResults: calculatedResults,
+      },
     });
   };
 
@@ -269,7 +287,8 @@ const ReportDeliveryConfirmation = () => {
                 </span>
               </div>
               <p className="text-lg text-text-secondary text-center">
-                Check your email for your comprehensive retirement gap analysis report.
+                Check your email for your comprehensive retirement gap analysis
+                report.
               </p>
             </div>
           )}
@@ -298,110 +317,83 @@ const ReportDeliveryConfirmation = () => {
             {/* What's Included - Agent Version Only */}
             {!isPublic && (
               <div className="card p-6">
-              <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
-                <Icon name="FileText" size={24} />
-                What's Included in Your Full Report
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  {
-                    icon: "BarChart3",
-                    title: "Detailed Risk Analysis",
-                    desc: "Complete breakdown of your GapGuardian Gold Standard™️ Risk Score",
-                  },
-                  {
-                    icon: "Calculator",
-                    title: "Gap Calculations",
-                    desc: "Precise dollar amounts for each identified gap",
-                  },
-                  {
-                    icon: "Target",
-                    title: "Action Plan",
-                    desc: "Step-by-step recommendations tailored to your situation",
-                  },
-                  {
-                    icon: "TrendingUp",
-                    title: "Projection Scenarios",
-                    desc: "Multiple retirement timeline and contribution scenarios",
-                  },
-                  {
-                    icon: "Shield",
-                    title: "Benefit Optimization",
-                    desc: "Strategies to maximize your existing benefits",
-                  },
-                  {
-                    icon: "Clock",
-                    title: "Timeline Guidance",
-                    desc: "When to implement each recommendation",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                      <Icon
-                        name={item.icon}
-                        size={16}
-                        className="text-primary"
-                      />
+                <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
+                  <Icon name="FileText" size={24} />
+                  What's Included in Your Full Report
+                </h2>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      icon: "BarChart3",
+                      title: "Detailed Risk Analysis",
+                      desc: "Complete breakdown of your GapGuardian Gold Standard™️ Risk Score",
+                    },
+                    {
+                      icon: "Calculator",
+                      title: "Gap Calculations",
+                      desc: "Precise dollar amounts for each identified gap",
+                    },
+                    {
+                      icon: "Target",
+                      title: "Action Plan",
+                      desc: "Step-by-step recommendations tailored to your situation",
+                    },
+                    {
+                      icon: "TrendingUp",
+                      title: "Projection Scenarios",
+                      desc: "Multiple retirement timeline and contribution scenarios",
+                    },
+                    {
+                      icon: "Shield",
+                      title: "Benefit Optimization",
+                      desc: "Strategies to maximize your existing benefits",
+                    },
+                    {
+                      icon: "Clock",
+                      title: "Timeline Guidance",
+                      desc: "When to implement each recommendation",
+                    },
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                        <Icon
+                          name={item.icon}
+                          size={16}
+                          className="text-primary"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-text-primary">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-text-secondary">
+                          {item.desc}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-text-primary">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-text-secondary">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
             )}
 
             {/* Next Steps - Agent Version Only */}
             {!isPublic && (
-            <NextStepsSection
-              onBookAudit={handleBookAudit}
-              onShareResults={handleShareResults}
-              onCalculateScenarios={handleCalculateScenarios}
-              onReferColleague={handleReferColleague}
-              profession={profession}
-            />
-            )}
-
-            {/* FAQ Section - Agent Version Only */}
-            {!isPublic && (
-              <FAQSection profession={profession} />
+              <NextStepsSection
+                onShareResults={handleShareResults}
+                onCalculateScenarios={handleCalculateScenarios}
+                onReferColleague={handleReferColleague}
+                profession={profession}
+              />
             )}
 
             {/* Calculation Log for debugging/analysis - Hidden for users */}
-            {false && <CalculationLog log={calculatedResults?.calculationLog} />}
+            {false && (
+              <CalculationLog log={calculatedResults?.calculationLog} />
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Urgency Card */}
-            <div className="card p-6 border-l-4 border-l-accent">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center">
-                  <Icon name="Clock" size={20} className="text-accent-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-primary">
-                    Time-Sensitive Opportunity
-                  </h3>
-                  <p className="text-sm text-text-secondary mt-1">
-                    Book your priority benefit audit within 48 hours to secure
-                    your spot
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleBookAudit}
-                className="w-full btn-primary py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-              >
-                <Icon name="Calendar" size={18} />
-                Book Priority Benefits Audit
-              </button>
-            </div>
-
             {/* Action Buttons - Only show before report is sent */}
             {!reportSent && (
               <div className="card p-6">
@@ -468,43 +460,12 @@ const ReportDeliveryConfirmation = () => {
             <div className="hidden lg:block">
               <TestimonialsSection profession={profession} />
             </div>
-          </div>
-
-          {/* Mobile Testimonials */}
-          <div className="lg:hidden mt-8">
-            <TestimonialsSection profession={profession} />
-          </div>
-
-          {/* Bottom CTA - Spans all 3 columns */}
-          <div
-            className={`lg:col-span-3 mt-12 rounded-2xl p-8 text-center ${theme.bg}`}
-          >
-            <div className="max-w-2xl mx-auto">
-              <div className="text-4xl mb-4">{theme.emoji}</div>
-              <h2 className="text-2xl font-bold text-primary mb-4">
-                Ready to Secure Your Retirement?
-              </h2>
-              <p className="text-text-secondary mb-6">
-                Don't let retirement gaps catch you off guard. Take action now
-                to protect your financial future.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handleBookAudit}
-                  className="btn-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-                >
-                  <Icon name="Calendar" size={18} />
-                  Schedule Your Audit
-                </button>
-                <button
-                  onClick={handleShareResults}
-                  className="border border-primary text-primary px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors duration-200"
-                >
-                  <Icon name="Share2" size={18} />
-                  Share Results
-                </button>
-              </div>
+            {/* Mobile Testimonials */}
+            <div className="lg:hidden mt-8">
+              <TestimonialsSection profession={profession} />
             </div>
+            {/* FAQ Section - Agent Version Only */}
+            {!isPublic && <FAQSection profession={profession} />}
           </div>
         </div>
       </main>
@@ -534,8 +495,9 @@ const ReportDeliveryConfirmation = () => {
                 Feature Under Development
               </p>
               <p className="text-text-secondary mb-6">
-                This feature is currently being enhanced and will be available soon.
-                In the meantime, you can email your report to access it immediately.
+                This feature is currently being enhanced and will be available
+                soon. In the meantime, you can email your report to access it
+                immediately.
               </p>
               <button
                 onClick={() => setShowFeaturePopup(false)}

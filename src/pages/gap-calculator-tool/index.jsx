@@ -17,10 +17,17 @@ import EnhancedCTAWrapper from "components/ui/EnhancedCTAWrapper";
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData: contextUserData, calculatedResults: contextCalculatedResults, hasValidAssessment } = useAssessment();
-  const { isPublic, isAgent, enableAdvancedCalculator, enableScenarioComparison } = useVersion();
-
-
+  const {
+    userData: contextUserData,
+    calculatedResults: contextCalculatedResults,
+    hasValidAssessment,
+  } = useAssessment();
+  const {
+    isPublic,
+    isAgent,
+    enableAdvancedCalculator,
+    enableScenarioComparison,
+  } = useVersion();
 
   const [activeTab, setActiveTab] = useState("calculator");
   const [savedScenarios, setSavedScenarios] = useState([]);
@@ -56,29 +63,49 @@ const GapCalculatorTool = () => {
       state: contextCalculatedResults.state,
       riskScore: contextCalculatedResults.riskScore,
       // Use the totalGap from calculation engine or calculate it
-      totalGap: contextCalculatedResults.totalGap ||
-        ((contextCalculatedResults.pensionGap || 0) * 240 +
-         (contextCalculatedResults.survivorGap || 0) * 240 +
-         (contextCalculatedResults.taxTorpedo || 0)),
+      totalGap:
+        contextCalculatedResults.totalGap ||
+        (contextCalculatedResults.pensionGap || 0) * 240 +
+          (contextCalculatedResults.survivorGap || 0) * 240 +
+          (contextCalculatedResults.taxTorpedo || 0),
       // Use the structured gaps from calculation engine or create them
       gaps: contextCalculatedResults.gaps || {
         pension: {
           amount: (contextCalculatedResults.pensionGap || 0) * 240,
-          risk: (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
-                (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
-          description: `Monthly pension gap: $${contextCalculatedResults.pensionGap || 0}/month`,
+          risk:
+            (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 60
+              ? "high"
+              : (contextCalculatedResults.riskComponents?.pensionRisk || 0) > 30
+              ? "medium"
+              : "low",
+          description: `Monthly pension gap: $${
+            contextCalculatedResults.pensionGap || 0
+          }/month`,
         },
         tax: {
           amount: contextCalculatedResults.taxTorpedo || 0,
-          risk: (contextCalculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
-                (contextCalculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
-          description: `Tax torpedo impact: $${contextCalculatedResults.taxTorpedo || 0}`,
+          risk:
+            (contextCalculatedResults.riskComponents?.taxRisk || 0) > 60
+              ? "high"
+              : (contextCalculatedResults.riskComponents?.taxRisk || 0) > 30
+              ? "medium"
+              : "low",
+          description: `Tax torpedo impact: $${
+            contextCalculatedResults.taxTorpedo || 0
+          }`,
         },
         survivor: {
           amount: (contextCalculatedResults.survivorGap || 0) * 240,
-          risk: (contextCalculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
-                (contextCalculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
-          description: `Monthly survivor benefit gap: $${contextCalculatedResults.survivorGap || 0}/month`,
+          risk:
+            (contextCalculatedResults.riskComponents?.survivorRisk || 0) > 60
+              ? "high"
+              : (contextCalculatedResults.riskComponents?.survivorRisk || 0) >
+                30
+              ? "medium"
+              : "low",
+          description: `Monthly survivor benefit gap: $${
+            contextCalculatedResults.survivorGap || 0
+          }/month`,
         },
       },
       calculationLog: contextCalculatedResults.calculationLog,
@@ -89,9 +116,16 @@ const GapCalculatorTool = () => {
     // Check if we have data from navigation state (from results dashboard)
     if (location.state?.userData) {
       setUserData(location.state.userData);
-    } else if (hasValidAssessment() && contextUserData && contextCalculatedResults) {
+    } else if (
+      hasValidAssessment() &&
+      contextUserData &&
+      contextCalculatedResults
+    ) {
       // Transform context data to the format expected by this component
-      const transformedData = transformContextData(contextUserData, contextCalculatedResults);
+      const transformedData = transformContextData(
+        contextUserData,
+        contextCalculatedResults
+      );
       if (transformedData) {
         setUserData(transformedData);
       } else {
@@ -103,7 +137,13 @@ const GapCalculatorTool = () => {
       navigate("/");
       return;
     }
-  }, [location.state, navigate, hasValidAssessment, contextUserData, contextCalculatedResults]);
+  }, [
+    location.state,
+    navigate,
+    hasValidAssessment,
+    contextUserData,
+    contextCalculatedResults,
+  ]);
 
   // Load preset scenarios from database configuration
   useEffect(() => {
@@ -112,14 +152,19 @@ const GapCalculatorTool = () => {
         // Force refresh cache to get latest data
         await configService.refreshCache();
         const config = await configService.getConfiguration();
-        console.log('[GapCalculator] Loaded configuration:', config);
-        console.log('[GapCalculator] PRESET_SCENARIOS:', config.PRESET_SCENARIOS);
+        console.log("[GapCalculator] Loaded configuration:", config);
+        console.log(
+          "[GapCalculator] PRESET_SCENARIOS:",
+          config.PRESET_SCENARIOS
+        );
 
         if (config.PRESET_SCENARIOS && config.PRESET_SCENARIOS.length > 0) {
-          console.log('[GapCalculator] Using database preset scenarios');
+          console.log("[GapCalculator] Using database preset scenarios");
           setPresetScenarios(config.PRESET_SCENARIOS);
         } else {
-          console.log('[GapCalculator] No database scenarios found, using fallback');
+          console.log(
+            "[GapCalculator] No database scenarios found, using fallback"
+          );
           // Fallback to hardcoded scenarios if database is empty
           setPresetScenarios([
             {
@@ -149,7 +194,7 @@ const GapCalculatorTool = () => {
           ]);
         }
       } catch (error) {
-        console.error('Error loading preset scenarios:', error);
+        console.error("Error loading preset scenarios:", error);
         // Use fallback scenarios on error
         setPresetScenarios([
           {
@@ -191,7 +236,7 @@ const GapCalculatorTool = () => {
           const projections = await calculateProjections(currentScenario);
           setCurrentProjections(projections);
         } catch (error) {
-          console.error('Error calculating projections:', error);
+          console.error("Error calculating projections:", error);
           // Set safe default values
           setCurrentProjections({
             totalContributions: 0,
@@ -292,7 +337,10 @@ const GapCalculatorTool = () => {
         annualGrowthRates = config.INVESTMENT_GROWTH_RATES;
       }
     } catch (error) {
-      console.warn('Failed to load investment growth rates from config, using fallback:', error);
+      console.warn(
+        "Failed to load investment growth rates from config, using fallback:",
+        error
+      );
     }
 
     const annualRate = annualGrowthRates[scenario.riskTolerance];
@@ -403,11 +451,6 @@ const GapCalculatorTool = () => {
     }
   };
 
-  const handleScheduleConsultation = () => {
-    // Open Calendly in a new tab - don't navigate away from current page
-    window.open("https://calendly.com/publicserv-wealth/benefit-audit", "_blank");
-  };
-
   const handleEmailReport = async (emailData) => {
     // Transform userData to the format expected by report delivery confirmation
     const transformedUserData = {
@@ -429,7 +472,9 @@ const GapCalculatorTool = () => {
         pension: {
           amount: (userData.pensionGap || 0) * 240,
           monthly: userData.pensionGap || 0,
-          description: `Monthly pension shortfall: $${userData.pensionGap || 0}/month`,
+          description: `Monthly pension shortfall: $${
+            userData.pensionGap || 0
+          }/month`,
         },
         tax: {
           amount: userData.taxTorpedo || 0,
@@ -438,7 +483,9 @@ const GapCalculatorTool = () => {
         survivor: {
           amount: (userData.survivorGap || 0) * 240,
           monthly: userData.survivorGap || 0,
-          description: `Monthly survivor benefit gap: $${userData.survivorGap || 0}/month`,
+          description: `Monthly survivor benefit gap: $${
+            userData.survivorGap || 0
+          }/month`,
         },
       },
 
@@ -446,13 +493,16 @@ const GapCalculatorTool = () => {
     };
 
     const projections = {
-      monthlyNeeded: Math.round(
-        ((userData.pensionGap || 0) + (userData.survivorGap || 0)) * 0.8
-      ) || 500,
+      monthlyNeeded:
+        Math.round(
+          ((userData.pensionGap || 0) + (userData.survivorGap || 0)) * 0.8
+        ) || 500,
     };
 
     // Navigate to report delivery confirmation with proper data structure
-    const nextRoute = isPublic ? "/public/report" : "/report-delivery-confirmation";
+    const nextRoute = isPublic
+      ? "/public/report"
+      : "/report-delivery-confirmation";
     navigate(nextRoute, {
       state: {
         userData: transformedUserData,
@@ -468,7 +518,9 @@ const GapCalculatorTool = () => {
 
   const tabs = [
     { id: "calculator", label: "Calculator", icon: "Calculator" },
-    ...(enableScenarioComparison ? [{ id: "comparison", label: "Compare", icon: "BarChart3" }] : []),
+    ...(enableScenarioComparison
+      ? [{ id: "comparison", label: "Compare", icon: "BarChart3" }]
+      : []),
   ];
 
   return (
@@ -485,12 +537,14 @@ const GapCalculatorTool = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center mb-4">
               <BackNavigation
-                onBack={() => navigate("/dynamic-results-dashboard", {
-                  state: {
-                    calculatedResults: location.state?.calculatedResults,
-                    userData: userData
-                  }
-                })}
+                onBack={() =>
+                  navigate("/dynamic-results-dashboard", {
+                    state: {
+                      calculatedResults: location.state?.calculatedResults,
+                      userData: userData,
+                    },
+                  })
+                }
                 customLabel="Back to Results Dashboard"
               />
             </div>
@@ -572,6 +626,10 @@ const GapCalculatorTool = () => {
                     presetScenarios={presetScenarios}
                     userData={userData}
                     projections={currentProjections}
+                    onSaveScenario={handleSaveScenario}
+                    savedScenarios={savedScenarios}
+                    isCalculating={isCalculating}
+                    saveMessage={saveMessage}
                   />
                 </div>
                 <div>
@@ -584,6 +642,26 @@ const GapCalculatorTool = () => {
                       projections={currentProjections}
                       userData={userData}
                     />
+                  </div>
+                  {/* Enhanced Get Detailed Report Section */}
+                  <div className="px-4 sm:px-6 lg:px-8 pb-8 pt-8">
+                    <div className="max-w-lg mx-auto">
+                      <EnhancedCTAWrapper
+                        title="Get Your Complete Analysis"
+                        subtitle="Receive a comprehensive 15-page report with personalized recommendations and next steps."
+                        urgencyText="FINAL STEP"
+                        variant="default"
+                      >
+                        <button
+                          onClick={handleOpenEmailModal}
+                          className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+                        >
+                          <Icon name="FileText" size={20} />
+                          Get My Detailed Report
+                          <Icon name="ArrowRight" size={16} />
+                        </button>
+                      </EnhancedCTAWrapper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -627,86 +705,6 @@ const GapCalculatorTool = () => {
                 </div>
               </div>
             )}
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={handleSaveScenario}
-                disabled={isCalculating || savedScenarios.length >= 3}
-                className="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-secondary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCalculating ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : savedScenarios.length >= 3 ? (
-                  <>
-                    <Icon name="Bookmark" size={20} />
-                    <span>Maximum Scenarios Saved (3/3)</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Bookmark" size={20} />
-                    <span>Save This Scenario ({savedScenarios.length}/3)</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={handleScheduleConsultation}
-                className="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-              >
-                <Icon name="Calendar" size={20} />
-                <span>Schedule Consultation</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Help Section */}
-          <div className="mt-12 card p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon name="HelpCircle" size={20} className="text-accent-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-text-primary mb-2">
-                  Need Help Understanding Your Options?
-                </h3>
-                <p className="text-text-secondary mb-4">
-                  Our retirement planning experts can walk you through these
-                  scenarios and help you choose the best strategy for your
-                  unique situation.
-                </p>
-                <button
-                  onClick={handleScheduleConsultation}
-                  className="text-primary hover:text-primary-700 font-medium inline-flex items-center gap-1 transition-colors duration-150"
-                >
-                  <span>Schedule a free consultation</span>
-                  <Icon name="ArrowRight" size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Get Detailed Report Section */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="max-w-lg mx-auto">
-            <EnhancedCTAWrapper
-              title="Get Your Complete Analysis"
-              subtitle="Receive a comprehensive 15-page report with personalized recommendations and next steps."
-              urgencyText="FINAL STEP"
-              variant="default"
-            >
-              <button
-                onClick={handleOpenEmailModal}
-                className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
-              >
-                <Icon name="FileText" size={20} />
-                Get My Detailed Report
-                <Icon name="ArrowRight" size={16} />
-              </button>
-            </EnhancedCTAWrapper>
           </div>
         </div>
       </main>
@@ -718,9 +716,8 @@ const GapCalculatorTool = () => {
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         onSubmit={handleEmailReport}
-        profession={userData?.profession || 'teacher'}
+        profession={userData?.profession || "teacher"}
       />
-
     </div>
   );
 };
@@ -735,7 +732,7 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
     yearsToRetirement: 0,
     monthlyNeeded: 0,
     error: null,
-    ...projections
+    ...projections,
   };
 
   // Handle error cases
@@ -753,7 +750,9 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
               <div className="font-medium text-error-800 mb-1">
                 Cannot Calculate Projections
               </div>
-              <div className="text-sm text-error-700">{safeProjections.error}</div>
+              <div className="text-sm text-error-700">
+                {safeProjections.error}
+              </div>
             </div>
           </div>
         </div>
@@ -799,7 +798,9 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
         {safeProjections.gapClosure > 100 && (
           <div className="mt-2 text-xs sm:text-sm text-success font-medium break-words">
             🎉 Exceeds gap by $
-            {(safeProjections.projectedValue - userData.totalGap).toLocaleString()}
+            {(
+              safeProjections.projectedValue - userData.totalGap
+            ).toLocaleString()}
           </div>
         )}
       </div>
@@ -814,8 +815,12 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
             Projected Value (Nominal)
           </div>
           <div className="text-xs text-text-muted mt-1 break-words">
-            ${(safeProjections.inflationAdjustedValue || safeProjections.projectedValue).toLocaleString()} in today's
-            dollars
+            $
+            {(
+              safeProjections.inflationAdjustedValue ||
+              safeProjections.projectedValue
+            ).toLocaleString()}{" "}
+            in today's dollars
           </div>
         </div>
 
@@ -857,7 +862,8 @@ const ProjectionResults = ({ scenario, projections, userData }) => {
           <span className="font-semibold text-success text-sm sm:text-base break-words text-right">
             $
             {(
-              safeProjections.projectedValue - safeProjections.totalContributions
+              safeProjections.projectedValue -
+              safeProjections.totalContributions
             ).toLocaleString()}
           </span>
         </div>

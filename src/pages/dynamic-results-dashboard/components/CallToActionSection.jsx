@@ -3,7 +3,6 @@ import Icon from "components/AppIcon";
 import EnhancedCTAWrapper from "components/ui/EnhancedCTAWrapper";
 
 const CallToActionSection = ({ onNext, profession }) => {
-
   const professionData = {
     teacher: {
       emoji: "🍎",
@@ -32,8 +31,6 @@ const CallToActionSection = ({ onNext, profession }) => {
   const currentProfession =
     professionData[profession] || professionData.teacher;
 
-
-
   const benefits = [
     {
       icon: "FileText",
@@ -41,9 +38,9 @@ const CallToActionSection = ({ onNext, profession }) => {
       description: "Detailed 15-page analysis with actionable recommendations",
     },
     {
-      icon: "Calendar",
-      title: "Priority Scheduling",
-      description: "Skip the wait - book your consultation within 24 hours",
+      icon: "Calculator",
+      title: "Interactive Tools",
+      description: "Use our advanced calculator to explore different scenarios",
     },
     {
       icon: "Shield",
@@ -53,7 +50,8 @@ const CallToActionSection = ({ onNext, profession }) => {
     {
       icon: "DollarSign",
       title: "No-Cost Analysis",
-      description: "Complete benefit audit with no upfront fees or obligations",
+      description:
+        "Complete retirement gap analysis with no upfront fees or obligations",
     },
   ];
 

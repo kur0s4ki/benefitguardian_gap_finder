@@ -1,23 +1,23 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Icon from 'components/AppIcon';
-import { useVersion } from 'contexts/VersionContext';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import Icon from "components/AppIcon";
+import { useVersion } from "contexts/VersionContext";
 
-const PublicVersionCTA = ({ 
+const PublicVersionCTA = ({
   title = "Want to See Your Complete Analysis?",
   showStatistic = true,
-  className = ""
+  className = "",
 }) => {
   const navigate = useNavigate();
   const { ctaMessage } = useVersion();
 
   const handleGetFullAnalysis = () => {
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <motion.div 
+    <motion.div
       className={`p-6 lg:p-8 bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-xl text-center ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -49,31 +49,63 @@ const PublicVersionCTA = ({
       {/* Benefits List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-left">
         <div className="flex items-start gap-3">
-          <Icon name="Check" size={20} className="text-primary flex-shrink-0 mt-0.5" />
+          <Icon
+            name="Check"
+            size={20}
+            className="text-primary flex-shrink-0 mt-0.5"
+          />
           <div>
-            <h4 className="font-semibold text-primary mb-1">Complete Gap Analysis</h4>
-            <p className="text-sm text-primary-600">Detailed pension and survivor benefit calculations</p>
+            <h4 className="font-semibold text-primary mb-1">
+              Complete Gap Analysis
+            </h4>
+            <p className="text-sm text-primary-600">
+              Detailed pension and survivor benefit calculations
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <Icon name="Check" size={20} className="text-primary flex-shrink-0 mt-0.5" />
+          <Icon
+            name="Check"
+            size={20}
+            className="text-primary flex-shrink-0 mt-0.5"
+          />
           <div>
-            <h4 className="font-semibold text-primary mb-1">Interactive Calculator</h4>
-            <p className="text-sm text-primary-600">Scenario planning and projection tools</p>
+            <h4 className="font-semibold text-primary mb-1">
+              Interactive Calculator
+            </h4>
+            <p className="text-sm text-primary-600">
+              Scenario planning and projection tools
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <Icon name="Check" size={20} className="text-primary flex-shrink-0 mt-0.5" />
+          <Icon
+            name="Check"
+            size={20}
+            className="text-primary flex-shrink-0 mt-0.5"
+          />
           <div>
-            <h4 className="font-semibold text-primary mb-1">Personalized Action Plan</h4>
-            <p className="text-sm text-primary-600">Step-by-step recommendations for your situation</p>
+            <h4 className="font-semibold text-primary mb-1">
+              Personalized Action Plan
+            </h4>
+            <p className="text-sm text-primary-600">
+              Step-by-step recommendations for your situation
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <Icon name="Check" size={20} className="text-primary flex-shrink-0 mt-0.5" />
+          <Icon
+            name="Check"
+            size={20}
+            className="text-primary flex-shrink-0 mt-0.5"
+          />
           <div>
-            <h4 className="font-semibold text-primary mb-1">Professional Report</h4>
-            <p className="text-sm text-primary-600">Comprehensive analysis you can download and share</p>
+            <h4 className="font-semibold text-primary mb-1">
+              Professional Report
+            </h4>
+            <p className="text-sm text-primary-600">
+              Comprehensive analysis you can download and share
+            </p>
           </div>
         </div>
       </div>
