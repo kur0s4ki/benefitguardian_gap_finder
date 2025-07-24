@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
 
-
 import { getRiskLevelSync } from "utils/riskUtils";
 import { useAssessment } from "contexts/AssessmentContext";
 import { useVersion } from "contexts/VersionContext";
@@ -13,11 +12,16 @@ import GapAnalysisCard from "./components/GapAnalysisCard";
 import DetailedBreakdown from "./components/DetailedBreakdown";
 import CallToActionSection from "./components/CallToActionSection";
 import { PublicHeroStatistic } from "components/ui/StatisticHighlight";
+import PublicVersionCTA from "components/ui/PublicVersionCTA";
 
 const DynamicResultsDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { calculatedResults: contextResults, hasValidAssessment, clearAssessmentData } = useAssessment();
+  const {
+    calculatedResults: contextResults,
+    hasValidAssessment,
+    clearAssessmentData,
+  } = useAssessment();
   const { isPublic, ctaMessage } = useVersion();
   const [isLoading, setIsLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
@@ -35,7 +39,9 @@ const DynamicResultsDashboard = () => {
         setCalculatedResults(contextResults);
       } else {
         // If no data available, redirect to start based on version
-        const startRoute = isPublic ? "/public/assessment" : "/profession-selection-landing";
+        const startRoute = isPublic
+          ? "/public/assessment"
+          : "/profession-selection-landing";
         navigate(startRoute, { replace: true });
         return;
       }
@@ -123,23 +129,35 @@ const DynamicResultsDashboard = () => {
         pension: {
           amount: (calculatedResults.pensionGap || 0) * 240,
           monthly: calculatedResults.pensionGap || 0,
-          risk: (calculatedResults.riskComponents?.pensionRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.pensionRisk || 0) > 30 ? "medium" : "low",
+          risk:
+            (calculatedResults.riskComponents?.pensionRisk || 0) > 60
+              ? "high"
+              : (calculatedResults.riskComponents?.pensionRisk || 0) > 30
+              ? "medium"
+              : "low",
           description: `Monthly pension shortfall: $${
             calculatedResults.pensionGap || 0
           }/month`,
         },
         tax: {
           amount: calculatedResults.taxTorpedo || 0,
-          risk: (calculatedResults.riskComponents?.taxRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.taxRisk || 0) > 30 ? "medium" : "low",
+          risk:
+            (calculatedResults.riskComponents?.taxRisk || 0) > 60
+              ? "high"
+              : (calculatedResults.riskComponents?.taxRisk || 0) > 30
+              ? "medium"
+              : "low",
           description: `Tax torpedo impact on retirement withdrawals`,
         },
         survivor: {
           amount: (calculatedResults.survivorGap || 0) * 240,
           monthly: calculatedResults.survivorGap || 0,
-          risk: (calculatedResults.riskComponents?.survivorRisk || 0) > 60 ? "high" :
-                (calculatedResults.riskComponents?.survivorRisk || 0) > 30 ? "medium" : "low",
+          risk:
+            (calculatedResults.riskComponents?.survivorRisk || 0) > 60
+              ? "high"
+              : (calculatedResults.riskComponents?.survivorRisk || 0) > 30
+              ? "medium"
+              : "low",
           description: `Monthly survivor benefit gap: $${
             calculatedResults.survivorGap || 0
           }/month`,
@@ -167,17 +185,11 @@ const DynamicResultsDashboard = () => {
     });
   }, [calculatedResults, navigate]);
 
-
-
   const handleStartNewAssessment = useCallback(() => {
     clearAssessmentData();
     const startRoute = isPublic ? "/public/assessment" : "/";
     navigate(startRoute);
   }, [clearAssessmentData, navigate, isPublic]);
-
-
-
-
 
   if (isLoading) {
     return (
@@ -193,8 +205,8 @@ const DynamicResultsDashboard = () => {
               Analyzing Your Retirement Profile
             </h2>
             <p className="text-text-secondary">
-              Calculating personalized gap analysis using GapGuardian Gold Standard™️
-              Analysis engine...
+              Calculating personalized gap analysis using GapGuardian Gold
+              Standard™️ Analysis engine...
             </p>
           </div>
         </div>
@@ -223,7 +235,11 @@ const DynamicResultsDashboard = () => {
                 Start New Assessment
               </button>
               <button
-                onClick={() => navigate(isPublic ? "/public/profile" : "/service-profile-collection")}
+                onClick={() =>
+                  navigate(
+                    isPublic ? "/public/profile" : "/service-profile-collection"
+                  )
+                }
                 className="btn-secondary px-6 py-2 rounded-lg w-full"
               >
                 Return to Profile Setup
@@ -298,7 +314,9 @@ const DynamicResultsDashboard = () => {
                   💡 Hidden Benefit Opportunity
                 </div>
                 <div className="text-2xl font-bold text-accent-900">
-                  ${calculatedResults.hiddenBenefitOpportunity?.toLocaleString() || '0'}
+                  $
+                  {calculatedResults.hiddenBenefitOpportunity?.toLocaleString() ||
+                    "0"}
                   /month
                 </div>
                 <div className="text-xs text-accent-700">
@@ -324,7 +342,9 @@ const DynamicResultsDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 pb-8">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
-                {isPublic ? "Key Retirement Risk Identified" : "Critical Retirement Gaps Identified"}
+                {isPublic
+                  ? "Key Retirement Risk Identified"
+                  : "Critical Retirement Gaps Identified"}
               </h2>
 
               {isPublic ? (
@@ -338,7 +358,9 @@ const DynamicResultsDashboard = () => {
                     amount={calculatedResults.taxTorpedo}
                     icon="Zap"
                     emoji="💥"
-                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
+                    description={`Potential tax impact on $${
+                      calculatedResults.otherSavings?.toLocaleString() || "0"
+                    } in savings`}
                     riskLevel={
                       (calculatedResults.riskComponents?.taxRisk || 0) > 50
                         ? "high"
@@ -348,20 +370,11 @@ const DynamicResultsDashboard = () => {
                   />
 
                   {/* CTA Message for Public Version */}
-                  <div className="mt-8 p-6 bg-primary-50 border border-primary-200 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold text-primary mb-3">
-                      Want to See Your Complete Analysis?
-                    </h3>
-                    <p className="text-primary-700 mb-4">
-                      {ctaMessage}
-                    </p>
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="btn-primary px-6 py-3 rounded-lg font-semibold"
-                    >
-                      Get Full Analysis
-                    </button>
-                  </div>
+                  <PublicVersionCTA
+                    title="Want to See Your Complete Analysis?"
+                    showStatistic={true}
+                    className="mt-8"
+                  />
                 </div>
               ) : (
                 // Agent Version - Show all gaps
@@ -385,7 +398,9 @@ const DynamicResultsDashboard = () => {
                     amount={calculatedResults.taxTorpedo}
                     icon="Zap"
                     emoji="💥"
-                    description={`Potential tax impact on $${calculatedResults.otherSavings?.toLocaleString() || '0'} in savings`}
+                    description={`Potential tax impact on $${
+                      calculatedResults.otherSavings?.toLocaleString() || "0"
+                    } in savings`}
                     riskLevel={
                       (calculatedResults.riskComponents?.taxRisk || 0) > 50
                         ? "high"
@@ -435,14 +450,10 @@ const DynamicResultsDashboard = () => {
               </div>
             </div>
           )}
-
-
         </main>
 
         <ConversionFooter />
       </div>
-
-
     </div>
   );
 };
