@@ -1,36 +1,39 @@
-import React from 'react';
-import Icon from '../AppIcon';
+import React from "react";
+import Icon from "../AppIcon";
 
 const ConversionFooter = ({ className = "" }) => {
   const currentYear = new Date().getFullYear();
 
   const complianceItems = [
     {
-      icon: 'Shield',
-      text: 'Trusted by Public Servants Nationwide',
-      tooltip: 'Securities and Exchange Commission registered investment advisor'
+      icon: "Shield",
+      text: "Trusted by Public Servants Nationwide",
+      tooltip:
+        "Securities and Exchange Commission registered investment advisor",
     },
     {
-      icon: 'Lock',
-      text: 'SOC 2-Compliant Data Protection',
-      tooltip: '256-bit SSL encryption and secure data handling'
+      icon: "Lock",
+      text: "SOC 2-Compliant Data Protection",
+      tooltip: "256-bit SSL encryption and secure data handling",
     },
     {
-      icon: 'Award',
-      text: 'Advanced Pension Analytics',
-      tooltip: 'Legally bound to act in your best interest'
-    }
+      icon: "Award",
+      text: "Advanced Pension Analytics",
+      tooltip: "Legally bound to act in your best interest",
+    },
   ];
 
   const footerLinks = [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Disclosures', href: '/disclosures' },
-    { label: 'Contact', href: '/contact' }
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+    { label: "Disclosures", href: "/disclosures" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
-    <footer className={`bg-secondary-50 border-t border-border mt-auto ${className}`}>
+    <footer
+      className={`bg-secondary-50 border-t border-border mt-auto ${className}`}
+    >
       {/* Compliance Badges */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-wrap justify-center items-center gap-6 mb-6">
@@ -40,10 +43,10 @@ const ConversionFooter = ({ className = "" }) => {
               className="flex items-center gap-2 text-sm text-text-secondary group"
               title={item.tooltip}
             >
-              <Icon 
-                name={item.icon} 
-                size={16} 
-                className="text-success group-hover:text-success-600 transition-colors duration-150" 
+              <Icon
+                name={item.icon}
+                size={16}
+                className="text-success group-hover:text-success-600 transition-colors duration-150"
               />
               <span className="font-medium">{item.text}</span>
             </div>
@@ -66,19 +69,22 @@ const ConversionFooter = ({ className = "" }) => {
         {/* Disclaimer */}
         <div className="text-center space-y-2">
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            Insights provided by PublicSery Wealth Group are for general informational purposes
-            only. This material is not intended as personalized advice. Outcomes may vary
-            based on individual circumstances. To explore strategies tailored to your goals,
-            consult a PublicSery Wealth Group professional.
+            Insights provided by PublicServ Wealth Group are for general
+            informational purposes only. This material is not intended as
+            personalized advice. Outcomes may vary based on individual
+            circumstances. To explore strategies tailored to your goals, consult
+            a PublicServ Wealth Group professional.
           </p>
 
           {/* Copyright and IP Notices */}
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            © 2025 PublicServ Wealth Group. This GapGuardian Gold Standard Analysis™ report is proprietary and confidential.
+            © 2025 PublicServ Wealth Group. This GapGuardian Gold Standard
+            Analysis™ report is proprietary and confidential.
           </p>
           <p className="text-xs text-text-muted max-w-4xl mx-auto leading-relaxed">
-            GapGuardian Gold Standard Analysis™ is the intellectual property of PublicServ Wealth Group.
-            Unauthorized use or reproduction is prohibited.
+            GapGuardian Gold Standard Analysis™ is the intellectual property of
+            PublicServ Wealth Group. Unauthorized use or reproduction is
+            prohibited.
           </p>
 
           <p className="text-xs text-text-muted font-medium">
@@ -106,7 +112,9 @@ const ConversionFooter = ({ className = "" }) => {
                 className="w-6 h-6 object-contain"
               />
               <div className="text-white">
-                <div className="font-semibold text-sm">PublicServ Wealth Group</div>
+                <div className="font-semibold text-sm">
+                  PublicServ Wealth Group
+                </div>
               </div>
             </div>
           </div>
