@@ -7,11 +7,13 @@ import YearsOfServiceSlider from "./components/YearsOfServiceSlider";
 import PensionEstimateInput from "./components/PensionEstimateInput";
 import StateSelector from "./components/StateSelector";
 import { useVersion } from "contexts/VersionContext";
+import { useAssessment } from "contexts/AssessmentContext";
 
 const ServiceProfileCollection = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPublic, isAgent } = useVersion();
+  const { userData: contextUserData, hasValidAssessment } = useAssessment();
 
   // Get profession from previous step, sessionStorage, or default
   const getProfession = () => {
@@ -80,6 +82,16 @@ const ServiceProfileCollection = () => {
       scrollToSection();
     }, 150); // Longer delay to ensure content is fully rendered
   };
+
+  // Restore form data from context when navigating back
+  useEffect(() => {
+    if (hasValidAssessment() && contextUserData?.serviceProfile) {
+      setFormData(prev => ({
+        ...prev,
+        ...contextUserData.serviceProfile
+      }));
+    }
+  }, [hasValidAssessment, contextUserData]);
 
   // Validate form on changes
   useEffect(() => {

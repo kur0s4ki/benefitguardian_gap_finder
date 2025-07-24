@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
+import BackNavigation from "components/ui/BackNavigation";
 import { useAssessment } from "contexts/AssessmentContext";
 import { configService } from "../../services/configurationService";
 import { useVersion } from "contexts/VersionContext";
@@ -11,6 +12,7 @@ import GapSummaryCard from "./components/GapSummaryCard";
 import InteractiveCalculator from "./components/InteractiveCalculator";
 import ScenarioComparison from "./components/ScenarioComparison";
 import EmailReportModal from "../dynamic-results-dashboard/components/EmailReportModal";
+import EnhancedCTAWrapper from "components/ui/EnhancedCTAWrapper";
 
 const GapCalculatorTool = () => {
   const navigate = useNavigate();
@@ -402,15 +404,8 @@ const GapCalculatorTool = () => {
   };
 
   const handleScheduleConsultation = () => {
-    // Navigate with scenario data
-    const nextRoute = isPublic ? "/public/report" : "/report-delivery-confirmation";
-    navigate(nextRoute, {
-      state: {
-        userData,
-        currentScenario,
-        projections: calculateProjections(currentScenario),
-      },
-    });
+    // Open Calendly in a new tab - don't navigate away from current page
+    window.open("https://calendly.com/publicserv-wealth/benefit-audit", "_blank");
   };
 
   const handleEmailReport = async (emailData) => {
@@ -489,18 +484,15 @@ const GapCalculatorTool = () => {
         <div className="bg-surface border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center mb-4">
-              <button
-                onClick={() => navigate("/dynamic-results-dashboard", {
+              <BackNavigation
+                onBack={() => navigate("/dynamic-results-dashboard", {
                   state: {
                     calculatedResults: location.state?.calculatedResults,
                     userData: userData
                   }
                 })}
-                className="flex items-center gap-2 px-4 py-3 text-primary hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-150 text-sm sm:text-base font-medium min-h-[44px]"
-              >
-                <Icon name="ChevronLeft" size={18} />
-                <span className="font-medium">Back to Results Dashboard</span>
-              </button>
+                customLabel="Back to Results Dashboard"
+              />
             </div>
 
             <div className="text-center mb-6">
@@ -697,20 +689,24 @@ const GapCalculatorTool = () => {
           </div>
         </div>
 
-        {/* Get Detailed Report Section */}
+        {/* Enhanced Get Detailed Report Section */}
         <div className="px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <button
-              onClick={handleOpenEmailModal}
-              className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+          <div className="max-w-lg mx-auto">
+            <EnhancedCTAWrapper
+              title="Get Your Complete Analysis"
+              subtitle="Receive a comprehensive 15-page report with personalized recommendations and next steps."
+              urgencyText="FINAL STEP"
+              variant="default"
             >
-              <Icon name="FileText" size={20} />
-              Get My Detailed Report
-              <Icon name="ArrowRight" size={16} />
-            </button>
-            <p className="text-sm text-text-secondary mt-2">
-              Step 6 of 6 - Receive your comprehensive analysis via email
-            </p>
+              <button
+                onClick={handleOpenEmailModal}
+                className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+              >
+                <Icon name="FileText" size={20} />
+                Get My Detailed Report
+                <Icon name="ArrowRight" size={16} />
+              </button>
+            </EnhancedCTAWrapper>
           </div>
         </div>
       </main>

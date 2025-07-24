@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import Icon from "components/AppIcon";
+import EnhancedCTAWrapper from "components/ui/EnhancedCTAWrapper";
 
 const CallToActionSection = ({ onNext, profession }) => {
 
@@ -100,19 +101,23 @@ const CallToActionSection = ({ onNext, profession }) => {
         ))}
       </div>
 
-      {/* Navigation Button */}
+      {/* Enhanced Navigation Button */}
       <div className="text-center">
-        <button
-          onClick={onNext}
-          className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+        <EnhancedCTAWrapper
+          title="Ready to Close Your Retirement Gaps?"
+          subtitle="Use our interactive calculator to explore scenarios and see exactly how to secure your financial future."
+          urgencyText="TAKE ACTION NOW"
+          className="max-w-lg mx-auto"
         >
-          <Icon name="Calculator" size={20} />
-          Gap Calculator Tool
-          <Icon name="ArrowRight" size={16} />
-        </button>
-        <p className="text-sm text-text-secondary mt-2">
-          Step 5 of 6 - Explore detailed calculations and scenarios
-        </p>
+          <button
+            onClick={onNext}
+            className="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2 hover:bg-primary-700 transition-colors duration-200"
+          >
+            <Icon name="Calculator" size={20} />
+            Gap Calculator Tool
+            <Icon name="ArrowRight" size={16} />
+          </button>
+        </EnhancedCTAWrapper>
       </div>
     </div>
   );

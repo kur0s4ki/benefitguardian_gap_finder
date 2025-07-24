@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ProgressHeader from "components/ui/ProgressHeader";
 import ConversionFooter from "components/ui/ConversionFooter";
 
+
 import { getRiskLevelSync } from "utils/riskUtils";
 import { useAssessment } from "contexts/AssessmentContext";
 import { useVersion } from "contexts/VersionContext";
@@ -173,6 +174,8 @@ const DynamicResultsDashboard = () => {
     const startRoute = isPublic ? "/public/assessment" : "/";
     navigate(startRoute);
   }, [clearAssessmentData, navigate, isPublic]);
+
+
 
 
 
