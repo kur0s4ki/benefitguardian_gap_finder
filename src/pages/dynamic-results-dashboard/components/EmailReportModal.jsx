@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
+import { submitReportRequest } from '../../../services/web3FormsService';
 
-const EmailReportModal = ({ isOpen, onClose, onSubmit, profession = 'teacher' }) => {
+const EmailReportModal = ({ isOpen, onClose, onSubmit, profession = 'teacher', calculationResults = null }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -28,11 +29,29 @@ const EmailReportModal = ({ isOpen, onClose, onSubmit, profession = 'teacher' })
     setIsSubmitting(true);
 
     try {
-      await onSubmit({ email: email.trim() });
-      onClose();
+      // Submit to Web3Forms
+      const result = await submitReportRequest({
+        email: email.trim(),
+        profession,
+        calculationResults
+      });
+      
+      if (result.success) {
+        console.log('Report request submitted successfully:', result.data);
+        
+        // Call the original onSubmit callback if provided
+        if (onSubmit) {
+          await onSubmit({ email: email.trim() });
+        }
+        
+        onClose();
+      } else {
+        console.error('Report request failed:', result.error);
+        setError(result.error || 'Failed to send report. Please try again.');
+      }
     } catch (error) {
       console.error('Error submitting email:', error);
-      setError('Failed to send report. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from 'components/AppIcon';
 import { useToast } from './ToastProvider';
+import { submitLeadForm } from '../../services/web3FormsService';
 
 const LeadCaptureForm = ({ 
   title = "Get Your Complete Analysis",
@@ -31,17 +32,25 @@ const LeadCaptureForm = ({
     setIsSubmitting(true);
 
     try {
-      // Simulate API call - replace with actual lead capture logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Submit to Web3Forms
+      const result = await submitLeadForm({ email, name });
       
-      if (onSubmit) {
-        await onSubmit({ email, name });
-      }
+      if (result.success) {
+        console.log('Lead form submitted successfully:', result.data);
+        
+        if (onSubmit) {
+          await onSubmit({ email, name });
+        }
 
-      setIsSubmitted(true);
-      addToast('Thank you! Check your email for next steps.', 'success');
+        setIsSubmitted(true);
+        addToast('Thank you! Check your email for next steps.', 'success');
+      } else {
+        console.error('Lead form submission failed:', result.error);
+        addToast(result.error || 'Something went wrong. Please try again.', 'error');
+      }
     } catch (error) {
-      addToast('Something went wrong. Please try again.', 'error');
+      console.error('Lead form error:', error);
+      addToast('Network error. Please check your connection and try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }

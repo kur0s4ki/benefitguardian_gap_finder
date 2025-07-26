@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../AppIcon';
+import { submitContactForm } from '../../services/web3FormsService';
 
 const ContactPopup = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -56,25 +57,28 @@ const ContactPopup = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - replace with actual backend integration
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Submit to Web3Forms
+      const result = await submitContactForm(formData);
       
-      // TODO: Replace with actual API call
-      console.log('Contact form submitted:', formData);
-      
-      setIsSuccess(true);
-      
-      // Auto-close after 3 seconds
-      setTimeout(() => {
-        onClose();
-        setIsSuccess(false);
-        setFormData({ name: '', email: '', phone: '', message: '' });
-        setErrors({});
-      }, 3000);
+      if (result.success) {
+        console.log('Contact form submitted successfully:', result.data);
+        setIsSuccess(true);
+        
+        // Auto-close after 3 seconds
+        setTimeout(() => {
+          onClose();
+          setIsSuccess(false);
+          setFormData({ name: '', email: '', phone: '', message: '' });
+          setErrors({});
+        }, 3000);
+      } else {
+        console.error('Form submission failed:', result.error);
+        setErrors({ submit: result.error || 'Failed to submit form. Please try again.' });
+      }
       
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Handle error state if needed
+      setErrors({ submit: 'Network error. Please check your connection and try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -239,6 +243,16 @@ const ContactPopup = ({ isOpen, onClose }) => {
                     disabled={isSubmitting}
                   />
                 </div>
+
+                {/* Submit Error */}
+                {errors.submit && (
+                  <div className="p-3 bg-error-50 border border-error-200 rounded-lg">
+                    <p className="text-sm text-error flex items-center gap-1">
+                      <Icon name="AlertCircle" size={14} />
+                      {errors.submit}
+                    </p>
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="pt-4">

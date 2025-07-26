@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
+import { submitDeliveryRequest } from '../../../services/web3FormsService';
 
-const DeliveryInfoModal = ({ isOpen, onClose, onSubmit, profession = 'teacher' }) => {
+const DeliveryInfoModal = ({ isOpen, onClose, onSubmit, profession = 'teacher', calculationResults = null }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -28,11 +29,24 @@ const DeliveryInfoModal = ({ isOpen, onClose, onSubmit, profession = 'teacher' }
     setIsSubmitting(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onSubmit(email);
+      // Submit to Web3Forms
+      const result = await submitDeliveryRequest({
+        email: email.trim(),
+        profession,
+        calculationResults
+      });
+      
+      if (result.success) {
+        console.log('Delivery request submitted successfully:', result.data);
+        onSubmit(email);
+      } else {
+        console.error('Delivery request failed:', result.error);
+        setError(result.error || 'Failed to send report. Please try again.');
+        setIsSubmitting(false);
+      }
     } catch (err) {
-      setError('Failed to send report. Please try again.');
+      console.error('Delivery request error:', err);
+      setError('Network error. Please check your connection and try again.');
       setIsSubmitting(false);
     }
   };
